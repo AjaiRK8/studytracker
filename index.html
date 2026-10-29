@@ -431,7 +431,7 @@ function importCsv(text){const rows=csvParse(text);if(rows.length<2)throw new Er
  if(H.includes('type')&&H.includes('note')&&H.includes('status')){const have=new Set(S.notes.map(x=>x.id));
   body.forEach(r=>{const s=sub(r),i=chi(r),t=NT.find(k=>k.toLowerCase()===g(r,'type').toLowerCase()),x=g(r,'note');if(!ok(s,i)||!t||(!x&&!g(r,'ldrdata'))){skip++;return}
    const id=g(r,'id')||uid();if(have.has(id)){skip++;return}have.add(id);S.del=(S.del||[]).filter(z=>z!==id);
-   S.notes.push({id,s,i,t,x,c:Date.parse(g(r,'created'))||Date.now(),d:/^done$/i.test(g(r,'status'))?1:0,sid:g(r,'sessionid'),q:(()=>{try{const a=JSON.parse(g(r,'ldrdata')||'[]');return Array.isArray(a)?a.map(o=>({q:String(o.q||''),p:String(o.p||''),s:String(o.s||'')})):[]}catch(e){return[]}})()});add++});return'sticky notes: '+add+' added, '+skip+' skipped'}
+   S.notes.push({id,s,i,t,x,c:Date.parse(g(r,'created'))||Date.now(),d:/^done$/i.test(g(r,'status'))?1:0,sid:g(r,'sessionid'),q:(()=>{try{const a=JSON.parse(g(r,'ldrdata')||'[]');return Array.isArray(a)?a.map(o=>({q:String(o.q||''),p:String(o.p||''),s:String(o.s||''),r:PRI.includes(o.r)?o.r:''})):[]}catch(e){return[]}})()});add++});return'sticky notes: '+add+' added, '+skip+' skipped'}
  if(H.includes('rev1')&&H.includes('study')){const on=v=>/^(1|y|yes|true|x|✓|done)$/i.test(v);
   body.forEach(r=>{const s=sub(r),i=chi(r);if(!ok(s,i)){skip++;return}const p=S.progress[pk(s,i)]=S.progress[pk(s,i)]||{};
    [['s','study'],['r1','rev1'],['r2','rev2'],['p','practice']].forEach(([k,c])=>{if(on(g(r,c)))p[k]=1});add++});return'chapter progress: '+add+' rows applied, '+skip+' skipped'}
@@ -604,9 +604,10 @@ function vSet(){
 /* ---------- STICKY NOTES ---------- */
 const NT=['Note','Pending','Doubt','Important','LDR'],NC={Note:'#fff1a8',Pending:'#ffc999',Doubt:'#bfe0ff',Important:'#ffb3b3',LDR:'#c9efc4'},NI={Note:'📝',Pending:'📌',Doubt:'❓',Important:'⭐',LDR:'📖'};
 const ldrList=n=>Array.isArray(n.q)?n.q:((n.qn||n.qp||n.qs)?[{q:n.qn||'',p:n.qp||'',s:n.qs||''}]:[]);
-const ldrHead=o=>[o.q?'Q. '+o.q:'',o.p?'p. '+o.p:''].filter(Boolean).join(' · ');
+const PRI=['High','Medium','Low'],PI={High:'🔴',Medium:'🟡',Low:'🟢'},PR=o=>{const k=PRI.indexOf(o.r);return k<0?3:k};
+const ldrHead=o=>[o.r?'['+o.r+']':'',o.q?'Q. '+o.q:'',o.p?'p. '+o.p:''].filter(Boolean).join(' · ');
 const ldrAll=n=>ldrList(n).map(o=>[ldrHead(o),o.s].filter(Boolean).join(': ')).join(' | ');
-const ldrHtml=n=>ldrList(n).map(o=>`<div style="margin-top:3px"><b>${esc(ldrHead(o)||'Question')}</b>${o.s?'<div style="opacity:.9">'+esc(o.s)+'</div>':''}</div>`).join('');
+const ldrHtml=n=>[...ldrList(n)].sort((a,b)=>PR(a)-PR(b)).map(o=>`<div style="margin-top:3px"><b>${o.r?PI[o.r]+' ':''}${esc(ldrHead({q:o.q,p:o.p})||'Question')}</b>${o.s?'<div style="opacity:.9">'+esc(o.s)+'</div>':''}</div>`).join('');
 /* voice typing (Web Speech API) */
 let REC=null,vLang='en-IN';
 function micToggle(btn){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -622,9 +623,9 @@ const micField=(html)=>`<div class="mf">${html}<button type="button" class="mic"
 function qRenum(){document.querySelectorAll('#nfQs .qb .qh').forEach((h,k)=>h.textContent='Question '+(k+1))}
 function addQ(v){v=v||{};const d=document.createElement('div');d.className='qb';
  d.innerHTML=`<div style="display:flex;align-items:center;gap:6px"><b class="qh"></b><span style="flex:1"></span><button type="button" class="btn ghost sm qx" title="Remove this question">✕</button></div>
- <div style="display:flex;gap:8px"><div style="flex:1"><label class="f">QUESTION NO.</label><input class="qn" autocomplete="off" placeholder="e.g. 7"></div><div style="flex:1"><label class="f">PAGE NO.</label><input class="qp" autocomplete="off" placeholder="e.g. 45"></div></div>
+ <div style="display:flex;gap:8px"><div style="flex:1"><label class="f">QUESTION NO.</label><input class="qn" autocomplete="off" placeholder="e.g. 7"></div><div style="flex:1"><label class="f">PAGE NO.</label><input class="qp" autocomplete="off" placeholder="e.g. 45"></div><div style="flex:1"><label class="f">PRIORITY</label><select class="qr">${PRI.map(k=>`<option value="${k}">${PI[k]} ${k}</option>`).join('')}</select></div></div>
  <label class="f">SUMMARY — what it deals with / adjustments</label>${micField('<textarea class="qs" rows="3" placeholder="e.g. Turnover changed to 3 Cr; ITC reversal under Rule 42 added; RCM on GTA"></textarea>')}`;
- d.querySelector('.qn').value=v.q||'';d.querySelector('.qp').value=v.p||'';d.querySelector('.qs').value=v.s||'';
+ d.querySelector('.qr').value=PRI.includes(v.r)?v.r:'Medium';d.querySelector('.qn').value=v.q||'';d.querySelector('.qp').value=v.p||'';d.querySelector('.qs').value=v.s||'';
  $('#nfQs').appendChild(d);qRenum()}
 document.addEventListener('click',e=>{const m=e.target.closest('.mic');if(m){e.preventDefault();micToggle(m);return}
  const x=e.target.closest('.qx');if(x){e.preventDefault();const bs=document.querySelectorAll('#nfQs .qb');if(bs.length>1)x.closest('.qb').remove();else{const b=x.closest('.qb');b.querySelectorAll('input,textarea').forEach(i=>i.value='')}qRenum();return}
@@ -666,7 +667,7 @@ function openNote(o){
  $('#nfVL').value=vLang;$('#nfVL').onchange=()=>{vLang=$('#nfVL').value;if(REC)REC.stop()};d.onclose=()=>{if(REC)REC.stop()};
  const tg=()=>{$('#nfL').style.display=$('#nfT').value==='LDR'?'block':'none'};$('#nfT').onchange=tg;tg();
  d.showModal();$('#nfNo').onclick=()=>d.close();
- $('#nfOK').onclick=()=>{if(REC)REC.stop();const x=$('#nfX').value.trim(),L1=$('#nfT').value==='LDR',q=L1?[...document.querySelectorAll('#nfQs .qb')].map(b=>({q:b.querySelector('.qn').value.trim(),p:b.querySelector('.qp').value.trim(),s:b.querySelector('.qs').value.trim()})).filter(o=>o.q||o.p||o.s):[];if(!x&&!q.length)return alert(L1?'Add at least one question (number, page or summary), or write a note.':'Write something on the note.');
+ $('#nfOK').onclick=()=>{if(REC)REC.stop();const x=$('#nfX').value.trim(),L1=$('#nfT').value==='LDR',q=L1?[...document.querySelectorAll('#nfQs .qb')].map(b=>({q:b.querySelector('.qn').value.trim(),p:b.querySelector('.qp').value.trim(),s:b.querySelector('.qs').value.trim(),r:b.querySelector('.qr').value})).filter(o=>o.q||o.p||o.s):[];if(!x&&!q.length)return alert(L1?'Add at least one question (number, page or summary), or write a note.':'Write something on the note.');
   const v={s:$('#nfS').value,i:+$('#nfC').value,t:$('#nfT').value,x,q};
   if(n){Object.assign(n,v);delete n.qn;delete n.qp;delete n.qs}else S.notes.push({id:uid(),...v,c:Date.now(),d:0,sid:(S.active&&S.active.s===v.s&&S.active.i===v.i)?'':''});
   save();d.close();render()}}
@@ -721,7 +722,7 @@ function openOut(){
  d.showModal();$('#oC').onclick=()=>d.close();
  $('#oS').onclick=()=>{const m=+$('#oM').value||0;const sid=uid();if(m>0)S.sessions.push({id:sid,s:a.s,i:a.i,a:a.a,n:$('#oN').value.trim(),st:a.st,en:a.st+m*6e4});const nx=$('#oX').value.trim();if(nx)S.notes.push({id:uid(),s:a.s,i:a.i,t:$('#oT').value,x:nx,c:Date.now(),d:0,sid:m>0?sid:''});
   if($('#oD').checked&&!$('#oD').disabled){const p=S.progress[pk(a.s,a.i)]=S.progress[pk(a.s,a.i)]||{};p[PK[j]]=1}
-  S.active=null;save();d.close();render();if(!FH)dlBackup()}}
+  S.active=null;save();d.close();render();if(!FH&&!(AUTH&&AUTH.google))dlBackup()}}
 document.addEventListener('change',e=>{const t=e.target;if(t.id==='pS'||t.id==='pC'||t.id==='pA')pTouched=true;
  if(t.id==='pS'){pS=t.value;pC=0;render()}
  else if(t.id==='pC'){pC=+t.value;const b=$('#pNotes');if(b)b.innerHTML=chNotes(pS,pC)}else if(t.id==='pA')pA=t.value;
