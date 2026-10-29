@@ -759,7 +759,7 @@ async function dWrite(id,txt){
  const b='ca'+Date.now(),body='--'+b+'\r\nContent-Type: application/json\r\n\r\n'+JSON.stringify({name:DNAME,parents:['appDataFolder']})+'\r\n--'+b+'\r\nContent-Type: application/json\r\n\r\n'+txt+'\r\n--'+b+'--';
  const r=await gf('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+b},body});return(await r.json()).id}
 const gSig=x=>[...(x.sessions||[]).map(v=>'s'+v.id),...(x.notes||[]).map(v=>'n'+v.id),...(x.del||[]).map(v=>'d'+v),...Object.keys(x.progress||{}).flatMap(k=>Object.keys(x.progress[k]).filter(f=>x.progress[k][f]).map(f=>'p'+k+f))].sort().join();
-async function gSync(){if(!AUTH||!AUTH.google||!USER)return;if(GBUSY){GDIRTY=true;return}GBUSY=true;
+async function gSync(){if(!AUTH||!AUTH.google||!USER)return;if(!navigator.onLine){syncMsg('📴 offline — saved on this device, will sync automatically when online');ubar();return}if(GBUSY){GDIRTY=true;return}GBUSY=true;
  try{do{GDIRTY=false;
   if(!GTOK){try{const o=JSON.parse(sessionStorage.getItem('caPlanner.gtok')||'null');if(o&&o.u===USER&&o.e>Date.now()){GTOK=o.t;GEXP=o.e}}catch(x){}}
   if(!GTOK||Date.now()>=GEXP){try{await gToken(false,USER)}catch(e){GNEED=true;gArm();syncMsg('☁ tap “Reconnect Google” to sync');ubar();GBUSY=false;return}}
@@ -770,7 +770,7 @@ async function gSync(){if(!AUTH||!AUTH.google||!USER)return;if(GBUSY){GDIRTY=tru
   GLW=S.savedAt||0;GNEED=false;
   if(ch){try{localStorage.setItem(ukey(USER),JSON.stringify(S))}catch(x){}uiRefresh()}
   syncMsg('☁ synced '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));ubar();
- }while(GDIRTY)}catch(e){syncMsg('⚠ Google Drive: '+(e.message||e));if(/expired/.test(e.message||''))GNEED=true;ubar()}
+ }while(GDIRTY)}catch(e){if(!navigator.onLine||e instanceof TypeError){syncMsg('📴 offline — saved on this device, will sync automatically when online')}else{syncMsg('⚠ Google Drive: '+(e.message||e));if(/expired/.test(e.message||''))GNEED=true}ubar()}
  GBUSY=false}
 let gArmed=false;
 function gArm(){if(gArmed)return;gArmed=true;const h=e=>{if(e.target.closest&&e.target.closest('[data-act="gre"]'))return;document.removeEventListener('click',h,true);gArmed=false;if(!GNEED||!USER)return;gToken(false,USER).then(()=>{GNEED=false;gSync()}).catch(()=>{})};document.addEventListener('click',h,true)}
@@ -795,6 +795,12 @@ async function gLogin(){
 $('#aG').onclick=gLogin;
 document.addEventListener('change',e=>{if(e.target.id==='sG'||e.target.id==='aCid')localStorage.setItem('caPlanner.gcid',e.target.value.trim())});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&AUTH&&AUTH.google&&!GNEED)gSync()});
+/* offline / online: keep working from the device, sync by itself when the connection returns */
+window.addEventListener('offline',()=>{if(AUTH&&AUTH.google&&USER){syncMsg('📴 offline — saved on this device, will sync automatically when online');ubar()}});
+window.addEventListener('online',()=>{if(!(AUTH&&AUTH.google&&USER))return;
+ if(!gisReady()){const sc=document.createElement('script');sc.src='https://accounts.google.com/gsi/client';sc.onload=()=>gSync();document.head.appendChild(sc)}else gSync()});
+/* installable offline copy (needs sw.js next to index.html, served over https) */
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 setInterval(()=>{if(AUTH&&AUTH.google&&USER&&!GNEED&&!document.hidden&&GTOK&&Date.now()<GEXP)gSync()},30000);
 {const kp=localStorage.getItem(KP);if(kp&&users()[kp])autoLogin(kp);else showAuth()}
 </script>
