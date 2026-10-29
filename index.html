@@ -612,10 +612,10 @@ const NT=['Note','Pending','Doubt','Important','LDR'],NC={Note:'#fff1a8',Pending
 const ldrList=n=>Array.isArray(n.q)?n.q:((n.qn||n.qp||n.qs)?[{q:n.qn||'',p:n.qp||'',s:n.qs||''}]:[]);
 const PRI=['High','Medium','Low'],PI={High:'🔴',Medium:'🟡',Low:'🟢'},PR=o=>{const k=PRI.indexOf(o.r);return k<0?3:k};
 const ldrHead=o=>[o.r?'['+o.r+']':'',o.q?'Q. '+o.q:'',o.p?'p. '+o.p:''].filter(Boolean).join(' · ');
-const rvKeys=()=>PK.filter(k=>/^r\d+$/.test(k)||k==='l'),rvLbl=k=>k==='l'?'LDR':'R'+k.slice(1);
+const rvKeys=()=>PK.slice(),rvLbl=k=>k==='s'?'Study':k==='p'?'Practice':k==='l'?'LDR':'R'+k.slice(1),rvFull=k=>k==='s'?'Study':k==='p'?'Practice':k==='l'?'Last Day Revision':'Revision '+k.slice(1);
 const rvTxt=o=>{const a=rvKeys().filter(k=>o.rv&&o.rv[k]).map(rvLbl);return a.length?'(done in '+a.join('/')+')':''};
 const ldrAll=n=>ldrList(n).map(o=>[ldrHead(o),o.s,rvTxt(o)].filter(Boolean).join(': ')).join(' | ');
-const ldrHtml=n=>ldrList(n).map((o,x)=>({o,x})).sort((a,b)=>PR(a.o)-PR(b.o)).map(({o,x})=>`<div style="margin-top:3px"><b>${o.r?PI[o.r]+' ':''}${esc(ldrHead({q:o.q,p:o.p})||'Question')}</b>${o.s?'<div style="opacity:.9">'+esc(o.s)+'</div>':''}<div>${rvKeys().map(k=>`<span class="rvc ${o.rv&&o.rv[k]?'on':''}" data-qrev="${n.id}|${x}|${k}" title="Tap to mark done / not done in ${k==='l'?'Last Day Revision':'Revision '+k.slice(1)}">${o.rv&&o.rv[k]?'✓ ':''}${rvLbl(k)}</span>`).join('')}</div></div>`).join('');
+const ldrHtml=n=>ldrList(n).map((o,x)=>({o,x})).sort((a,b)=>PR(a.o)-PR(b.o)).map(({o,x})=>`<div style="margin-top:3px"><b>${o.r?PI[o.r]+' ':''}${esc(ldrHead({q:o.q,p:o.p})||'Question')}</b>${o.s?'<div style="opacity:.9">'+esc(o.s)+'</div>':''}<div>${rvKeys().map(k=>`<span class="rvc ${o.rv&&o.rv[k]?'on':''}" data-qrev="${n.id}|${x}|${k}" title="Tap to mark done / not done in ${rvFull(k)}">${o.rv&&o.rv[k]?'✓ ':''}${rvLbl(k)}</span>`).join('')}</div></div>`).join('');
 /* voice typing (Web Speech API) */
 let REC=null,vLang='en-IN';
 function micToggle(btn){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -633,7 +633,7 @@ function addQ(v){v=v||{};const d=document.createElement('div');d.className='qb';
  d.innerHTML=`<div style="display:flex;align-items:center;gap:6px"><b class="qh"></b><span style="flex:1"></span><button type="button" class="btn ghost sm qx" title="Remove this question">✕</button></div>
  <div style="display:flex;gap:8px"><div style="flex:1"><label class="f">QUESTION NO.</label><input class="qn" autocomplete="off" placeholder="e.g. 7"></div><div style="flex:1"><label class="f">PAGE NO.</label><input class="qp" autocomplete="off" placeholder="e.g. 45"></div><div style="flex:1"><label class="f">PRIORITY</label><select class="qr">${PRI.map(k=>`<option value="${k}">${PI[k]} ${k}</option>`).join('')}</select></div></div>
  <label class="f">SUMMARY — what it deals with / adjustments</label>${micField('<textarea class="qs" rows="3" placeholder="e.g. Turnover changed to 3 Cr; ITC reversal under Rule 42 added; RCM on GTA"></textarea>')}
- <label class="f">DONE IN (revision tracker)</label><div class="qd" style="display:flex;gap:12px;flex-wrap:wrap;font-size:13px">${rvKeys().map(k=>`<label style="display:flex;gap:4px;align-items:center"><input type="checkbox" data-k="${k}" style="width:auto" ${v.rv&&v.rv[k]?'checked':''}>${k==='l'?'Last Day Revision':'Revision '+k.slice(1)}</label>`).join('')}</div>`;
+ <label class="f">DONE IN (revision tracker)</label><div class="qd" style="display:flex;gap:12px;flex-wrap:wrap;font-size:13px">${rvKeys().map(k=>`<label style="display:flex;gap:4px;align-items:center"><input type="checkbox" data-k="${k}" style="width:auto" ${v.rv&&v.rv[k]?'checked':''}>${rvFull(k)}</label>`).join('')}</div>`;
  d.querySelector('.qr').value=PRI.includes(v.r)?v.r:'Medium';d.querySelector('.qn').value=v.q||'';d.querySelector('.qp').value=v.p||'';d.querySelector('.qs').value=v.s||'';
  $('#nfQs').appendChild(d);qRenum()}
 document.addEventListener('click',e=>{const m=e.target.closest('.mic');if(m){e.preventDefault();micToggle(m);return}
