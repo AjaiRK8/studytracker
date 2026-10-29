@@ -560,13 +560,20 @@ function heat(m){const tg=+S.set.target||4;const end=new Date();end.setDate(end.
 function subBars(){const t=hoursOf(()=>true)||1;const mx=Math.max(...ORDER.map(s=>hoursOf(x=>x.s===s)),.01);return ORDER.map(s=>{const h=hoursOf(x=>x.s===s);return`<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:13px"><span>${META[s].n}</span><span class="mono">${fh(h)}</span></div><div class="bar"><i style="width:${h/mx*100}%;background:${META[s].c}"></i></div></div>`}).join('')}
 function recent(n){const r=[...S.sessions].sort((a,b)=>b.st-a.st).slice(0,n);if(!r.length)return'<small>No sessions yet — punch in to start.</small>';return'<table>'+r.map(x=>{const c=L[x.s][x.i];return`<tr><td class="mono">${dk(x.st)}</td><td><b style="color:${META[x.s].c}">${x.s}</b> ${esc(c?c.t:'')}<br><small>${esc(x.a)}${x.n?' · '+esc(x.n):''}</small></td><td class="mono">${fh(hrs(x))}</td></tr>`}).join('')+'</table>'}
 
+function qTodo(a){const k=PK[ACTS.indexOf(a.a)];if(!k)return'';
+ const it=[];S.notes.filter(n=>n.s===a.s&&n.i===a.i&&n.t==='LDR').forEach(n=>ldrList(n).forEach((o,x)=>it.push({n,o,x})));if(!it.length)return'';
+ const pend=it.filter(z=>!(z.o.rv&&z.o.rv[k])).sort((u,v)=>PR(u.o)-PR(v.o)),dn=it.filter(z=>z.o.rv&&z.o.rv[k]);
+ const row=(z,d)=>`<label style="display:flex;gap:8px;align-items:flex-start;padding:7px 9px;border-radius:4px;margin-top:5px;background:${NC.LDR};color:#2a2415;font-size:13px;cursor:pointer;${d?'opacity:.6':''}"><input type="checkbox" data-qdone="${z.n.id}|${z.x}|${k}" ${d?'checked':''} style="width:auto;margin-top:3px"><span style="flex:1;word-break:break-word">${z.o.r?PI[z.o.r]+' ':''}<b>${esc(ldrHead({q:z.o.q,p:z.o.p})||'Question')}</b>${z.o.s?'<div style="opacity:.85">'+esc(z.o.s)+'</div>':''}</span></label>`;
+ return`<div style="margin-top:14px;border-top:1px dashed var(--line);padding-top:10px"><b>📖 LDR questions for ${esc(a.a)}</b> <small>· ${pend.length} pending · ${dn.length} done</small>`+
+  (pend.length?pend.map(z=>row(z,0)).join(''):'<div style="margin-top:6px;font-size:13px">All LDR questions of this chapter are done for '+esc(a.a)+' 🎉</div>')+
+  (dn.length?`<details style="margin-top:8px"><summary class="hint" style="cursor:pointer">Done in ${esc(a.a)} (${dn.length})</summary>${dn.map(z=>row(z,1)).join('')}</details>`:'')+'</div>'}
 function vPunch(){
  /* default the form to the most recent saved session until the user picks something else */
  if(!pTouched&&!S.active){const l=[...S.sessions].sort((a,b)=>b.st-a.st)[0];if(l&&l.id!==pInit&&L[l.s]&&L[l.s][l.i]){pInit=l.id;pS=l.s;pC=l.i;cS=l.s;if(ACTS.includes(l.a))pA=l.a}}
  const td=(byDay()[dk(Date.now())]||{}).t||0;
  if(S.active){const a=S.active,c=L[a.s][a.i];return`<div class="card live"><h2><span class="dot"></span>You are punched in</h2><div style="color:${META[a.s].c};font-weight:700">${esc(META[a.s].n)}</div><div style="font-size:18px">${esc(c.t)}</div><small>${esc(a.a)}${a.n?' · '+esc(a.n):''} · since ${new Date(a.st).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</small>
  <div class="clock tick">00:00:00</div><button class="btn acc big" data-act="out">PUNCH OUT</button>
- <button class="btn ghost" style="width:100%;margin-top:8px" data-act="addNote" data-s="${a.s}" data-i="${a.i}">＋ Sticky note (pending / doubt / important)</button>${chNotes(a.s,a.i)}<div class="hint">The timer keeps running even if you close this tab. <a href="#" data-act="discard">Discard this session</a></div><div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">${links(a.s,c)}</div></div>`}
+ <button class="btn ghost" style="width:100%;margin-top:8px" data-act="addNote" data-s="${a.s}" data-i="${a.i}">＋ Sticky note (pending / doubt / important)</button>${qTodo(a)}${chNotes(a.s,a.i)}<div class="hint">The timer keeps running even if you close this tab. <a href="#" data-act="discard">Discard this session</a></div><div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">${links(a.s,c)}</div></div>`}
  const opts=ORDER.map(s=>`<option value="${s}" ${s===pS?'selected':''}>${META[s].p} · ${META[s].n}</option>`).join('');
  const ch=L[pS].map(c=>`<option value="${c.i}" ${c.i===pC?'selected':''}>${pad(c.i+1)}. ${esc(c.t)}</option>`).join('');
  const c=L[pS][pC]||L[pS][0];
@@ -743,6 +750,7 @@ function openOut(){
   if($('#oD').checked&&!$('#oD').disabled){const p=S.progress[pk(a.s,a.i)]=S.progress[pk(a.s,a.i)]||{};p[PK[j]]=1}
   S.active=null;save();d.close();render();if(!FH&&!(AUTH&&AUTH.google))dlBackup()}}
 document.addEventListener('change',e=>{const t=e.target;if(t.id==='pS'||t.id==='pC'||t.id==='pA')pTouched=true;
+ if(t.dataset.qdone!==undefined){const[id,x,k]=t.dataset.qdone.split('|'),n=S.notes.find(z=>z.id===id);if(n){if(!Array.isArray(n.q)){n.q=ldrList(n);delete n.qn;delete n.qp;delete n.qs}const o=n.q[+x];if(o){o.rv=o.rv||{};o.rv[k]=t.checked?1:0;save();const y=window.scrollY;render();tickAll();scrollTo(0,y)}}return}
  if(t.id==='pS'){pS=t.value;pC=0;selSave();render()}
  else if(t.id==='pC'){pC=+t.value;selSave();const b=$('#pNotes');if(b)b.innerHTML=chNotes(pS,pC)}else if(t.id==='pA'){pA=t.value;selSave()}
  else if(t.id==='cF'){cF=t.value;render()}
