@@ -471,7 +471,7 @@ async function autoLogin(u){try{AUTH=users()[u];USER=u;const c=[],lo=loadLocal(u
  $('#auth').hidden=true;document.querySelector('.wrap').style.display='';syncMsg(FH?'💾 file linked':PD?'⚠ click “Reconnect save file” to resume file saving':'');save();render();tickAll();prune();if(AUTH&&AUTH.google)gSync()}catch(e){showAuth()}}
 /* --- login / logout --- */
 let amode='in';const am=t=>$('#aM').textContent=t;
-function showAuth(){try{sessionStorage.removeItem('caPlanner.gtok')}catch(x){}GTOK=null;GID=null;GLW=-1;GNEED=false;PD=false;lastW=0;USER=null;AUTH=null;FH=null;DH=null;S=norm();syncTxt='';document.querySelector('.wrap').style.display='none';$('#auth').hidden=false;$('#aP').value='';$('#aU').value=localStorage.getItem(LK)||'';am('');ubar();const ci=$('#aCid');if(ci){ci.value=gcid();ci.closest('details').hidden=!!GCID_DEFAULT}}
+function showAuth(){pTouched=false;pInit='';try{sessionStorage.removeItem('caPlanner.gtok')}catch(x){}GTOK=null;GID=null;GLW=-1;GNEED=false;PD=false;lastW=0;USER=null;AUTH=null;FH=null;DH=null;S=norm();syncTxt='';document.querySelector('.wrap').style.display='none';$('#auth').hidden=false;$('#aP').value='';$('#aU').value=localStorage.getItem(LK)||'';am('');ubar();const ci=$('#aCid');if(ci){ci.value=gcid();ci.closest('details').hidden=!!GCID_DEFAULT}}
 function setMode(m){amode=m;$('#amIn').classList.toggle('on',m==='in');$('#amNew').classList.toggle('on',m==='new');$('#aFw').style.display=m==='in'?'':'none';$('#aGo').textContent=m==='in'?'Sign in':'Create account';$('#aP').autocomplete=m==='in'?'current-password':'new-password';am('')}
 async function doAuth(){
  const u=$('#aU').value.trim().toLowerCase(),p=$('#aP').value,f=$('#aF').files[0],create=amode==='new';
@@ -513,7 +513,7 @@ function streak(m){let n=0,d=new Date();if(!m[dk(d)])d.setDate(d.getDate()-1);wh
 const daysLeft=()=>Math.ceil((new Date(S.set.exam+'T09:00')-new Date())/864e5);
 
 /* ---------- VIEWS ---------- */
-let tab='punch',pS='DT',pC=0,pA='Study',pN='',cS='DT',cQ='',cF='all';
+let pTouched=false,pInit='',tab='punch',pS='DT',pC=0,pA='Study',pN='',cS='DT',cQ='',cF='all';
 const TABS=[['punch','Punch In / Out'],['dash','Dashboard'],['chap','Chapters & Links'],['notes','Sticky Notes'],['log','Session Log'],['set','Settings']];
 function nav(){$('#nav').innerHTML=TABS.map(([k,n])=>`<button class="${tab===k?'on':''}" data-tab="${k}">${n}${k==='punch'&&S.active?' ●':''}${k==='notes'&&S.notes.some(x=>!x.d)?' ('+S.notes.filter(x=>!x.d).length+')':''}</button>`).join('')}
 function render(){if(!USER)return;nav();ubar();warn();const d=daysLeft();$('#dl').textContent=d>0?d:0;$('#main').innerHTML=({dash:vDash,punch:vPunch,chap:vChap,notes:vNotes,log:vLog,set:vSet})[tab]();}
@@ -551,6 +551,8 @@ function subBars(){const t=hoursOf(()=>true)||1;const mx=Math.max(...ORDER.map(s
 function recent(n){const r=[...S.sessions].sort((a,b)=>b.st-a.st).slice(0,n);if(!r.length)return'<small>No sessions yet — punch in to start.</small>';return'<table>'+r.map(x=>{const c=L[x.s][x.i];return`<tr><td class="mono">${dk(x.st)}</td><td><b style="color:${META[x.s].c}">${x.s}</b> ${esc(c?c.t:'')}<br><small>${esc(x.a)}${x.n?' · '+esc(x.n):''}</small></td><td class="mono">${fh(hrs(x))}</td></tr>`}).join('')+'</table>'}
 
 function vPunch(){
+ /* default the form to the most recent saved session until the user picks something else */
+ if(!pTouched&&!S.active){const l=[...S.sessions].sort((a,b)=>b.st-a.st)[0];if(l&&l.id!==pInit&&L[l.s]&&L[l.s][l.i]){pInit=l.id;pS=l.s;pC=l.i;if(ACTS.includes(l.a))pA=l.a}}
  const td=(byDay()[dk(Date.now())]||{}).t||0;
  if(S.active){const a=S.active,c=L[a.s][a.i];return`<div class="card live"><h2><span class="dot"></span>You are punched in</h2><div style="color:${META[a.s].c};font-weight:700">${esc(META[a.s].n)}</div><div style="font-size:18px">${esc(c.t)}</div><small>${esc(a.a)}${a.n?' · '+esc(a.n):''} · since ${new Date(a.st).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</small>
  <div class="clock tick">00:00:00</div><button class="btn acc big" data-act="out">PUNCH OUT</button>
@@ -720,7 +722,7 @@ function openOut(){
  $('#oS').onclick=()=>{const m=+$('#oM').value||0;const sid=uid();if(m>0)S.sessions.push({id:sid,s:a.s,i:a.i,a:a.a,n:$('#oN').value.trim(),st:a.st,en:a.st+m*6e4});const nx=$('#oX').value.trim();if(nx)S.notes.push({id:uid(),s:a.s,i:a.i,t:$('#oT').value,x:nx,c:Date.now(),d:0,sid:m>0?sid:''});
   if($('#oD').checked&&!$('#oD').disabled){const p=S.progress[pk(a.s,a.i)]=S.progress[pk(a.s,a.i)]||{};p[PK[j]]=1}
   S.active=null;save();d.close();render();if(!FH)dlBackup()}}
-document.addEventListener('change',e=>{const t=e.target;
+document.addEventListener('change',e=>{const t=e.target;if(t.id==='pS'||t.id==='pC'||t.id==='pA')pTouched=true;
  if(t.id==='pS'){pS=t.value;pC=0;render()}
  else if(t.id==='pC'){pC=+t.value;const b=$('#pNotes');if(b)b.innerHTML=chNotes(pS,pC)}else if(t.id==='pA')pA=t.value;
  else if(t.id==='cF'){cF=t.value;render()}
