@@ -349,10 +349,13 @@ IBS:[
 };
 const L={};
 ORDER.forEach(s=>{let g='';L[s]=[];RAW[s].forEach(r=>{if(r[0]==='#'){g=r[1];return}L[s].push({i:L[s].length,t:r[0],nb:r[1]||'',pg:r[2],alt:r[3],url:r[4],pdf:r[5],g})})});
+/* user-editable chapters: S.cust[subject] = full replacement list (chapter order = index; progress/notes follow the index) */
+const L0={};ORDER.forEach(s=>L0[s]=L[s].map(c=>({...c})));
+function applyCust(){ORDER.forEach(s=>{const cu=S&&S.cust&&S.cust[s];L[s].length=0;(Array.isArray(cu)&&cu.length?cu:L0[s]).forEach((c,i)=>L[s].push({...c,i}))})}
 
 /* ---------- STATE ---------- */
 const K='caFinalPlanner.v1';
-const DEF={sessions:[],notes:[],del:[],progress:{},active:null,set:{exam:'2027-05-02',target:6,revs:2,base:'',files:{DT:'Study material/DT module.pdf',IDT:'Study material/IDT module.pdf',AUD:'Study material/Audit Module.pdf',FR:'Study material/FR module.pdf',AFM:'Study material/AFM module.pdf'}}};
+const DEF={sessions:[],notes:[],del:[],progress:{},active:null,cust:{},set:{mf:{},noic:{},exam:'2027-05-02',target:6,revs:2,base:'',files:{DT:'Study material/DT module.pdf',IDT:'Study material/IDT module.pdf',AUD:'Study material/Audit Module.pdf',FR:'Study material/FR module.pdf',AFM:'Study material/AFM module.pdf'}}};
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pad=n=>String(n).padStart(2,'0');
@@ -368,7 +371,7 @@ function fixNames(){const o={DT:'DT_module.pdf',IDT:'IDT_module.pdf',AUD:'Audit_
 function mergeS(list){list=list.slice().sort((a,b)=>(b.savedAt||0)-(a.savedAt||0));const base=JSON.parse(JSON.stringify(list[0])),del=new Set(),ss=new Map(),nn=new Map(),pr={};
  list.forEach(x=>(x.del||[]).forEach(i=>del.add(i)));
  list.slice().reverse().forEach(x=>{(x.sessions||[]).forEach(v=>ss.set(v.id,v));(x.notes||[]).forEach(v=>nn.set(v.id,v));for(const k in x.progress||{}){pr[k]=pr[k]||{};for(const f in x.progress[k])pr[k][f]=(pr[k][f]||x.progress[k][f])?1:0}});
- base.sessions=[...ss.values()].filter(v=>!del.has(v.id));base.notes=[...nn.values()].filter(v=>!del.has(v.id));base.progress=pr;base.del=[...del];return base}
+ base.sessions=[...ss.values()].filter(v=>!del.has(v.id));base.notes=[...nn.values()].filter(v=>!del.has(v.id));base.progress=pr;base.del=[...del];base.cust=Object.assign({},...list.slice().reverse().map(x=>x.cust||{}));return base}
 /* --- password hashing (PBKDF2, browser built-in) --- */
 const b64=x=>btoa(String.fromCharCode(...new Uint8Array(x))),unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 async function hashPw(pw,salt,it){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);return b64(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:unb64(salt),iterations:it},k,256))}
@@ -515,7 +518,8 @@ const prog=(s,i)=>S.progress[pk(s,i)]||{};
 /* personal module PDFs are shown only to this Google account; everyone else sees just the official ICAI links */
 const MOD_OWNER='ajai.rk16@gmail.com',modOK=()=>!!(AUTH&&AUTH.google&&USER&&String(USER).toLowerCase()===MOD_OWNER);
 function pdfHref(s,pg){if(!modOK())return null;const f=S.set.files[s];if(!f||pg==null)return null;return(S.set.base||'')+encodeURI(f)+'#page='+pg}
-function links(s,c){let h='';if(c.pdf)(Array.isArray(c.pdf)?c.pdf:[['ICAI chapter PDF',c.pdf]]).forEach(([l,u])=>{h+=`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(l)} ↗</a>`});if(c.url)h+=`<a href="${esc(c.url)}" target="_blank" rel="noopener">Open on ICAI ↗</a>`;const a=pdfHref(s,c.pg);if(a)h+=`<a href="${a}" target="_blank" rel="noopener">Module p.${c.pg} ↗</a>`;if(c.alt){const b=pdfHref(s,c.alt[0]);if(b)h+=`<a href="${b}" target="_blank" rel="noopener">${esc(c.alt[1])} p.${c.alt[0]} ↗</a>`}return h}
+function myLink(s,c){const mf=(S.set.mf||{})[s]||'',hp=c.up!==undefined&&c.up!==null&&c.up!=='';let u=c.u||(hp?mf:'');if(!u||/^\s*javascript:/i.test(u))return'';if(!/^([a-z][a-z0-9+.-]*:|\/)/i.test(u))u=(S.set.base||'')+u;u=u.replace(/ /g,'%20');if(hp&&u.indexOf('#')<0)u+='#page='+encodeURIComponent(c.up);return`<a href="${esc(u)}" target="_blank" rel="noopener">My material${hp?' p.'+esc(c.up):''} ↗</a>`}
+function links(s,c){let h=myLink(s,c);const hideIC=S.set.noic&&S.set.noic[s];if(!hideIC&&c.pdf)(Array.isArray(c.pdf)?c.pdf:[['ICAI chapter PDF',c.pdf]]).forEach(([l,u])=>{h+=`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(l)} ↗</a>`});if(!hideIC&&c.url)h+=`<a href="${esc(c.url)}" target="_blank" rel="noopener">Open on ICAI ↗</a>`;const a=pdfHref(s,c.pg);if(a)h+=`<a href="${a}" target="_blank" rel="noopener">Module p.${c.pg} ↗</a>`;if(c.alt){const b=pdfHref(s,c.alt[0]);if(b)h+=`<a href="${b}" target="_blank" rel="noopener">${esc(c.alt[1])} p.${c.alt[0]} ↗</a>`}return h}
 function hoursOf(f){return S.sessions.filter(f).reduce((a,s)=>a+hrs(s),0)}
 function byDay(){const m={};S.sessions.forEach(s=>{const k=dk(s.st);(m[k]=m[k]||{t:0,by:{}});const h=hrs(s);m[k].t+=h;m[k].by[s.s]=(m[k].by[s.s]||0)+h});return m}
 function streak(m){let n=0,d=new Date();if(!m[dk(d)])d.setDate(d.getDate()-1);while(m[dk(d)]){n++;d.setDate(d.getDate()-1)}return n}
@@ -528,7 +532,7 @@ function nav(){$('#nav').innerHTML=TABS.map(([k,n])=>`<button class="${tab===k?'
 const SELK=()=>'caPlanner.sel.'+USER;
 function selSave(){try{localStorage.setItem(SELK(),JSON.stringify({pS,pC,pA,cS}))}catch(e){}}
 function selLoad(){try{const o=JSON.parse(localStorage.getItem(SELK())||'null');if(!o)return false;if(L[o.pS]&&L[o.pS][o.pC]){pS=o.pS;pC=o.pC;if(ACTS.includes(o.pA))pA=o.pA}if(L[o.cS])cS=o.cS;return true}catch(e){return false}}
-function render(){if(!USER)return;buildActs();if(selUser!==USER){selUser=USER;if(selLoad())pTouched=true}nav();ubar();warn();const d=daysLeft();$('#dl').textContent=d>0?d:0;$('#main').innerHTML=({dash:vDash,punch:vPunch,chap:vChap,notes:vNotes,log:vLog,set:vSet})[tab]();}
+function render(){if(!USER)return;applyCust();buildActs();if(selUser!==USER){selUser=USER;if(selLoad())pTouched=true}nav();ubar();warn();const d=daysLeft();$('#dl').textContent=d>0?d:0;$('#main').innerHTML=({dash:vDash,punch:vPunch,chap:vChap,notes:vNotes,log:vLog,set:vSet})[tab]();}
 
 function vDash(){
  const m=byDay(),tod=dk(Date.now()),tot=hoursOf(()=>true),td=(m[tod]||{}).t||0;
@@ -623,12 +627,33 @@ function vLog(){
  <div style="margin-top:12px"><button class="btn" data-act="addManual">Add session</button></div></div>
  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><h2 style="margin:0">All sessions</h2>${dataBar("sessions")}</div>${r.length?`<table>${t}</table>`:'<small>Nothing logged yet.</small>'}</div></div>`}
 
+
+/* ---------- MY STUDY MATERIAL (Settings) ---------- */
+let mmS='FR';
+function ensureCust(s){S.cust=S.cust||{};if(!Array.isArray(S.cust[s])||!S.cust[s].length)S.cust[s]=L0[s].map(c=>{const o={...c};delete o.i;return o})}
+function remap(s,fn){const np={};for(const k in S.progress){const[a,b]=k.split(':');if(a!==s){np[k]=S.progress[k];continue}const j=fn(+b);if(j>=0)np[s+':'+j]=S.progress[k]}S.progress=np;
+ const keep=(arr)=>arr.filter(x=>{if(x.s!==s)return true;const j=fn(x.i);if(j<0){(S.del=S.del||[]).push(x.id);return false}x.i=j;return true});
+ S.notes=keep(S.notes);S.sessions=keep(S.sessions);if(S.active&&S.active.s===s){const j=fn(S.active.i);if(j<0)S.active=null;else S.active.i=j}}
+function mmFin(){save();applyCust();if(!L[pS][pC])pC=0;nC=-1;render()}
+function myMat(){const s=mmS,ls=L[s],mf=(S.set.mf||{})[s]||'';
+ const inp=(f,i,v,w,ph)=>`<input data-mm="${f}" data-i="${i}" value="${esc(v)}" placeholder="${ph}" style="${w}">`;
+ const rows=ls.map(c=>`<div style="display:flex;gap:4px;margin-top:4px;align-items:center"><span class="mono" style="width:24px">${c.i+1}</span>${inp('t',c.i,c.t,'flex:3;min-width:150px','Chapter title')}${inp('nb',c.i,c.nb,'flex:1;min-width:60px','Ref')}${inp('u',c.i,c.u||'','flex:3;min-width:150px','Link / PDF (optional)')}${inp('up',c.i,c.up??'','width:64px;flex:none','Page')}<button class="btn ghost sm" data-act="mmUp" data-i="${c.i}">↑</button><button class="btn ghost sm" data-act="mmDn" data-i="${c.i}">↓</button><button class="btn ghost sm" data-act="mmDel" data-i="${c.i}">✕</button></div>`).join('');
+ return`<div class="card" style="grid-column:1/-1"><h2>My study material — chapters & links</h2>
+ <small>Edit chapters/links for any subject. Link = web URL (Drive, etc.) or PDF name relative to this file. Page opens the PDF at that page. Set the subject PDF once, then enter only page numbers. Progress and notes stay with the chapter number.</small>
+ <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center"><select id="mmS" style="width:auto">${ORDER.map(k=>`<option value="${k}" ${k===s?'selected':''}>${k} — ${esc(META[k].n)}</option>`).join('')}</select>
+ <label style="display:flex;gap:5px;align-items:center;font-size:12px;cursor:pointer"><input type="checkbox" id="mmN" style="width:auto" ${S.set.noic&&S.set.noic[s]?'checked':''}>Hide official ICAI links</label></div>
+ <label class="f">${s} — STUDY MATERIAL PDF (URL or file name)</label><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="mmF" style="flex:1;min-width:200px" value="${esc(mf)}" placeholder="e.g. https://…/module.pdf or My FR.pdf"><label class="btn ghost sm" style="cursor:pointer">Pick PDF<input type="file" id="mmPick" accept=".pdf,application/pdf" hidden></label></div>
+ <div style="max-height:440px;overflow:auto;margin-top:10px">${rows}</div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn" data-act="mmAdd">＋ Add chapter</button><button class="btn ghost" data-act="mmReset">Restore default chapters</button></div>
+ <label class="f">PASTE CHAPTER LIST — one per line: Title | page | link (page, link optional)</label><textarea id="mmP" rows="4" style="width:100%"></textarea>
+ <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn ghost" data-act="mmApp">Append list</button><button class="btn ghost" data-act="mmRep">Replace chapters with list</button></div></div>`}
+function mmParse(){return($('#mmP').value||'').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const a=l.split('|').map(x=>x.trim());const o={t:a[0],nb:'',pg:null};if(a[1])o.up=+a[1]||a[1];if(a[2])o.u=a[2];return o})}
 function vSet(){
  const f=ORDER.filter(s=>s!=='IBS').map(s=>`<label class="f">${META[s].n} — PDF file name</label><input data-file="${s}" value="${esc(S.set.files[s])}">`).join('');
  return`<div class="grid two"><div class="card"><h2>Goals</h2><label class="f">EXAM START DATE</label><input type="date" id="sE" value="${S.set.exam}"><small>Set to the date of your first paper once ICAI announces the schedule.</small><label class="f">DAILY TARGET (hours)</label><input type="number" id="sT" step="0.5" min="0" value="${S.set.target}"><label class="f">NUMBER OF REVISIONS</label><input type="number" id="sR" min="1" max="10" step="1" value="${S.set.revs||2}"><small>Adds Revision 3, 4… to the activity list, chapter tracker and LDR question tracking. Existing data is kept if you reduce it. “Last Day Revision” is always included.</small></div>
  ${modOK()?`<div class="card"><h2>Module PDF links</h2><small>Paths are relative to this HTML file (default: Study material folder). Change if yours differ.</small><label class="f">FOLDER PREFIX (optional, e.g. file:///D:/CA/ or ../pdf/)</label><input id="sB" value="${esc(S.set.base)}">${f}</div>`:''}
  <div class="card"><h2>Account · ${esc(USER)}</h2><small>Change your password, or remove this account from this browser.</small><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">${AUTH&&AUTH.google?'<small>Signed in with Google — no password to change.</small>':'<button class="btn" data-act="chpw">Change password</button>'}<button class="btn ghost" data-act="delacc">Delete account</button></div></div>
- <div class="card"><h2>Google Drive sync</h2>${AUTH&&AUTH.google?`<small>Signed in as ${esc(USER)}. Your data is saved to a private app folder in your Google Drive (only this planner can see it). Open the same planner link on your phone, tap “Sign in with Google”, and the same data appears.</small><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="gsync">Sync now</button>${GNEED?'<button class="btn acc" data-act="gre">Reconnect Google</button>':''}</div>`:'<small>Sign out and choose “Sign in with Google” to sync across PC and mobile.</small>'}${GCID_DEFAULT?'':`<label class="f">GOOGLE CLIENT ID</label><input id="sG" value="${esc(gcid())}" placeholder="xxxx.apps.googleusercontent.com">`}</div>
+ ${myMat()}<div class="card"><h2>Google Drive sync</h2>${AUTH&&AUTH.google?`<small>Signed in as ${esc(USER)}. Your data is saved to a private app folder in your Google Drive (only this planner can see it). Open the same planner link on your phone, tap “Sign in with Google”, and the same data appears.</small><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="gsync">Sync now</button>${GNEED?'<button class="btn acc" data-act="gre">Reconnect Google</button>':''}</div>`:'<small>Sign out and choose “Sign in with Google” to sync across PC and mobile.</small>'}${GCID_DEFAULT?'':`<label class="f">GOOGLE CLIENT ID</label><input id="sG" value="${esc(gcid())}" placeholder="xxxx.apps.googleusercontent.com">`}</div>
  <div class="card"><h2>Backup</h2><small>Data is auto-saved on every event in this browser and in your linked file. You can also export manually.</small><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="export">Export backup</button><label class="btn ghost" style="cursor:pointer">Import<input type="file" id="imp" accept=".json" hidden></label><button class="btn ghost" data-act="exportAll">Export all CSVs</button><label class="btn ghost" style="cursor:pointer">Import CSV<input type="file" id="impCsv" accept=".csv,text/csv" multiple hidden></label><button class="btn ghost" data-act="reset">Reset everything</button></div></div></div>`}
 
 /* ---------- STICKY NOTES ---------- */
@@ -736,6 +761,12 @@ document.addEventListener('click',e=>{
  if(a==='addNote')openNote({s:t.dataset.s,i:+t.dataset.i});
  if(a==='addNoteAny')openNote({s:nS!=='all'?nS:ORDER[0],i:nC>=0?nC:0,t:nT!=='all'?nT:'Note'});
  if(a==='clearC'){nC=-1;nCq='';render()}
+ if(a==='mmAdd'){ensureCust(mmS);S.cust[mmS].push({t:'New chapter',nb:'',pg:null});mmFin()}
+ if(a==='mmDel'){const i=+t.dataset.i,s=mmS;if(L[s].length<=1)return alert('At least one chapter is required.');const n=S.sessions.filter(x=>x.s===s&&x.i===i).length+S.notes.filter(x=>x.s===s&&x.i===i).length;if(confirm('Delete chapter '+(i+1)+'? Its progress and '+n+' session(s)/note(s) are removed.')){ensureCust(s);S.cust[s].splice(i,1);remap(s,j=>j===i?-1:j>i?j-1:j);mmFin()}}
+ if(a==='mmUp'||a==='mmDn'){const i=+t.dataset.i,k=a==='mmUp'?i-1:i+1,s=mmS;if(k<0||k>=L[s].length)return;ensureCust(s);const A=S.cust[s];[A[i],A[k]]=[A[k],A[i]];remap(s,j=>j===i?k:j===k?i:j);mmFin()}
+ if(a==='mmReset'){if(confirm('Restore default chapters for '+mmS+'? Progress/notes of extra chapters are removed.')){const s=mmS;delete S.cust[s];remap(s,j=>j<L0[s].length?j:-1);mmFin()}}
+ if(a==='mmApp'){const r=mmParse();if(!r.length)return;ensureCust(mmS);S.cust[mmS].push(...r);mmFin()}
+ if(a==='mmRep'){const r=mmParse();if(!r.length)return;if(confirm('Replace all '+mmS+' chapters with '+r.length+' from the list? Progress/notes stay on the same chapter numbers; those beyond the new count are removed.')){const s=mmS;S.cust=S.cust||{};S.cust[s]=r;remap(s,j=>j<r.length?j:-1);mmFin()}}
  if(a==='goPunch'){tab='punch';render();tickAll()}
  if(a==='in'){S.active={s:pS,i:pC,a:pA,n:$('#pN').value.trim(),st:Date.now()};save();render();tickAll()}
  if(a==='discard'){if(confirm('Discard this running session without saving?')){S.active=null;save();render()}}
@@ -777,6 +808,11 @@ document.addEventListener('change',e=>{const t=e.target;if(t.id==='pS'||t.id==='
  else if(t.id==='qAllT'){S.set.qAll=t.checked?1:0;save();const y=window.scrollY;render();tickAll();scrollTo(0,y)}
  else if(t.id==='mS')fillMC();
  else if(t.dataset.pk){const k=pk(cS,+t.dataset.i);S.progress[k]=S.progress[k]||{};S.progress[k][t.dataset.pk]=t.checked?1:0;save();const y=window.scrollY;render();scrollTo(0,y)}
+ else if(t.id==='mmS'){mmS=t.value;render()}
+ else if(t.id==='mmF'){S.set.mf=S.set.mf||{};S.set.mf[mmS]=t.value.trim();save()}
+ else if(t.id==='mmN'){S.set.noic=S.set.noic||{};S.set.noic[mmS]=t.checked?1:0;save()}
+ else if(t.id==='mmPick'){const f=t.files[0];if(!f)return;S.set.mf=S.set.mf||{};S.set.mf[mmS]=f.name;save();render()}
+ else if(t.dataset.mm){const s=mmS;ensureCust(s);const c=S.cust[s][+t.dataset.i];if(c){let v=t.value.trim();if(t.dataset.mm==='up')v=v===''?'':(+v||v);c[t.dataset.mm]=v;save();applyCust()}}
  else if(t.id==='sE'){S.set.exam=t.value;save();render()}
  else if(t.id==='sT'){S.set.target=+t.value;save()}
  else if(t.id==='sR'){S.set.revs=Math.max(1,Math.min(10,Math.round(+t.value)||2));save();render()}
