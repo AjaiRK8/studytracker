@@ -590,9 +590,9 @@ function vChap(){
  L[cS].forEach(c=>{const p=prog(cS,c.i);if(q&&!c.t.toLowerCase().includes(q))return;if(cF==='pend'&&p.s)return;
   if(c.g!==g){g=c.g;if(g)rows+=`<div class="grp">${esc(g)}</div>`}
   const tm=hoursOf(x=>x.s===cS&&x.i===c.i);
-  rows+=`<div class="row"><span class="no">${pad(c.i+1)}</span><div class="tt">${esc(c.t)}<small>${c.nb?'Notebook p.'+esc(c.nb)+' ':''}${nbadge(cS,c.i)}</small></div><div class="tm mono">${tm?fh(tm):'–'}</div>
+  rows+=`<div class="row"><span class="no">${pad(c.i+1)}</span><div class="tt" data-cexp="${c.i}" style="cursor:pointer" title="Click to expand / collapse"><span style="display:inline-block;width:1.1em;color:var(--mute)">${cOpen.has(cS+':'+c.i)?'▾':'▸'}</span>${esc(c.t)}<small>${c.nb?'Notebook p.'+esc(c.nb)+' ':''}${nbadge(cS,c.i)}</small></div><div class="tm mono">${tm?fh(tm):'–'}</div>
   <div class="chk">${PK.map((k,j)=>`<label title="${ACTS[j]}"><input type="checkbox" data-pk="${k}" data-i="${c.i}" ${p[k]?'checked':''}>${PL(k)}</label>`).join('')}</div>
-  <div class="lk">${links(cS,c)}<a href="#" data-go="${c.i}">▶ punch in</a><a href="#" data-nadd="${c.i}">＋ sticky note</a><a href="#" data-cexp="${c.i}">${cOpen.has(cS+':'+c.i)?'▾ hide':'▸ details'}</a></div></div>${cOpen.has(cS+':'+c.i)?cPanel(cS,c):''}`});
+  <div class="lk">${links(cS,c)}<a href="#" data-go="${c.i}">▶ punch in</a><a href="#" data-nadd="${c.i}">＋ sticky note</a></div></div>${cOpen.has(cS+':'+c.i)?cPanel(cS,c):''}`});
  return`<div class="card"><div class="chips">${chips}</div><div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap"><input id="cQ" style="flex:1;min-width:180px" placeholder="Search chapters…" value="${esc(cQ)}"><select id="cF" style="width:auto"><option value="all">All</option><option value="pend" ${cF==='pend'?'selected':''}>Study pending</option></select>${dataBar("prog")}</div>
  <div class="hint" style="margin:0 0 6px">S = Study done · R1, R2… = Revisions · LDR = Last Day Revision · P = Practice. Module links open the ICAI PDF at that page (PDF page number) — PDFs are expected in the “Study material” folder next to this file.</div>${rows||'<small>No chapters match.</small>'}</div>`}
 
