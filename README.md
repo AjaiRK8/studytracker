@@ -1,2 +1,3 @@
-# tallysoftupdates
-Repository to push updates to software
+# Study Tracker
+Track your study 
+
