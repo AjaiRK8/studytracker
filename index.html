@@ -471,7 +471,7 @@ async function autoLogin(u){try{AUTH=users()[u];USER=u;const c=[],lo=loadLocal(u
  $('#auth').hidden=true;document.querySelector('.wrap').style.display='';syncMsg(FH?'💾 file linked':PD?'⚠ click “Reconnect save file” to resume file saving':'');save();render();tickAll();prune();if(AUTH&&AUTH.google)gSync()}catch(e){showAuth()}}
 /* --- login / logout --- */
 let amode='in';const am=t=>$('#aM').textContent=t;
-function showAuth(){GTOK=null;GID=null;GLW=-1;GNEED=false;PD=false;lastW=0;USER=null;AUTH=null;FH=null;DH=null;S=norm();syncTxt='';document.querySelector('.wrap').style.display='none';$('#auth').hidden=false;$('#aP').value='';$('#aU').value=localStorage.getItem(LK)||'';am('');ubar();const ci=$('#aCid');if(ci){ci.value=gcid();ci.closest('details').hidden=!!GCID_DEFAULT}}
+function showAuth(){try{sessionStorage.removeItem('caPlanner.gtok')}catch(x){}GTOK=null;GID=null;GLW=-1;GNEED=false;PD=false;lastW=0;USER=null;AUTH=null;FH=null;DH=null;S=norm();syncTxt='';document.querySelector('.wrap').style.display='none';$('#auth').hidden=false;$('#aP').value='';$('#aU').value=localStorage.getItem(LK)||'';am('');ubar();const ci=$('#aCid');if(ci){ci.value=gcid();ci.closest('details').hidden=!!GCID_DEFAULT}}
 function setMode(m){amode=m;$('#amIn').classList.toggle('on',m==='in');$('#amNew').classList.toggle('on',m==='new');$('#aFw').style.display=m==='in'?'':'none';$('#aGo').textContent=m==='in'?'Sign in':'Create account';$('#aP').autocomplete=m==='in'?'current-password':'new-password';am('')}
 async function doAuth(){
  const u=$('#aU').value.trim().toLowerCase(),p=$('#aP').value,f=$('#aF').files[0],create=amode==='new';
@@ -746,11 +746,11 @@ function gToken(interactive,hint){return new Promise((res,rej)=>{
  if(!gcid())return rej(new Error('Google Client ID is not set.'));
  if(!gisReady())return rej(new Error('Google sign-in script not loaded — check your internet connection.'));
  const tc=google.accounts.oauth2.initTokenClient({client_id:gcid(),scope:GSC,...(hint?{hint}:{}),prompt:interactive?'select_account':'',
-  callback:r=>{if(r.error||!r.access_token)return rej(new Error(r.error_description||r.error||'Google sign-in failed'));GTOK=r.access_token;GEXP=Date.now()+((+r.expires_in||3600)-90)*1000;GNEED=false;res(GTOK)},
+  callback:r=>{if(r.error||!r.access_token)return rej(new Error(r.error_description||r.error||'Google sign-in failed'));GTOK=r.access_token;GEXP=Date.now()+((+r.expires_in||3600)-90)*1000;GNEED=false;try{sessionStorage.setItem('caPlanner.gtok',JSON.stringify({t:GTOK,e:GEXP,u:USER||''}))}catch(x){}res(GTOK)},
   error_callback:e=>rej(new Error(e&&e.type==='popup_closed'?'The Google sign-in window was closed.':'Google sign-in failed ('+((e&&e.type)||'unknown')+'). Allow pop-ups for this page and try again.'))});
  tc.requestAccessToken()})}
 async function gf(url,o){o=o||{};o.headers={...(o.headers||{}),Authorization:'Bearer '+GTOK};const r=await fetch(url,o);
- if(r.status===401){GTOK=null;GEXP=0;throw new Error('Google session expired')}
+ if(r.status===401){GTOK=null;GEXP=0;try{sessionStorage.removeItem('caPlanner.gtok')}catch(x){}throw new Error('Google session expired')}
  if(!r.ok){let m='';try{m=(await r.json()).error.message}catch(e){}throw new Error('Drive error '+r.status+(m?' — '+m:''))}return r}
 async function dFind(){const r=await gf('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id)&q='+encodeURIComponent("name='"+DNAME+"'"));const j=await r.json();return j.files&&j.files[0]?j.files[0].id:null}
 async function dRead(id){return(await gf('https://www.googleapis.com/drive/v3/files/'+id+'?alt=media')).json()}
@@ -761,7 +761,8 @@ async function dWrite(id,txt){
 const gSig=x=>[...(x.sessions||[]).map(v=>'s'+v.id),...(x.notes||[]).map(v=>'n'+v.id),...(x.del||[]).map(v=>'d'+v),...Object.keys(x.progress||{}).flatMap(k=>Object.keys(x.progress[k]).filter(f=>x.progress[k][f]).map(f=>'p'+k+f))].sort().join();
 async function gSync(){if(!AUTH||!AUTH.google||!USER)return;if(GBUSY){GDIRTY=true;return}GBUSY=true;
  try{do{GDIRTY=false;
-  if(!GTOK||Date.now()>=GEXP){try{await gToken(false,USER)}catch(e){GNEED=true;syncMsg('☁ tap “Reconnect Google” to sync');ubar();GBUSY=false;return}}
+  if(!GTOK){try{const o=JSON.parse(sessionStorage.getItem('caPlanner.gtok')||'null');if(o&&o.u===USER&&o.e>Date.now()){GTOK=o.t;GEXP=o.e}}catch(x){}}
+  if(!GTOK||Date.now()>=GEXP){try{await gToken(false,USER)}catch(e){GNEED=true;gArm();syncMsg('☁ tap “Reconnect Google” to sync');ubar();GBUSY=false;return}}
   if(!GID)GID=await dFind();let rs=-2,ch=false;
   if(GID){const e=await dRead(GID);if(e&&e.data){rs=e.data.savedAt||0;
    if(rs!==GLW){const b=JSON.stringify(S),rd=norm(e.data);S=mergeS([S,rd]);fixNames();ch=b!==JSON.stringify(S);if(gSig(S)!==gSig(rd)){S.savedAt=Date.now();ch=true}}}}
@@ -771,6 +772,8 @@ async function gSync(){if(!AUTH||!AUTH.google||!USER)return;if(GBUSY){GDIRTY=tru
   syncMsg('☁ synced '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));ubar();
  }while(GDIRTY)}catch(e){syncMsg('⚠ Google Drive: '+(e.message||e));if(/expired/.test(e.message||''))GNEED=true;ubar()}
  GBUSY=false}
+let gArmed=false;
+function gArm(){if(gArmed)return;gArmed=true;const h=e=>{if(e.target.closest&&e.target.closest('[data-act="gre"]'))return;document.removeEventListener('click',h,true);gArmed=false;if(!GNEED||!USER)return;gToken(false,USER).then(()=>{GNEED=false;gSync()}).catch(()=>{})};document.addEventListener('click',h,true)}
 async function gReconnect(){try{await gToken(true,USER)}catch(e){return alert(e.message)}GNEED=false;gSync()}
 async function gLogin(){
  if(location.protocol==='file:')return am('Google sign-in only works when the planner is opened from a web address (e.g. GitHub Pages), not from a file on your computer.');
