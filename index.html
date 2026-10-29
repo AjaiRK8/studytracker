@@ -564,7 +564,8 @@ function vPunch(){
  <label class="f">ACTIVITY</label><select id="pA">${ACTS.map(a=>`<option ${a===pA?'selected':''}>${a}</option>`).join('')}</select>
  <label class="f">NOTE (optional)</label><input id="pN" value="${esc(pN)}" placeholder="e.g. RTP questions, exam-oriented notes">
  <div style="margin-top:14px"><button class="btn acc big" data-act="in">PUNCH IN</button></div>
- <div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">${links(pS,c)}</div></div>
+ <div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">${links(pS,c)}</div>
+ <button class="btn ghost" style="width:100%;margin-top:10px" data-act="addNote" data-s="${pS}" data-i="${c.i}">＋ Sticky note for this chapter</button><div id="pNotes">${chNotes(pS,c.i)}</div></div>
  <div class="card"><h2>Today</h2><div class="clock" style="text-align:left">${fh(td)}</div><small>Target ${S.set.target}h · ${td>=S.set.target?'target reached 🎯':fh(Math.max(0,S.set.target-td))+' to go'}</small><h2 style="margin-top:18px">Recent</h2>${recent(5)}</div></div>`}
 
 function vChap(){
@@ -632,7 +633,9 @@ function nSug(){const w=nWords(nCq);if(nC>=0||!w.length)return'';const r=[];(nS=
  if(!r.length)return'<div class="nsug"><div style="padding:8px 10px;opacity:.6;font-size:13px">No matching chapter</div></div>';
  return'<div class="nsug">'+r.slice(0,12).map(([s,c])=>`<a href="#" data-npick="${s}:${c.i}"><b style="color:${META[s].c}">${s}</b> ${pad(c.i+1)}. ${esc(c.t)}</a>`).join('')+(r.length>12?`<div style="padding:6px 10px;opacity:.6;font-size:12px">+${r.length-12} more — keep typing</div>`:'')+'</div>'}
 function nbadge(s,i){const a=S.notes.filter(n=>n.s===s&&n.i===i&&!n.d);if(!a.length)return'';return NT.filter(k=>a.some(n=>n.t===k)).map(k=>`<a href="#" class="nb" style="background:${NC[k]}" data-nview="${s}:${i}" title="${k}">${NI[k]} ${a.filter(n=>n.t===k).length}</a>`).join('')}
-function chNotes(s,i){const a=S.notes.filter(n=>n.s===s&&n.i===i&&!n.d);if(!a.length)return'';return'<div style="margin-top:12px"><small>Open notes for this chapter</small>'+a.map(n=>`<div style="background:${NC[n.t]};color:#2a2415;border-radius:4px;padding:6px 8px;margin-top:5px;font-size:13px">${NI[n.t]} ${esc((n.x||ldrAll(n)).slice(0,140))}${n.t==='LDR'?'<br><small>'+esc(ldrAll(n))+'</small>':''}</div>`).join('')+'</div>'}
+function chNotes(s,i){const a=S.notes.filter(n=>n.s===s&&n.i===i).sort((x,y)=>(x.d-y.d)||(y.c-x.c));
+ const bt='background:#0000001a;border:0;border-radius:4px;padding:3px 8px;cursor:pointer;color:#2a2415;font:600 11px var(--fm)';
+ return`<div id="chN" style="margin-top:12px"><small>Sticky notes for this chapter (${a.length})</small>`+(a.length?a.map(n=>`<div style="background:${NC[n.t]};color:#2a2415;border-radius:4px;padding:8px 10px;margin-top:6px;font-size:13px;${n.d?'opacity:.6':''}"><div style="font:600 11px var(--fm);margin-bottom:3px">${NI[n.t]} ${n.t}${n.d?' · done':''} · ${dk(n.c)}</div><div style="white-space:pre-wrap;word-break:break-word;${n.d?'text-decoration:line-through':''}">${esc(n.x)}</div>${n.t==='LDR'&&ldrList(n).length?`<div style="border-top:1px dashed #0004;margin-top:5px;padding-top:5px">${ldrHtml(n)}</div>`:''}<div style="display:flex;gap:6px;margin-top:6px"><button type="button" data-nact="edit" data-nid="${n.id}" style="${bt}">✎ Edit${n.t==='LDR'?' / add LDR questions':''}</button><button type="button" data-nact="done" data-nid="${n.id}" style="${bt}">${n.d?'↺ Reopen':'✓ Done'}</button></div></div>`).join(''):'<div style="opacity:.7;font-size:13px;margin-top:4px">No sticky notes for this chapter yet.</div>')+'</div>'}
 function pendList(){const a=S.notes.filter(n=>!n.d&&n.t!=='Note').sort((x,y)=>y.c-x.c).slice(0,8);if(!a.length)return'<small>Nothing pending. Add sticky notes from the punch-out box or the Chapters tab.</small>';
  return'<table>'+a.map(n=>`<tr><td>${NI[n.t]}</td><td><b style="color:${META[n.s].c}">${n.s}</b> ${esc(L[n.s][n.i].t)}<br><small>${esc((n.x||ldrAll(n)).slice(0,120))}</small></td><td><button class="btn ghost sm" data-nact="done" data-nid="${n.id}">✓ Done</button></td></tr>`).join('')+'</table>'}
 function vNotes(){
@@ -719,7 +722,7 @@ function openOut(){
   S.active=null;save();d.close();render();if(!FH)dlBackup()}}
 document.addEventListener('change',e=>{const t=e.target;
  if(t.id==='pS'){pS=t.value;pC=0;render()}
- else if(t.id==='pC')pC=+t.value;else if(t.id==='pA')pA=t.value;
+ else if(t.id==='pC'){pC=+t.value;const b=$('#pNotes');if(b)b.innerHTML=chNotes(pS,pC)}else if(t.id==='pA')pA=t.value;
  else if(t.id==='cF'){cF=t.value;render()}
  else if(t.id==='nvS'){nS=t.value;nC=-1;nCq='';render()}
  else if(t.id==='nvSt'){nSt=t.value;render()}
