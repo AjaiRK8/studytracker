@@ -82,6 +82,7 @@ td,th{padding:7px 6px;border-bottom:1px dashed var(--line);text-align:left;verti
 .nsug{position:absolute;left:0;right:0;top:100%;z-index:30;background:var(--card,#fff);color:var(--ink,#222);border:1px solid #8884;border-radius:8px;box-shadow:0 8px 24px #0004;max-height:300px;overflow:auto;margin-top:2px}.nsug a{display:block;padding:8px 10px;text-decoration:none;color:inherit;font-size:13px;border-bottom:1px solid #8882}.nsug a:hover{background:#8883}
 .notes{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;padding:6px}
 .rvc{display:inline-block;border:1px solid #0006;border-radius:10px;padding:0 7px;margin:3px 4px 0 0;font:600 10px var(--fm);cursor:pointer;opacity:.55;user-select:none}.rvc.on{background:#2e7d5b;color:#fff;border-color:#2e7d5b;opacity:1}
+.cpanel{margin:0 0 8px 34px;padding:8px 12px;background:var(--card);border:1px solid var(--line);border-radius:6px}.cpanel table{width:100%;font-size:13px}
 .nb{display:inline-block;background:#ffe27a;color:#2a2415;border-radius:4px;padding:0 6px;margin-left:4px;font:600 11px var(--fm)}
 dialog{border:2px solid var(--ink);border-radius:12px;background:var(--card);color:var(--ink);max-width:420px;width:92%}
 dialog::backdrop{background:#0008}
@@ -472,7 +473,7 @@ async function autoLogin(u){try{AUTH=users()[u];USER=u;const c=[],lo=loadLocal(u
  $('#auth').hidden=true;document.querySelector('.wrap').style.display='';syncMsg(FH?'💾 file linked':PD?'⚠ click “Reconnect save file” to resume file saving':'');save();render();tickAll();prune();if(AUTH&&AUTH.google)gSync()}catch(e){showAuth()}}
 /* --- login / logout --- */
 let amode='in';const am=t=>$('#aM').textContent=t;
-function showAuth(){pTouched=false;pInit='';try{sessionStorage.removeItem('caPlanner.gtok')}catch(x){}GTOK=null;GID=null;GLW=-1;GNEED=false;PD=false;lastW=0;USER=null;AUTH=null;FH=null;DH=null;S=norm();syncTxt='';document.querySelector('.wrap').style.display='none';$('#auth').hidden=false;$('#aP').value='';$('#aU').value=localStorage.getItem(LK)||'';am('');ubar();const ci=$('#aCid');if(ci){ci.value=gcid();ci.closest('details').hidden=!!GCID_DEFAULT}}
+function showAuth(){selUser='';pTouched=false;pInit='';try{sessionStorage.removeItem('caPlanner.gtok')}catch(x){}GTOK=null;GID=null;GLW=-1;GNEED=false;PD=false;lastW=0;USER=null;AUTH=null;FH=null;DH=null;S=norm();syncTxt='';document.querySelector('.wrap').style.display='none';$('#auth').hidden=false;$('#aP').value='';$('#aU').value=localStorage.getItem(LK)||'';am('');ubar();const ci=$('#aCid');if(ci){ci.value=gcid();ci.closest('details').hidden=!!GCID_DEFAULT}}
 function setMode(m){amode=m;$('#amIn').classList.toggle('on',m==='in');$('#amNew').classList.toggle('on',m==='new');$('#aFw').style.display=m==='in'?'':'none';$('#aGo').textContent=m==='in'?'Sign in':'Create account';$('#aP').autocomplete=m==='in'?'current-password':'new-password';am('')}
 async function doAuth(){
  const u=$('#aU').value.trim().toLowerCase(),p=$('#aP').value,f=$('#aF').files[0],create=amode==='new';
@@ -519,10 +520,13 @@ function streak(m){let n=0,d=new Date();if(!m[dk(d)])d.setDate(d.getDate()-1);wh
 const daysLeft=()=>Math.ceil((new Date(S.set.exam+'T09:00')-new Date())/864e5);
 
 /* ---------- VIEWS ---------- */
-let pTouched=false,pInit='',tab='punch',pS='DT',pC=0,pA='Study',pN='',cS='DT',cQ='',cF='all';
+const cOpen=new Set(),cLog=new Set();let selUser='',pTouched=false,pInit='',tab='punch',pS='DT',pC=0,pA='Study',pN='',cS='DT',cQ='',cF='all';
 const TABS=[['punch','Punch In / Out'],['dash','Dashboard'],['chap','Chapters & Links'],['notes','Sticky Notes'],['log','Session Log'],['set','Settings']];
 function nav(){$('#nav').innerHTML=TABS.map(([k,n])=>`<button class="${tab===k?'on':''}" data-tab="${k}">${n}${k==='punch'&&S.active?' ●':''}${k==='notes'&&S.notes.some(x=>!x.d)?' ('+S.notes.filter(x=>!x.d).length+')':''}</button>`).join('')}
-function render(){if(!USER)return;buildActs();nav();ubar();warn();const d=daysLeft();$('#dl').textContent=d>0?d:0;$('#main').innerHTML=({dash:vDash,punch:vPunch,chap:vChap,notes:vNotes,log:vLog,set:vSet})[tab]();}
+const SELK=()=>'caPlanner.sel.'+USER;
+function selSave(){try{localStorage.setItem(SELK(),JSON.stringify({pS,pC,pA,cS}))}catch(e){}}
+function selLoad(){try{const o=JSON.parse(localStorage.getItem(SELK())||'null');if(!o)return false;if(L[o.pS]&&L[o.pS][o.pC]){pS=o.pS;pC=o.pC;if(ACTS.includes(o.pA))pA=o.pA}if(L[o.cS])cS=o.cS;return true}catch(e){return false}}
+function render(){if(!USER)return;buildActs();if(selUser!==USER){selUser=USER;if(selLoad())pTouched=true}nav();ubar();warn();const d=daysLeft();$('#dl').textContent=d>0?d:0;$('#main').innerHTML=({dash:vDash,punch:vPunch,chap:vChap,notes:vNotes,log:vLog,set:vSet})[tab]();}
 
 function vDash(){
  const m=byDay(),tod=dk(Date.now()),tot=hoursOf(()=>true),td=(m[tod]||{}).t||0;
@@ -558,7 +562,7 @@ function recent(n){const r=[...S.sessions].sort((a,b)=>b.st-a.st).slice(0,n);if(
 
 function vPunch(){
  /* default the form to the most recent saved session until the user picks something else */
- if(!pTouched&&!S.active){const l=[...S.sessions].sort((a,b)=>b.st-a.st)[0];if(l&&l.id!==pInit&&L[l.s]&&L[l.s][l.i]){pInit=l.id;pS=l.s;pC=l.i;if(ACTS.includes(l.a))pA=l.a}}
+ if(!pTouched&&!S.active){const l=[...S.sessions].sort((a,b)=>b.st-a.st)[0];if(l&&l.id!==pInit&&L[l.s]&&L[l.s][l.i]){pInit=l.id;pS=l.s;pC=l.i;cS=l.s;if(ACTS.includes(l.a))pA=l.a}}
  const td=(byDay()[dk(Date.now())]||{}).t||0;
  if(S.active){const a=S.active,c=L[a.s][a.i];return`<div class="card live"><h2><span class="dot"></span>You are punched in</h2><div style="color:${META[a.s].c};font-weight:700">${esc(META[a.s].n)}</div><div style="font-size:18px">${esc(c.t)}</div><small>${esc(a.a)}${a.n?' · '+esc(a.n):''} · since ${new Date(a.st).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</small>
  <div class="clock tick">00:00:00</div><button class="btn acc big" data-act="out">PUNCH OUT</button>
@@ -576,6 +580,10 @@ function vPunch(){
  <button class="btn ghost" style="width:100%;margin-top:10px" data-act="addNote" data-s="${pS}" data-i="${c.i}">＋ Sticky note for this chapter</button><div id="pNotes">${chNotes(pS,c.i)}</div></div>
  <div class="card"><h2>Today</h2><div class="clock" style="text-align:left">${fh(td)}</div><small>Target ${S.set.target}h · ${td>=S.set.target?'target reached 🎯':fh(Math.max(0,S.set.target-td))+' to go'}</small><h2 style="margin-top:18px">Recent</h2>${recent(5)}</div></div>`}
 
+function cLogHtml(s,i){const r=S.sessions.filter(x=>x.s===s&&x.i===i).sort((a,b)=>b.st-a.st);if(!r.length)return'<small>No sessions logged for this chapter yet.</small>';
+ return'<table>'+r.map(x=>`<tr><td class="mono">${dk(x.st)} ${hm(x.st)}</td><td>${esc(x.a)}${x.n?' · '+esc(x.n):''}</td><td class="mono">${fh(hrs(x))}</td></tr>`).join('')+'</table>'}
+function cPanel(s,c){const k=s+':'+c.i,n=S.sessions.filter(x=>x.s===s&&x.i===c.i).length,o=cLog.has(k);
+ return`<div class="cpanel"><button type="button" class="btn ghost sm" data-clog="${c.i}">${o?'▾ Hide':'▸ Show'} session log (${n})</button>${o?'<div style="margin-top:6px">'+cLogHtml(s,c.i)+'</div>':''}${chNotes(s,c.i)}<div style="margin-top:8px"><button type="button" class="btn ghost sm" data-nadd="${c.i}">＋ Sticky note</button></div></div>`}
 function vChap(){
  const chips=ORDER.map(s=>`<button class="chip ${cS===s?'on':''}" style="--c:${META[s].c}" data-sub="${s}">${s}</button>`).join('');
  let g='',rows='';const q=cQ.toLowerCase();
@@ -584,7 +592,7 @@ function vChap(){
   const tm=hoursOf(x=>x.s===cS&&x.i===c.i);
   rows+=`<div class="row"><span class="no">${pad(c.i+1)}</span><div class="tt">${esc(c.t)}<small>${c.nb?'Notebook p.'+esc(c.nb)+' ':''}${nbadge(cS,c.i)}</small></div><div class="tm mono">${tm?fh(tm):'–'}</div>
   <div class="chk">${PK.map((k,j)=>`<label title="${ACTS[j]}"><input type="checkbox" data-pk="${k}" data-i="${c.i}" ${p[k]?'checked':''}>${PL(k)}</label>`).join('')}</div>
-  <div class="lk">${links(cS,c)}<a href="#" data-go="${c.i}">▶ punch in</a><a href="#" data-nadd="${c.i}">＋ sticky note</a></div></div>`});
+  <div class="lk">${links(cS,c)}<a href="#" data-go="${c.i}">▶ punch in</a><a href="#" data-nadd="${c.i}">＋ sticky note</a><a href="#" data-cexp="${c.i}">${cOpen.has(cS+':'+c.i)?'▾ hide':'▸ details'}</a></div></div>${cOpen.has(cS+':'+c.i)?cPanel(cS,c):''}`});
  return`<div class="card"><div class="chips">${chips}</div><div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap"><input id="cQ" style="flex:1;min-width:180px" placeholder="Search chapters…" value="${esc(cQ)}"><select id="cF" style="width:auto"><option value="all">All</option><option value="pend" ${cF==='pend'?'selected':''}>Study pending</option></select>${dataBar("prog")}</div>
  <div class="hint" style="margin:0 0 6px">S = Study done · R1, R2… = Revisions · LDR = Last Day Revision · P = Practice. Module links open the ICAI PDF at that page (PDF page number) — PDFs are expected in the “Study material” folder next to this file.</div>${rows||'<small>No chapters match.</small>'}</div>`}
 
@@ -688,11 +696,12 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 function fillMC(){const s=$('#mS');if(!s)return;$('#mC').innerHTML=L[s.value].map(c=>`<option value="${c.i}">${pad(c.i+1)}. ${esc(c.t)}</option>`).join('')}
 
 document.addEventListener('click',e=>{
- const t=e.target.closest('[data-tab],[data-act],[data-sub],[data-go],[data-del],[data-nadd],[data-nview],[data-npick],[data-nact],[data-ntype],[data-qrev]');if(!t)return;
+ const t=e.target.closest('[data-tab],[data-act],[data-sub],[data-go],[data-del],[data-nadd],[data-nview],[data-npick],[data-nact],[data-ntype],[data-qrev],[data-cexp],[data-clog]');if(!t)return;
+ if(t.dataset.cexp!==undefined||t.dataset.clog!==undefined){e.preventDefault();const k=cS+':'+(t.dataset.cexp!==undefined?t.dataset.cexp:t.dataset.clog),St=t.dataset.cexp!==undefined?cOpen:cLog;St.has(k)?St.delete(k):St.add(k);const y=window.scrollY;render();scrollTo(0,y);return}
  if(t.dataset.qrev){e.preventDefault();const[id,x,k]=t.dataset.qrev.split('|'),n=S.notes.find(z=>z.id===id);if(n){if(!Array.isArray(n.q)){n.q=ldrList(n);delete n.qn;delete n.qp;delete n.qs}const o=n.q[+x];if(o){o.rv=o.rv||{};o.rv[k]=o.rv[k]?0:1;save();const y=window.scrollY;render();scrollTo(0,y)}}return}
  if(t.dataset.tab){tab=t.dataset.tab;render();if(tab==='log')fillMC();tickAll();return}
- if(t.dataset.sub){cS=t.dataset.sub;render();return}
- if(t.dataset.go!==undefined){e.preventDefault();pS=cS;pC=+t.dataset.go;tab='punch';render();return}
+ if(t.dataset.sub){cS=t.dataset.sub;selSave();render();return}
+ if(t.dataset.go!==undefined){e.preventDefault();pS=cS;pC=+t.dataset.go;selSave();tab='punch';render();return}
  if(t.dataset.del){if(confirm('Delete this session?')){(S.del=S.del||[]).push(t.dataset.del);S.sessions=S.sessions.filter(x=>x.id!==t.dataset.del);save();render();fillMC()}return}
  if(t.dataset.nadd!==undefined){e.preventDefault();openNote({s:cS,i:+t.dataset.nadd});return}
  if(t.dataset.npick){e.preventDefault();const[s,i]=t.dataset.npick.split(':');nS=s;nC=+i;nCq='';render();return}
@@ -734,8 +743,8 @@ function openOut(){
   if($('#oD').checked&&!$('#oD').disabled){const p=S.progress[pk(a.s,a.i)]=S.progress[pk(a.s,a.i)]||{};p[PK[j]]=1}
   S.active=null;save();d.close();render();if(!FH&&!(AUTH&&AUTH.google))dlBackup()}}
 document.addEventListener('change',e=>{const t=e.target;if(t.id==='pS'||t.id==='pC'||t.id==='pA')pTouched=true;
- if(t.id==='pS'){pS=t.value;pC=0;render()}
- else if(t.id==='pC'){pC=+t.value;const b=$('#pNotes');if(b)b.innerHTML=chNotes(pS,pC)}else if(t.id==='pA')pA=t.value;
+ if(t.id==='pS'){pS=t.value;pC=0;selSave();render()}
+ else if(t.id==='pC'){pC=+t.value;selSave();const b=$('#pNotes');if(b)b.innerHTML=chNotes(pS,pC)}else if(t.id==='pA'){pA=t.value;selSave()}
  else if(t.id==='cF'){cF=t.value;render()}
  else if(t.id==='nvS'){nS=t.value;nC=-1;nCq='';render()}
  else if(t.id==='nvSt'){nSt=t.value;render()}
