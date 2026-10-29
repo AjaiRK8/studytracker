@@ -1,846 +1,794 @@
-<!DOCTYPE html>
+<!doctype html>
+<!--
+  CA Final May 2027 · Study Punch Card
+  Copyright © 2026 Ajai R Krishnan. All rights reserved.
+  No part of this software (source code, design, text) may be copied, modified, distributed or
+  sold without prior written permission of the copyright holder. Third-party names and study
+  material (ICAI, module PDFs) belong to their respective owners.
+-->
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Anandu R Krishnan | Video Editor, Cinematographer and Colourist</title>
-<meta name="description" content="Video editor, cinematographer and colourist working out of Bengaluru and Kochi. Brand films, social reels and event coverage, shot, cut and graded.">
-<meta name="theme-color" content="#0A1114">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Anandu R Krishnan | Crafting visual tales">
-<meta property="og:description" content="Video editor, cinematographer and colourist. Brand films, social reels and event coverage for Lexus, Skoda, MakeMyTrip, Rare Rabbit and more.">
-<meta name="twitter:card" content="summary_large_image">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Person",
-  "name": "Anandu R Krishnan",
-  "jobTitle": "Video editor, cinematographer and colourist",
-  "address": { "@type": "PostalAddress", "addressLocality": "Bengaluru" }
-}
-</script>
-
+<meta name="author" content="Ajai R Krishnan"><meta name="copyright" content="© 2026 Ajai R Krishnan. All rights reserved.">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CA Final May 2027 · Study Punch Card</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #0A1114;
-  --surface: rgba(12, 18, 24, 0.80);
-  --ink: #EEF1F5;
-  --muted: #A7B2BF;
-  --rule: rgba(255, 255, 255, 0.16);
-  --accent: #FFB454;
-  --on-accent: #1A1206;
-  --red: #FF5A5F;
-  --glow: rgba(255, 180, 84, 0.13);
-  --bokeh: rgba(255, 180, 84, 0.34);
-  --hole: rgba(255, 255, 255, 0.55);
-  --sans: "Archivo", "Helvetica Neue", Arial, system-ui, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --header-h: 60px;
-  --tl-h: 64px;
-  --strip: 12px;
-  --wrap: 1120px;
-  color-scheme: dark;
-}
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    --bg: #EEF2F4; --surface: rgba(255, 255, 255, 0.80); --ink: #11151B; --muted: #475060;
-    --rule: rgba(17, 21, 27, 0.18); --accent: #9A4A00; --on-accent: #FFFFFF; --red: #C62828;
-    --glow: rgba(154, 74, 0, 0.10); --bokeh: rgba(154, 74, 0, 0.22); --hole: rgba(255, 255, 255, 0.75);
-    color-scheme: light;
-  }
-}
-:root[data-theme="light"] {
-  --bg: #EEF2F4; --surface: rgba(255, 255, 255, 0.80); --ink: #11151B; --muted: #475060;
-  --rule: rgba(17, 21, 27, 0.18); --accent: #9A4A00; --on-accent: #FFFFFF; --red: #C62828;
-  --glow: rgba(154, 74, 0, 0.10); --bokeh: rgba(154, 74, 0, 0.22); --hole: rgba(255, 255, 255, 0.75);
-  color-scheme: light;
-}
-@media (min-width: 768px) { :root { --strip: 22px; } }
-
-*, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header-h) + 12px); -webkit-text-size-adjust: 100%; }
-body {
-  margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans);
-  font-size: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem); line-height: 1.6; padding-bottom: calc(var(--tl-h) + 12px);
-}
-a { color: var(--accent); text-underline-offset: 3px; }
-:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
-h1, h2, h3 { font-family: var(--sans); font-stretch: 72%; font-weight: 800; line-height: 0.98; margin: 0; letter-spacing: -0.005em; }
-p { margin: 0 0 1em; max-width: 62ch; }
-ul { margin: 0; padding: 0; list-style: none; }
-.mono { font-family: var(--mono); font-size: 0.82rem; }
-
-.wrap { width: 100%; max-width: var(--wrap); margin-inline: auto; padding-inline: calc(var(--strip) + 1.1rem); position: relative; z-index: 2; }
-.skip { position: absolute; left: 1rem; top: -4rem; background: var(--accent); color: var(--on-accent); padding: 0.6rem 1rem; z-index: 100; border-radius: 4px; font-weight: 600; }
-.skip:focus { top: 0.75rem; }
-
-/* ---------- Scroll-driven background: grade wash, grain, bokeh, lens, film edge, viewfinder ---------- */
-.bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
-.bg > * { position: absolute; }
-.bg-wash, .bg-glow, .bg-grain, .bg-bokeh, .bg-vf { inset: 0; }
-.bg-wash { background: var(--bg); }
-.bg-glow { background: radial-gradient(circle 460px at var(--mx, 72%) var(--my, 24%), var(--glow), transparent 70%); }
-.bg-bokeh { filter: blur(2px); }
-.bg-bokeh span { position: absolute; top: 0; border-radius: 50%; background: radial-gradient(circle, var(--bokeh), transparent 68%); will-change: transform; }
-.bg-lens { width: min(115vmin, 920px); aspect-ratio: 1; right: -22vmin; top: 50%; transform: translateY(-50%); color: var(--accent); opacity: 0.2; }
-.bg-lens svg { width: 100%; height: 100%; fill: none; stroke: currentColor; }
-.bg-grain {
-  opacity: 0.1; mix-blend-mode: overlay; background-size: 220px 220px;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-}
-.bg-strip { top: 0; bottom: 0; width: var(--strip); background: rgba(4, 6, 8, 0.78); overflow: hidden; }
-.bg-strip.l { left: 0; } .bg-strip.r { right: 0; }
-.bg-strip::before {
-  content: ""; position: absolute; left: calc(50% - 3px); width: 6px; top: -28px; bottom: 0;
-  background: repeating-linear-gradient(to bottom, transparent 0, transparent 18px, var(--hole) 18px, var(--hole) 28px);
-  transform: translateY(var(--sy, 0px)); border-radius: 1px;
-}
-.bg-vf { inset: calc(var(--header-h) + 14px) calc(var(--strip) + 14px) calc(var(--tl-h) + 14px) calc(var(--strip) + 14px); color: var(--ink); font-family: var(--mono); font-size: 0.72rem; }
-.bg-vf .k { position: absolute; width: 26px; height: 26px; border: 2px solid currentColor; opacity: 0.45; }
-.bg-vf .k-tl { left: 0; top: 0; border-right: 0; border-bottom: 0; } .bg-vf .k-tr { right: 0; top: 0; border-left: 0; border-bottom: 0; }
-.bg-vf .k-bl { left: 0; bottom: 0; border-right: 0; border-top: 0; } .bg-vf .k-br { right: 0; bottom: 0; border-left: 0; border-top: 0; }
-.bg-vf .hud { position: absolute; opacity: 0.72; line-height: 1.5; }
-.bg-vf .hud-l { left: 6px; top: 34px; } .bg-vf .hud-r { right: 6px; top: 34px; text-align: right; }
-.bg-vf .rec { color: var(--red); font-weight: 500; }
-
-/* ---------- Header ---------- */
-.site-header { position: sticky; top: 0; z-index: 50; height: var(--header-h); background: var(--bg); border-bottom: 1px solid var(--rule); }
-@supports (background: color-mix(in srgb, red 50%, transparent)) {
-  .site-header { background: color-mix(in srgb, var(--bg) 72%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
-}
-.site-header .wrap { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-.brand { font-stretch: 72%; font-weight: 800; font-size: 1.35rem; color: var(--ink); text-decoration: none; white-space: nowrap; }
-.nav { display: flex; align-items: center; gap: 0.25rem; }
-.nav-list { display: none; }
-.nav a.nav-link { display: block; padding: 0.5rem 0.7rem; color: var(--ink); text-decoration: none; font-weight: 500; font-size: 0.95rem; border-radius: 4px; }
-.nav a.nav-link:hover { background: var(--rule); }
-.icon-btn { width: 44px; height: 44px; display: inline-grid; place-items: center; background: transparent; color: var(--ink); border: 1px solid var(--rule); border-radius: 6px; cursor: pointer; }
-.icon-btn:hover { background: var(--rule); }
-.icon-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.menu-btn { margin-left: 0.5rem; }
-.nav-list.open { display: block; position: absolute; top: var(--header-h); left: 0; right: 0; background: var(--bg); border-bottom: 1px solid var(--rule); padding: 0.5rem calc(var(--strip) + 1.1rem) 1rem; }
-.nav-list.open a.nav-link { padding: 0.85rem 0.25rem; border-bottom: 1px solid var(--rule); border-radius: 0; }
-
-/* ---------- Buttons ---------- */
-.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0.65rem 1.3rem; font: 600 0.98rem/1.2 var(--sans); text-decoration: none; border-radius: 4px; border: 1.5px solid var(--accent); cursor: pointer; }
-.btn-primary { background: var(--accent); color: var(--on-accent); }
-.btn-primary:hover { filter: brightness(1.08); }
-.btn-quiet { background: transparent; color: var(--ink); border-color: var(--rule); }
-.btn-quiet:hover { border-color: var(--accent); }
-
-/* ---------- Sections ---------- */
-section { padding-block: clamp(3.5rem, 8vw, 6rem); position: relative; }
-.section-head { margin-bottom: clamp(1.5rem, 3vw, 2.5rem); max-width: 40rem; }
-.section-head h2 { font-size: clamp(2.3rem, 1rem + 5vw, 4.2rem); }
-.section-head p { margin: 0.8rem 0 0; color: var(--muted); }
-.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
-.placeholder { color: var(--muted); font-style: italic; }
-
-/* Hero: a title card */
-.hero { min-height: calc(100vh - var(--header-h) - var(--tl-h)); min-height: calc(100svh - var(--header-h) - var(--tl-h)); display: flex; align-items: flex-end; padding-block: clamp(3.5rem, 8vw, 6rem) clamp(2.5rem, 6vw, 4rem); }
-.hero .who { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); margin: 0 0 1.1rem; }
-.hero h1 { font-size: clamp(2.5rem, 0.4rem + 10.2vw, 8.6rem); line-height: 0.9; }
-.hero h1 span { display: block; }
-.hero .pitch { margin: 1.6rem 0 0; font-size: clamp(1.05rem, 1rem + 0.5vw, 1.3rem); max-width: 34rem; color: var(--ink); }
-.cta-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.8rem; }
-
-/* Showreel */
-.reel { position: relative; aspect-ratio: 16 / 9; border-radius: 4px; overflow: hidden; border: 1px solid var(--rule); background: linear-gradient(135deg, #0F2A33, #3A2412); }
-.reel button.poster { position: absolute; inset: 0; width: 100%; border: 0; cursor: pointer; background: radial-gradient(ellipse at 70% 30%, rgba(255, 180, 84, 0.35), transparent 55%), linear-gradient(135deg, #0F2A33, #3A2412); color: #fff; display: grid; place-items: center; }
-.reel .play { width: clamp(64px, 9vw, 96px); aspect-ratio: 1; border-radius: 50%; border: 2px solid #fff; display: grid; place-items: center; background: rgba(0, 0, 0, 0.35); }
-.reel .play svg { width: 36%; fill: #fff; margin-left: 6%; }
-.reel button.poster:hover .play { background: var(--accent); border-color: var(--accent); }
-.reel button.poster:hover .play svg { fill: var(--on-accent); }
-.reel .tc { position: absolute; left: 1rem; bottom: 0.8rem; font-family: var(--mono); font-size: 0.8rem; color: #fff; text-shadow: 0 1px 3px #000; }
-.reel iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-.reel-note { margin: 0.8rem 0 0; color: var(--muted); font-size: 0.92rem; min-height: 1.5em; }
-
-/* Work grid */
-.filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.4rem; }
-.chip { min-height: 44px; padding: 0.4rem 1.1rem; border-radius: 999px; border: 1px solid var(--rule); background: transparent; color: var(--ink); font: 500 0.95rem var(--sans); cursor: pointer; }
-.chip:hover { border-color: var(--accent); }
-.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); grid-auto-rows: 15rem; grid-auto-flow: dense; gap: 0.8rem; }
-.tile { position: relative; border: 0; padding: 0; text-align: left; cursor: pointer; overflow: hidden; border-radius: 4px; color: #fff; font: inherit; }
-.tile.wide { grid-column: span 2; } .tile.tall { grid-row: span 2; }
-.tile[hidden] { display: none; }
-.art { background-color: var(--g1, #222); background-image: radial-gradient(ellipse at 75% 25%, var(--g3, rgba(255,255,255,0.25)), transparent 55%), linear-gradient(135deg, var(--g1, #222), var(--g2, #555)); background-size: cover; background-position: center; }
-.tile .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 2.2rem 0.9rem 0.8rem; background: linear-gradient(transparent, rgba(0, 0, 0, 0.78)); display: grid; gap: 0.1rem; }
-.tile .cat { font-family: var(--mono); font-size: 0.75rem; opacity: 0.85; }
-.tile .ttl { font-weight: 600; }
-.tile::after { content: ""; position: absolute; inset: 0; border: 2px solid transparent; border-radius: 4px; transition: border-color 0.2s; }
-.tile:hover::after, .tile:focus-visible::after { border-color: var(--accent); }
-@media (max-width: 560px) { .tile.wide { grid-column: auto; } }
-
-dialog#lb { width: min(960px, 94vw); max-height: 92vh; padding: 0; border: 1px solid var(--rule); border-radius: 6px; background: var(--bg); color: var(--ink); }
-dialog#lb::backdrop { background: rgba(0, 0, 0, 0.82); }
-.lb-view { aspect-ratio: 16 / 10; width: 100%; }
-.lb-bar { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.7rem 0.9rem; }
-.lb-bar p { margin: 0; }
-.lb-btns { display: flex; gap: 0.4rem; }
-
-/* Services: clapperboard panels */
-.slates { display: grid; gap: 1rem; }
-.slate { overflow: hidden; }
-.slate .clap { height: 26px; background: repeating-linear-gradient(135deg, var(--ink) 0, var(--ink) 16px, var(--bg) 16px, var(--bg) 32px); border-bottom: 1px solid var(--rule); }
-.slate-body { padding: 1.1rem 1.2rem 1.3rem; }
-.slate h3 { font-size: 2rem; margin-bottom: 0.4rem; }
-.slate p { color: var(--muted); }
-.slate li { padding: 0.45rem 0; border-top: 1px solid var(--rule); }
-.slate .scene { font-family: var(--mono); font-size: 0.78rem; color: var(--accent); margin-bottom: 0.5rem; }
-
-/* Before / after grade */
-.ba-wrap { margin-top: clamp(2rem, 5vw, 3.5rem); }
-.ba-wrap h3 { font-size: clamp(1.8rem, 1rem + 2.5vw, 2.6rem); margin-bottom: 0.4rem; }
-.ba { --pos: 50%; position: relative; aspect-ratio: 16 / 9; border-radius: 4px; overflow: hidden; border: 1px solid var(--rule); margin-top: 1.1rem; background: #111; }
-.ba .layer { position: absolute; inset: 0; background-size: cover; background-position: center; }
-.scene-art { background:
-  radial-gradient(circle at 72% 32%, #FFE3A3 0 7%, rgba(255, 190, 90, 0.7) 8%, transparent 26%),
-  radial-gradient(ellipse 70% 38% at 25% 100%, #1E3B3A 0 60%, transparent 61%),
-  radial-gradient(ellipse 80% 34% at 80% 104%, #14282C 0 60%, transparent 61%),
-  linear-gradient(180deg, #2B5D78 0%, #E48B52 62%, #F2C27C 100%); }
-.ba .before { clip-path: inset(0 calc(100% - var(--pos)) 0 0); filter: saturate(0.2) contrast(0.62) brightness(1.18); }
-.ba .after { filter: saturate(1.25) contrast(1.1); }
-.ba .line { position: absolute; top: 0; bottom: 0; left: var(--pos); width: 2px; background: #fff; box-shadow: 0 0 6px rgba(0, 0, 0, 0.6); }
-.ba .line::after { content: ""; position: absolute; top: 50%; left: 50%; width: 34px; height: 34px; margin: -17px; border-radius: 50%; background: #fff; border: 2px solid var(--accent); }
-.ba .lbl { position: absolute; top: 0.7rem; padding: 0.15rem 0.6rem; background: rgba(0, 0, 0, 0.6); color: #fff; font-family: var(--mono); font-size: 0.75rem; border-radius: 3px; }
-.ba .lbl.a { left: 0.7rem; } .ba .lbl.b { right: 0.7rem; }
-.ba input[type="range"] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: ew-resize; margin: 0; }
-.ba:focus-within { outline: 3px solid var(--accent); outline-offset: 3px; }
-
-/* Process: clips on a timeline */
-.clips { display: grid; gap: 0.6rem; }
-.pclip { padding: 1rem 1.1rem 1.2rem; border-radius: 4px; border: 1px solid var(--rule); border-top: 6px solid hsl(var(--h) 60% 52%); background: var(--surface); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
-.pclip h3 { font-size: 1.7rem; margin-bottom: 0.4rem; }
-.pclip .n { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); }
-.pclip p { margin: 0; color: var(--muted); }
-.ruler { height: 14px; margin-bottom: 0.5rem; background-image: repeating-linear-gradient(90deg, var(--rule) 0, var(--rule) 1px, transparent 1px, transparent 5%); border-bottom: 1px solid var(--rule); display: none; }
-
-/* About + kit */
-.about-grid { display: grid; gap: 2rem; }
-.about-grid p { font-size: 1.1rem; }
-.kit { padding: 0.4rem 1.1rem; }
-.kit-row { display: grid; grid-template-columns: 7rem 1fr; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--rule); }
-.kit-row:last-child { border-bottom: 0; }
-.kit-row dt { font-family: var(--mono); font-size: 0.82rem; color: var(--accent); }
-.kit-row dd { margin: 0; overflow-wrap: anywhere; }
-
-/* Contact */
-.contact-grid { display: grid; gap: 1.5rem; }
-.form { padding: 1.2rem; display: grid; gap: 0.9rem; }
-.field { display: grid; gap: 0.3rem; }
-.field label { font-weight: 500; font-size: 0.92rem; }
-.field input, .field select, .field textarea { width: 100%; font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--rule); border-radius: 4px; padding: 0.7rem 0.8rem; min-height: 46px; }
-.field select option { color: #111; }
-.field textarea { min-height: 120px; resize: vertical; }
-.field input:focus-visible, .field select:focus-visible, .field textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
-.form-note { margin: 0; color: var(--muted); font-size: 0.9rem; min-height: 1.4em; }
-.contact-list { padding: 0.3rem 1.1rem; align-self: start; }
-.contact-list li { display: grid; grid-template-columns: 6.5rem 1fr; gap: 1rem; padding: 0.85rem 0; border-bottom: 1px solid var(--rule); }
-.contact-list li:last-child { border-bottom: 0; }
-.contact-list .label { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); padding-top: 0.15rem; }
-.contact-list a { overflow-wrap: anywhere; }
-
-.site-footer { padding-block: 2rem 1rem; color: var(--muted); font-size: 0.92rem; }
-.site-footer p { margin: 0 0 0.4rem; }
-
-/* ---------- Bottom timeline: scroll is the playhead ---------- */
-.tl { position: fixed; left: 0; right: 0; bottom: 0; height: var(--tl-h); z-index: 60; display: flex; align-items: stretch; background: var(--bg); border-top: 1px solid var(--rule); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: content-box; }
-@supports (background: color-mix(in srgb, red 50%, transparent)) {
-  .tl { background: color-mix(in srgb, var(--bg) 82%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
-}
-.tl-time { flex: 0 0 auto; width: clamp(98px, 24vw, 150px); display: flex; flex-direction: column; justify-content: center; padding-inline: 0.6rem; font-family: var(--mono); line-height: 1.3; }
-.tl-time b { font-weight: 500; font-size: 0.82rem; color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.tl-time span { font-size: 0.7rem; color: var(--muted); display: none; }
-.tl-track { position: relative; flex: 1; margin: 6px 0.8rem 6px 0; display: grid; grid-template-rows: 12px 1fr 14px; gap: 3px; min-width: 0; }
-.tl-track:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-.tl-ruler { background-image: repeating-linear-gradient(90deg, var(--rule) 0, var(--rule) 1px, transparent 1px, transparent 4%); border-bottom: 1px solid var(--rule); cursor: ew-resize; touch-action: none; }
-.tl-v { position: relative; }
-.tl-a { position: relative; cursor: ew-resize; touch-action: none; }
-.tl-a svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.tl-a path { stroke: var(--accent); stroke-width: 1.5; opacity: 0.55; }
-.clip { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; padding: 0 0.45rem; overflow: hidden; white-space: nowrap; border-radius: 3px; text-decoration: none; color: #fff; font: 500 0.7rem var(--mono); background: hsl(var(--h) 38% 30%); border: 1px solid rgba(255, 255, 255, 0.2); }
-.clip:hover { background: hsl(var(--h) 48% 38%); }
-.clip.on { background: hsl(var(--h) 58% 42%); border-color: var(--accent); }
-.tl-head { position: absolute; top: -4px; bottom: -4px; left: 0; width: 2px; margin-left: -1px; background: var(--red); pointer-events: none; z-index: 3; will-change: transform; }
-.tl-head::before { content: ""; position: absolute; top: 0; left: -5px; border: 6px solid transparent; border-top-color: var(--red); border-bottom: 0; }
-@media (min-width: 768px) { .tl-time span { display: block; } .tl-time b { font-size: 1rem; } }
-
-@media (min-width: 640px) { .slates { grid-template-columns: repeat(3, 1fr); } .about-grid { grid-template-columns: 1.2fr 1fr; align-items: start; } }
-@media (min-width: 768px) { .menu-btn { display: none; } .nav-list { display: flex; gap: 0.1rem; } .contact-grid { grid-template-columns: 1.1fr 0.9fr; } }
-@media (min-width: 900px) {
-  .clips { grid-template-columns: 1fr 1.7fr 2.1fr 1.2fr 1fr; }
-  .ruler { display: block; }
-  .process-wrap { display: block; }
-}
-@media (max-width: 520px) {
-  .bg-vf .hud-r { display: none; }
-  .kit-row, .contact-list li { grid-template-columns: 5.5rem 1fr; }
-}
-
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-
-@media print {
-  .bg, .tl, .site-header, .cta-row, .skip, dialog { display: none !important; }
-  body { background: #fff; color: #000; padding-bottom: 0; }
-  :root { --ink: #000; --muted: #333; --surface: #fff; --rule: #999; --accent: #000; }
-  .hero { min-height: 0; } section { padding-block: 1rem; break-inside: avoid; }
-}
+:root{--bg:#f3eee2;--card:#fbf8f0;--ink:#1e1c18;--mute:#6f6a5e;--line:#d9d1bd;--acc:#d8432a;--acc2:#1e1c18;--ok:#2e7d5b;
+--fs:'IBM Plex Sans',system-ui,Segoe UI,Roboto,sans-serif;--fh:'Fraunces',Georgia,'Times New Roman',serif;--fm:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#171613;--card:#211f1a;--ink:#efe9da;--mute:#a19a88;--line:#3a3629;--acc:#ff6a4d;--acc2:#efe9da}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--fs)}
+.wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:12px}
+h1{font:800 clamp(26px,5vw,42px)/1 var(--fh);margin:0;letter-spacing:-.02em}
+h1 span{color:var(--acc)}
+.sub{font:12px var(--fm);color:var(--mute);margin-top:6px}
+.badge{font:600 13px var(--fm);border:1.5px dashed var(--ink);padding:8px 12px;border-radius:6px;text-align:center}
+.badge b{display:block;font:800 30px/1 var(--fh);color:var(--acc)}
+nav{display:flex;gap:4px;flex-wrap:wrap;margin:14px 0}
+nav button{font:600 13px var(--fm);background:none;border:1.5px solid var(--line);color:var(--ink);padding:8px 14px;border-radius:999px;cursor:pointer}
+nav button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;position:relative}
+.card h2{font:700 18px var(--fh);margin:0 0 10px}
+.grid{display:grid;gap:12px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.kpi .v{font:800 30px/1.05 var(--fh)}.kpi .l{font:11px var(--fm);color:var(--mute);text-transform:none;margin-top:4px}
+.two{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.mono{font-family:var(--fm)}
+.mute{color:var(--mute)}
+small{color:var(--mute)}
+.bar{height:8px;background:var(--line);border-radius:5px;overflow:hidden}.bar i{display:block;height:100%}
+.subcard{border-left:6px solid var(--c);}
+.subcard .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.subcard h3{margin:0;font:700 16px var(--fh)}
+.pips{display:flex;gap:10px;font:11px var(--fm);color:var(--mute);margin-top:8px;flex-wrap:wrap}
+a{color:var(--acc);text-decoration:none;font-weight:600}a:hover{text-decoration:underline}
+button,select,input,textarea{font:inherit;color:inherit}
+select,input,textarea{background:var(--bg);border:1.5px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+label.f{display:block;font:11px var(--fm);color:var(--mute);margin:10px 0 4px}
+.btn{border:0;border-radius:8px;padding:10px 16px;font:700 14px var(--fs);cursor:pointer;background:var(--ink);color:var(--bg)}
+.btn.acc{background:var(--acc);color:#fff}.btn.ghost{background:none;border:1.5px solid var(--line);color:var(--ink)}
+.btn.sm{padding:5px 9px;font-size:12px}
+.punch{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.punch{grid-template-columns:1fr}}
+.clock{font:600 clamp(44px,10vw,76px)/1 var(--fm);letter-spacing:-.03em;text-align:center;margin:8px 0}
+.big{width:100%;padding:16px;font-size:18px;border-radius:12px}
+.live{border:2px solid var(--acc)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--acc);animation:p 1.2s infinite;margin-right:6px}
+@keyframes p{50%{opacity:.25}}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chip{border:1.5px solid var(--c,var(--line));padding:5px 11px;border-radius:999px;font:600 12px var(--fm);cursor:pointer;background:none}
+.chip.on{background:var(--c,var(--ink));color:#fff}
+.row{display:grid;grid-template-columns:34px 1fr 64px auto auto;gap:10px;align-items:center;padding:9px 4px;border-bottom:1px dashed var(--line)}
+.row .no{font:12px var(--fm);color:var(--mute)}
+.row .tt{font-weight:500}.row .tt small{display:block;font:11px var(--fm)}
+.chk{display:flex;gap:8px;font:11px var(--fm)}.chk label{display:flex;gap:3px;align-items:center;cursor:pointer}
+.chk input{width:auto;accent-color:var(--ok)}
+.lk{font-size:12px;display:flex;flex-direction:column;gap:2px;align-items:flex-end}
+.grp{font:700 12px var(--fm);text-transform:none;background:var(--line);padding:5px 8px;border-radius:4px;margin:12px 0 2px}
+@media(max-width:760px){.row{grid-template-columns:28px 1fr auto}.row .tm{display:none}.row .chk,.row .lk{grid-column:2/4}.row .lk{flex-direction:row;gap:10px}}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{padding:7px 6px;border-bottom:1px dashed var(--line);text-align:left;vertical-align:top}th{font:11px var(--fm);color:var(--mute)}
+.heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,14px);gap:3px;overflow-x:auto;padding-bottom:4px}
+.heat i{width:14px;height:14px;border-radius:3px;background:var(--line)}
+.sticky{background:var(--bg);color:#2a2415;padding:12px 12px 8px;border-radius:3px;box-shadow:2px 4px 10px #0003;transform:rotate(calc(var(--r)*.5));display:flex;flex-direction:column;gap:6px;min-height:150px}
+.sticky .hd{font:600 11px var(--fm);display:flex;justify-content:space-between;gap:6px}
+.sticky .tx{white-space:pre-wrap;word-break:break-word;flex:1;font-size:14px}
+.sticky .ft{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font:11px var(--fm)}
+.sticky .ft button{background:#0000001a;border:0;border-radius:4px;padding:3px 8px;cursor:pointer;color:#2a2415;font:600 11px var(--fm)}
+.sticky.done{opacity:.55}.sticky.done .tx{text-decoration:line-through}
+.mf{position:relative}.mf textarea{padding-right:44px;resize:vertical}.mic{position:absolute;right:6px;top:6px;border:0;border-radius:50%;width:30px;height:30px;cursor:pointer;background:#8883;font-size:15px;line-height:30px;padding:0}.mic.rec{background:#d8432a;color:#fff;animation:micp 1s infinite}@keyframes micp{50%{opacity:.55}}.qb{border:1px solid var(--line);border-radius:8px;padding:8px 10px 10px;margin-top:8px;background:#8881}
+.nsug{position:absolute;left:0;right:0;top:100%;z-index:30;background:var(--card,#fff);color:var(--ink,#222);border:1px solid #8884;border-radius:8px;box-shadow:0 8px 24px #0004;max-height:300px;overflow:auto;margin-top:2px}.nsug a{display:block;padding:8px 10px;text-decoration:none;color:inherit;font-size:13px;border-bottom:1px solid #8882}.nsug a:hover{background:#8883}
+.notes{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;padding:6px}
+.nb{display:inline-block;background:#ffe27a;color:#2a2415;border-radius:4px;padding:0 6px;margin-left:4px;font:600 11px var(--fm)}
+dialog{border:2px solid var(--ink);border-radius:12px;background:var(--card);color:var(--ink);max-width:420px;width:92%}
+dialog::backdrop{background:#0008}
+.hint{font:12px var(--fm);color:var(--mute);margin-top:10px}
+.warn{background:#ffe9a8;color:#332;padding:8px 12px;border-radius:6px;font-size:13px;margin-bottom:10px}
+#auth{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+#auth[hidden]{display:none}.ab{width:100%;max-width:400px}
+.atabs{display:flex;gap:6px;margin:14px 0 4px}.atabs button{flex:1;font:600 13px var(--fm);background:none;border:1.5px solid var(--line);padding:8px;border-radius:999px;cursor:pointer}
+.atabs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ubar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;font-size:12px}
+.rm{display:flex;gap:8px;align-items:center;font-size:13px;margin-top:8px}.rm input{width:auto}
+.amsg{font:12px var(--fm);color:var(--acc);margin-top:10px;min-height:16px}
+.copy{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);font:11px var(--fm);color:var(--mute);text-align:center}
 </style>
 </head>
 <body>
-<a class="skip" href="#main">Skip to content</a>
-
-<div class="bg" aria-hidden="true">
-  <div class="bg-wash"></div>
-  <div class="bg-glow"></div>
-  <div class="bg-bokeh"></div>
-  <div class="bg-lens">
-    <svg viewBox="-300 -300 600 600">
-      <g id="lens-ring">
-        <circle r="284" stroke-width="1.5"/>
-        <circle r="270" stroke-width="14" stroke-dasharray="2 11.46"/>
-        <circle r="262" stroke-width="22" stroke-dasharray="3 84.6" opacity="0.8"/>
-        <circle r="236" stroke-width="1.5"/>
-      </g>
-      <circle r="200" stroke-width="1.5"/>
-      <g id="iris-lines" stroke-width="1.5"></g>
-      <polygon id="iris" stroke-width="2.5" stroke-linejoin="round"/>
-    </svg>
-  </div>
-  <div class="bg-grain"></div>
-  <div class="bg-strip l"></div>
-  <div class="bg-strip r"></div>
-  <div class="bg-vf">
-    <span class="k k-tl"></span><span class="k k-tr"></span><span class="k k-bl"></span><span class="k k-br"></span>
-    <div class="hud hud-l"><span class="rec">REC</span><br><span id="hud-scene">Scene 1 of 7</span><br><span id="hud-look">Look: Teal and orange</span></div>
-    <div class="hud hud-r"><span id="hud-exp">ISO 400  f/2.8  1/50</span><br>5600K</div>
-  </div>
-</div>
-
-<header class="site-header">
-  <div class="wrap">
-    <a class="brand" href="#top" aria-label="Anandu R Krishnan, back to top">Anandu R Krishnan</a>
-    <nav class="nav" aria-label="Primary">
-      <ul class="nav-list" id="nav-list">
-        <li><a class="nav-link" href="#reel">Reel</a></li>
-        <li><a class="nav-link" href="#work">Work</a></li>
-        <li><a class="nav-link" href="#services">Services</a></li>
-        <li><a class="nav-link" href="#process">Process</a></li>
-        <li><a class="nav-link" href="#about">About</a></li>
-        <li><a class="nav-link" href="#contact">Contact</a></li>
-      </ul>
-      <button class="icon-btn" id="theme-btn" type="button" aria-label="Switch to light theme">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
-      </button>
-      <button class="icon-btn menu-btn" id="menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="nav-list">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-      </button>
-    </nav>
-  </div>
+<div class="wrap">
+<header>
+  <div><h1>CA FINAL <span>·</span> MAY 2027</h1><div class="sub">STUDY PUNCH CARD — punch in, study, punch out.</div></div>
+  <div class="badge"><b id="dl">–</b>days to go</div>
 </header>
-
-<main id="main">
-  <section class="hero" id="top">
-    <div class="wrap">
-      <p class="who">Anandu R Krishnan, editor, cinematographer, colourist</p>
-      <h1><span>Video editor</span><span>Cinematographer</span><span>Colourist</span></h1>
-      <p class="pitch">I make cinematic stories that put technical precision behind emotional storytelling. Editing, colour and camera work as one thing rather than three. Based in Bengaluru and Kochi.</p>
-      <div class="cta-row">
-        <a class="btn btn-primary" href="#work">See the work</a>
-        <a class="btn btn-quiet" href="#contact">Start a project</a>
-      </div>
-    </div>
-  </section>
-
-  <section id="reel">
-    <div class="wrap">
-      <div class="section-head"><h2>Showreel</h2><p>Recent work in one reel. Press play.</p></div>
-      <div class="reel" id="reel-box">
-        <button class="poster" id="reel-btn" type="button" aria-label="Play showreel">
-          <span class="play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3l16 9-16 9z"/></svg></span>
-          <span class="tc">00:00:00:00 / [ADD RUNNING TIME]</span>
-        </button>
-      </div>
-      <p class="reel-note" id="reel-note" role="status"></p>
-    </div>
-  </section>
-
-  <section id="work">
-    <div class="wrap">
-      <div class="section-head"><h2>Selected work</h2><p>Brand films, social reels and event coverage. Filter by what you need, then tap any frame to view it larger.</p></div>
-      <div class="filters" role="group" aria-label="Filter work">
-        <button class="chip" type="button" data-f="all" aria-pressed="true">All</button>
-        <button class="chip" type="button" data-f="video" aria-pressed="false">Video</button>
-        <button class="chip" type="button" data-f="photo" aria-pressed="false">Photo</button>
-        <button class="chip" type="button" data-f="edit" aria-pressed="false">Edits</button>
-      </div>
-      <!-- EDIT: for each tile, set data-img="images/your-file.jpg" to show a real photo or video still. Change the title and client text. -->
-      <div class="grid" id="grid">
-        <button class="tile art wide" type="button" data-cat="video" data-cattext="Video" data-img="" style="--g1:#0F3A44;--g2:#B35C2E;--g3:rgba(255,200,120,.4)"><span class="cap"><span class="cat">Video</span><span class="ttl">[PROJECT TITLE]</span></span></button>
-        <button class="tile art tall" type="button" data-cat="photo" data-cattext="Photo" data-img="" style="--g1:#2B1B33;--g2:#D6785A;--g3:rgba(255,220,200,.35)"><span class="cap"><span class="cat">Photo</span><span class="ttl">[PROJECT TITLE]</span></span></button>
-        <button class="tile art" type="button" data-cat="edit" data-cattext="Edit" data-img="" style="--g1:#14202E;--g2:#3E6E8E;--g3:rgba(180,220,255,.3)"><span class="cap"><span class="cat">Edit</span><span class="ttl">[PROJECT TITLE]</span></span></button>
-        <button class="tile art" type="button" data-cat="photo" data-cattext="Photo" data-img="" style="--g1:#1E2B1D;--g2:#8C9C4A;--g3:rgba(255,245,170,.3)"><span class="cap"><span class="cat">Photo</span><span class="ttl">[PROJECT TITLE]</span></span></button>
-        <button class="tile art" type="button" data-cat="video" data-cattext="Video" data-img="" style="--g1:#301418;--g2:#D4503F;--g3:rgba(255,190,150,.35)"><span class="cap"><span class="cat">Video</span><span class="ttl">[PROJECT TITLE]</span></span></button>
-        <button class="tile art wide" type="button" data-cat="photo" data-cattext="Photo" data-img="" style="--g1:#0B1B2E;--g2:#4A7AA8;--g3:rgba(200,230,255,.3)"><span class="cap"><span class="cat">Photo</span><span class="ttl">[PROJECT TITLE]</span></span></button>
-        <button class="tile art tall" type="button" data-cat="edit" data-cattext="Edit" data-img="" style="--g1:#1D1A2E;--g2:#7A5AA8;--g3:rgba(230,200,255,.3)"><span class="cap"><span class="cat">Edit</span><span class="ttl">[PROJECT TITLE]</span></span></button>
-        <button class="tile art" type="button" data-cat="video" data-cattext="Video" data-img="" style="--g1:#162B26;--g2:#2F8F7A;--g3:rgba(190,255,230,.3)"><span class="cap"><span class="cat">Video</span><span class="ttl">[PROJECT TITLE]</span></span></button>
-        <button class="tile art" type="button" data-cat="photo" data-cattext="Photo" data-img="" style="--g1:#33220F;--g2:#C9923A;--g3:rgba(255,230,160,.4)"><span class="cap"><span class="cat">Photo</span><span class="ttl">[PROJECT TITLE]</span></span></button>
-        <button class="tile art wide" type="button" data-cat="edit" data-cattext="Edit" data-img="" style="--g1:#201414;--g2:#8A3B3B;--g3:rgba(255,190,190,.3)"><span class="cap"><span class="cat">Edit</span><span class="ttl">[PROJECT TITLE]</span></span></button>
-        <button class="tile art" type="button" data-cat="video" data-cattext="Video" data-img="" style="--g1:#0E2236;--g2:#2E6FA0;--g3:rgba(160,210,255,.3)"><span class="cap"><span class="cat">Video</span><span class="ttl">[PROJECT TITLE]</span></span></button>
-        <button class="tile art" type="button" data-cat="photo" data-cattext="Photo" data-img="" style="--g1:#2A1A24;--g2:#B0587A;--g3:rgba(255,200,225,.35)"><span class="cap"><span class="cat">Photo</span><span class="ttl">[PROJECT TITLE]</span></span></button>
-      </div>
-    </div>
-  </section>
-
-  <dialog id="lb" aria-label="Work viewer">
-    <div class="lb-view art" id="lb-view"></div>
-    <div class="lb-bar">
-      <p id="lb-cap"></p>
-      <div class="lb-btns">
-        <button class="icon-btn" id="lb-prev" type="button" aria-label="Previous"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-        <button class="icon-btn" id="lb-next" type="button" aria-label="Next"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
-        <button class="icon-btn" id="lb-close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-      </div>
-    </div>
-  </dialog>
-
-  <section id="services">
-    <div class="wrap">
-      <div class="section-head"><h2>Services</h2><p>Camera, cut and colour under one roof.</p></div>
-      <!-- EDIT: change these lists to match exactly what you offer -->
-      <div class="slates">
-        <article class="panel slate">
-          <div class="clap" aria-hidden="true"></div>
-          <div class="slate-body">
-            <p class="scene">Scene 1</p>
-            <h3>Cinematography</h3>
-            <p>Shooting with the edit in mind, because the same person cuts it.</p>
-            <ul>
-              <li>Brand films</li>
-              <li>Social reels</li>
-              <li>Event coverage and photography</li>
-            </ul>
-          </div>
-        </article>
-        <article class="panel slate">
-          <div class="clap" aria-hidden="true"></div>
-          <div class="slate-body">
-            <p class="scene">Scene 2</p>
-            <h3>Video editing</h3>
-            <p>Pacing, sound and tone that serve the story first.</p>
-            <ul>
-              <li>Brand films and short stories</li>
-              <li>Social reels</li>
-              <li>Documentary</li>
-            </ul>
-          </div>
-        </article>
-        <article class="panel slate">
-          <div class="clap" aria-hidden="true"></div>
-          <div class="slate-body">
-            <p class="scene">Scene 3</p>
-            <h3>Colour grading</h3>
-            <p>A defined colour identity for every film.</p>
-            <ul>
-              <li>Custom palettes and LUTs</li>
-              <li>Colour-managed workflow</li>
-              <li>Resolve and Fusion</li>
-            </ul>
-          </div>
-        </article>
-      </div>
-
-      <div class="ba-wrap">
-        <h3>Raw to graded</h3>
-        <p class="placeholder" style="margin:0">Drag across the frame to compare flat and graded footage. To use your own pair, set data-before and data-after on the frame below.</p>
-        <div class="ba" id="ba" data-before="" data-after="">
-          <div class="layer scene-art after" id="ba-after"></div>
-          <div class="layer scene-art before" id="ba-before"></div>
-          <span class="lbl a">Flat</span><span class="lbl b">Graded</span>
-          <div class="line" aria-hidden="true"></div>
-          <input type="range" id="ba-range" min="0" max="100" value="50" aria-label="Compare flat footage and graded footage">
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="process">
-    <div class="wrap">
-      <div class="section-head"><h2>How a project runs</h2><p>Five clips from first call to final file.</p></div>
-      <div class="ruler" aria-hidden="true"></div>
-      <ol class="clips" style="list-style:none;margin:0;padding:0">
-        <li class="pclip" style="--h:195"><span class="n">1</span><h3>Brief</h3><p>We talk through the tone, intention, length and timeline.</p></li>
-        <li class="pclip" style="--h:35"><span class="n">2</span><h3>Shoot</h3><p>Shooting on location, with the cut already in mind.</p></li>
-        <li class="pclip" style="--h:220"><span class="n">3</span><h3>Edit</h3><p>Cut, colour grade, sound and titles.</p></li>
-        <li class="pclip" style="--h:150"><span class="n">4</span><h3>Review</h3><p>You send notes and I revise. [ADD NUMBER OF REVISIONS]</p></li>
-        <li class="pclip" style="--h:300"><span class="n">5</span><h3>Deliver</h3><p>Final files in the formats you need.</p></li>
-      </ol>
-    </div>
-  </section>
-
-  <section id="about">
-    <div class="wrap">
-      <div class="section-head"><h2>About</h2></div>
-      <div class="about-grid">
-        <div>
-          <img src="https://anandu-r-krishnan.github.io/portfolio/assets/img/portrait.jpg" alt="Portrait of Anandu R Krishnan" width="320" style="display:block;width:100%;max-width:320px;height:auto;border-radius:6px;margin:0 0 1.25rem" loading="lazy">
-          <p>I am Anandu, a video editor, cinematographer and colourist working between Bengaluru and Kochi.</p>
-          <p>I work closely with each client to understand their tone and intention first. Whether it is a brand film, a short story or a documentary, the mood is built for that project rather than pulled off a preset shelf.</p>
-          <p>Recent work includes campaigns for Lexus, Skoda, MakeMyTrip, Rare Rabbit and Sid&rsquo;s Farm, and a reel that crossed 33 million views, around thirty times the creator&rsquo;s previous best.</p>
-          <h3>Story first, not just clean</h3>
-          <p>I shape emotion and rhythm. Pacing, sound and tone serve the narrative before they serve the technique.</p>
-          <h3>A defined colour identity</h3>
-          <p>I build custom palettes and LUTs so each film ends up with a look of its own.</p>
-          <h3>Both sides of the frame</h3>
-          <p>Because I shoot and edit, I know what gets captured on set and how it has to live in the cut.</p>
-          <h3>Disciplined, but not rigid</h3>
-          <p>Colour-managed workflows in Resolve and Fusion underneath, an intuitive and organic process on top.</p>
-        </div>
-        <dl class="panel kit" aria-label="Kit list">
-          <div class="kit-row"><dt>Cameras</dt><dd class="placeholder">[ADD CAMERAS]</dd></div>
-          <div class="kit-row"><dt>Lenses</dt><dd class="placeholder">[ADD LENSES]</dd></div>
-          <div class="kit-row"><dt>Audio</dt><dd class="placeholder">[ADD MICS AND RECORDERS]</dd></div>
-          <div class="kit-row"><dt>Light and support</dt><dd class="placeholder">[ADD GIMBAL, TRIPOD, LIGHTS, DRONE]</dd></div>
-          <div class="kit-row"><dt>Software</dt><dd>DaVinci Resolve, Fusion</dd></div>
-        </dl>
-      </div>
-    </div>
-  </section>
-
-  <section id="contact">
-    <div class="wrap">
-      <div class="section-head"><h2>Get in touch</h2><p>Tell me what you are making, roughly when, and the tone you are after. I will come back to you within a day.</p></div>
-      <div class="contact-grid">
-        <form class="panel form" id="enquiry">
-          <div class="field"><label for="f-name">Your name</label><input id="f-name" name="name" type="text" autocomplete="name" required></div>
-          <div class="field"><label for="f-email">Your email</label><input id="f-email" name="email" type="email" autocomplete="email" required></div>
-          <div class="field"><label for="f-type">What do you need?</label>
-            <select id="f-type" name="type"><option>Video editing</option><option>Colour grading</option><option>Cinematography</option><option>Photography</option><option>Full production: shoot, edit and grade</option><option>Something else</option></select>
-          </div>
-          <div class="field"><label for="f-date">Date or deadline</label><input id="f-date" name="date" type="text" placeholder="For example, 20 March or mid-November"></div>
-          <div class="field"><label for="f-msg">Tell me about it</label><textarea id="f-msg" name="msg" required></textarea></div>
-          <button class="btn btn-primary" type="submit">Send enquiry</button>
-          <p class="form-note" id="form-note" role="status"></p>
-        </form>
-        <ul class="panel contact-list">
-          <!-- Contact details taken from anandu-r-krishnan.github.io/portfolio -->
-          <li><span class="label">Email</span><a href="mailto:storycraftcreatives@gmail.com">storycraftcreatives@gmail.com</a></li>
-          <li><span class="label">WhatsApp</span><a href="https://wa.me/918792472134" rel="noopener">+91 87924 72134</a></li>
-          <li><span class="label">Instagram</span><a href="https://www.instagram.com/anandukrizz" rel="noopener">@anandukrizz</a></li>
-          <li><span class="label">Location</span><span>Bengaluru and Kochi, India</span></li>
-        </ul>
-      </div>
-    </div>
-  </section>
-</main>
-
-<footer class="site-footer">
-  <div class="wrap">
-    <p>All photos, films and edits on this site are &copy; 2026 Anandu R Krishnan. Please ask before using them.</p>
-  </div>
-</footer>
-
-<div class="tl" id="tl">
-  <div class="tl-time"><b id="tl-tc">00:00:00:00</b><span>of 00:02:00:00</span></div>
-  <div class="tl-track" id="tl-track" role="group" tabindex="0" aria-label="Page timeline. Use left and right arrow keys to move through the page.">
-    <div class="tl-ruler scrub" id="tl-ruler"></div>
-    <div class="tl-v" id="tl-v"></div>
-    <div class="tl-a scrub" id="tl-a"><svg id="tl-wave" preserveAspectRatio="none" aria-hidden="true"></svg></div>
-    <div class="tl-head" id="tl-head" aria-hidden="true"></div>
-  </div>
+<div class="ubar" id="ubar"></div>
+<nav id="nav"></nav>
+<div id="warn"></div>
+<main id="main"></main>
+<footer class="copy">© 2026 Ajai R Krishnan. All rights reserved.</footer>
 </div>
+<dialog id="dlg"></dialog>
+<div id="auth" hidden><div class="card ab">
+ <h1 style="font-size:28px">CA FINAL <span>·</span> MAY 2027</h1><div class="sub">STUDY PUNCH CARD — sign in to continue</div>
+ <div class="atabs"><button id="amIn" class="on">Sign in</button><button id="amNew">Create account</button></div>
+ <div style="margin:12px 0 4px"><button type="button" class="btn acc big" id="aG" style="width:100%">🔐 Sign in / Sign up with Google (Gmail)</button>
+ <details style="margin-top:8px"><summary class="hint" style="cursor:pointer">Google setup (Client ID)</summary><input id="aCid" placeholder="xxxx.apps.googleusercontent.com" style="margin-top:6px" autocomplete="off"><div class="hint">One-time: paste your Google OAuth Client ID. Works only when this planner is opened from a web address (e.g. GitHub Pages), not from a file on your computer.</div></details>
+ <div class="hint" style="text-align:center;margin-top:10px">— or use a username &amp; password —</div></div>
+ <form id="aForm"><label class="f">USERNAME</label><input id="aU" name="username" autocomplete="username" autocapitalize="none">
+ <label class="f">PASSWORD</label><input id="aP" name="password" type="password" autocomplete="current-password">
+ <div id="aFw"><label class="f">BACKUP .JSON FILE — only needed the first time on a new browser / PC</label><input type="file" id="aF" accept=".json"></div>
+ <label class="rm"><input type="checkbox" id="aRu" checked> Remember my username</label>
+ <label class="rm"><input type="checkbox" id="aKs"> Keep me signed in on this device <small>(only on your own PC/phone)</small></label>
+ <div style="margin-top:14px"><button type="submit" class="btn acc big" id="aGo">Sign in</button></div><div class="amsg" id="aM"></div></form>
+ <div class="copy" style="margin-top:14px">© 2026 Ajai R Krishnan. All rights reserved.</div>
+ <div class="hint">To remember the password too, accept your browser’s “Save password” prompt — the browser stores it, not this planner. Passwords are hashed (PBKDF2); there is no password recovery. Google accounts sync to a private app folder in your own Google Drive.</div>
+</div></div>
 
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
-(function () {
-  /* ===== EDIT THESE TWO LINES =====
-     email: your email address, so the quote form opens a draft to you.
-     showreel: a YouTube or Vimeo link to your showreel. */
-  var CONFIG = { email: 'storycraftcreatives@gmail.com', showreel: 'https://youtu.be/2ni39vVd5XM' };
+/* ===== GOOGLE SIGN-IN: paste your OAuth Client ID between the quotes (ends with .apps.googleusercontent.com) ===== */
+const GCID_DEFAULT='';
+/* ---------- DATA: [title, notebook page ref, PDF page, alt [page,label], external url] ---------- */
+const META={
+ DT:{n:'Direct Tax & Intl Taxation',p:'Paper 4',c:'#c0642b'},
+ IDT:{n:'Indirect Tax Laws (GST & Customs)',p:'Paper 5',c:'#a3324a'},
+ AUD:{n:'Advanced Auditing & Ethics',p:'Paper 3',c:'#2e7d5b'},
+ FR:{n:'Financial Reporting',p:'Paper 1',c:'#2f6da8'},
+ AFM:{n:'Adv. Financial Management',p:'Paper 2',c:'#7a4b9e'},
+ IBS:{n:'Integrated Business Solutions',p:'Paper 6',c:'#5b6b73'}
+};
+const ORDER=['FR','AFM','AUD','DT','IDT','IBS'];
+const RAW={
+DT:[
+['Basics, Tax Rates AY 26-27 & Alternate Taxation Regime','01',1],
+['Income from Capital Gains','19',339],
+['Income from Other Sources','62',519],
+['Taxation of Dividend & Deemed Dividend','68',525],
+['Taxation in Case of Liquidation & Buy Back','72',382],
+['Taxation in Case of Amalgamation & Demerger','74',417],
+['Profits & Gains of Business or Profession','80',117],
+['Income Computation & Disclosure Standards (ICDS)','124',117],
+['Taxation of Political Parties & Electoral Trust','135',1045],
+['Taxation in Case of Firm / LLP','136',826],
+['Taxation in Case of AOP / BOI','140',878],
+['Taxation of Business Trust','142',1056],
+['Taxation of Investment Fund','146',1068],
+['Taxation of Securitisation Trust','148',1053],
+['Minimum Alternate Tax (MAT)','149',934],
+['Alternate Minimum Tax (AMT)','156',950],
+['Deduction u/s 10AA (SEZ)','158',736],
+['Deduction under Chapter VI-A','161',637],
+['Clubbing of Income','176',573],
+['Set-Off & Carry Forward of Losses','179',595],
+['Advance Tax, TDS & TCS','187',1149,[1303,'Advance tax']],
+['Assessment Procedure','223',1419],
+['Appeals & Revisions','268',1560],
+['Dispute Resolution Committee','278',1620],
+['Miscellaneous Provisions','282',1636],
+['Penalties & Prosecutions','292',1686],
+['The Black Money Act, 2015','298',1778],
+['GAAR','304',1120],
+['Taxation of VDA','309',1138],
+['Exempt Income','312',73],
+['Tonnage Taxation','314',804],
+['Taxation of Trust & Institutions','315',961],
+['Tax Audit & Ethical Compliance','331',1780],
+['Transfer Pricing','337',2103],
+['Non-Resident & NRI Taxation','356',1891],
+['Double Taxation Relief (DTAA)','388',2057],
+['Advance Ruling (BOAR)','392',2093],
+['Model Tax Conventions (MTC)','395',2327],
+['Application & Interpretation of Tax Treaties','402',2297],
+['Base Erosion & Profit Shifting (BEPS)','409',2243],
+['Latest Developments in International Taxation','419',2361],
+['Foreign Tax Credit Rule','424',2057],
+['Conversion of Foreign Income into Indian Currency','426',2057],
+['Remaining Case Laws & Concepts','427',null]],
+IDT:[
+['#','GST'],
+['Basic Concepts of GST','1–4',1,[1303,'E-commerce']],
+['Supply under GST','5–31',1,[1303,'E-commerce']],
+['Levy & Collection under CGST','32–46',157,[1461,'Import/Export']],
+['Levy & Collection under IGST','47–55',157,[1461,'Import/Export']],
+['Exemptions under GST','56–90',391],
+['Time of Supply','91–100',567],
+['Place of Supply','101–122',255],
+['Value of Supply','123–145',629],
+['Input Tax Credit','146–183',737,[1627,'Job work']],
+['Composition Scheme','184–193',157],
+['Invoice, Debit & Credit Notes','194–205',1075],
+['Registration','206–226',965],
+['Payment Process under GST','227–246',1221],
+['Returns under GST','247–260',1357],
+['Account & Records, E-way Bill','261–268',1163],
+['Refunds under GST','269–283',1551],
+['Assessment & Audit under GST','284–297',1655],
+['Search, Seizure, Offences & Penalties','298–312',1681,[1779,'Offences & penalties']],
+['Demand & Recovery under GST','313–319',1703],
+['Appeals','320–327',1853],
+['Advance Ruling','328–329',1903],
+['Ethics & Other Provisions','330–336',1929],
+['#','Customs & Foreign Trade Policy'],
+['Taxable Event under Customs','337–348',1978],
+['Exemptions under Customs','349–354',1978],
+['Classification of Goods & Types of Customs Duty','355–374',1985,[2035,'Classification']],
+['Valuation under Customs','375–390',2065],
+['Procedures under Customs','391–419',2179],
+['Baggage Provisions','420–427',2179],
+['Stores under Customs','428–429',2279],
+['Warehousing under Customs','430–436',2279],
+['Refunds under Customs','437–439',2313],
+['Foreign Trade Policy','440–468',2337],
+['Appendices A–D (CMA topics, case laws, sections, concept index)','469–491',null]],
+AUD:[
+['#','Basics & Standards on Auditing'],
+['Basics of Audit','',35],
+['SA 200 – Overall Objectives of the Auditor','',35],
+['Audit Procedures','',245],
+['SA 210 / SA 230 – Engagement Terms & Documentation','',35],
+['SQC 1 & SA 220 – Quality Control','',1],
+['SA 240 – Fraud','',35],
+['SA 250 – Laws & Regulations','',35],
+['SA 260 – Communication with TCWG','',35],
+['SA 265 – Communicating Deficiencies in IC','',171],
+['SA 299 – Joint Audit','',35],
+['SA 315 – Risk Identification & Assessment','',171],
+['SA 330 – Auditor\u2019s Responses to Assessed Risks','',171],
+['SA 320 – Materiality','',171],
+['SA 402 – Service Organisations','',35],
+['SA 450 – Evaluation of Misstatements','',285],
+['SA 500 – Audit Evidence','',245],
+['SA 501 – Specific Considerations','',245],
+['SA 505 – External Confirmations','',245],
+['SA 510 – Opening Balances','',245],
+['SA 520 – Analytical Procedures','',245],
+['SA 530 – Audit Sampling','',245],
+['SA 540 – Accounting Estimates','',245],
+['SA 550 – Related Parties','',245],
+['SA 560 – Subsequent Events','',285],
+['SA 570 – Going Concern','',285],
+['SA 580 – Written Representations','',285],
+['SA 600 – Group Audit (Using work of other auditors)','',649],
+['SA 620 – Using Work of Auditor\u2019s Expert','',245],
+['SA 700 – Forming an Opinion & Reporting','',321],
+['SA 701 – Key Audit Matters','',321],
+['SA 705 – Modifications to the Opinion','',321],
+['SA 706 – Emphasis of Matter / Other Matter','',321],
+['SA 710 – Comparative Information','',321],
+['SA 720 – Other Information','',321],
+['#','Professional Ethics'],
+['Fundamental Principles & Types of Threats','',983],
+['NOCLAR','',988],
+['Membership Provisions, Branch Office, KYC & First Schedule','',1014],
+['Second Schedule','',1062],
+['Council General Guidelines & Recommendatory Measures','',1082],
+['ESB Decisions & Disciplinary Proceedings','',1012],
+['#','Companies, Planning & Special Audits'],
+['CARO 2020','',426],
+['Company Audit','',321],
+['Audit Planning','',101],
+['Risk Assessment & Internal Control','',171],
+['Group Audit','',649],
+['Bank Audit','',689],
+['NBFC Audit','',689],
+['PSU Audit','',771],
+['Internal Audit & SA 610','',809],
+['Due Diligence','',854],
+['Forensic Accounting','',854],
+['Investigation','',854],
+['SA 800 Series (SA 800, 805, 810)','',433],
+['SRE (2400, 2410)','',499],
+['SAE (3400, 3402, 3420)','',549],
+['SRS (4400, 4410)','',473],
+['SDG & ESG Assurance','',937],
+['Digital Audit','',589]],
+FR:[
+['Introduction to Ind AS & Schedule III','1.1–1.10',1],
+['Conceptual Framework for Financial Reporting','2.1',47],
+['Ind AS 1 – Presentation of Financial Statements','3.1–3.8',121],
+['Ind AS 2 – Inventories','4.1–4.6',240],
+['Ind AS 7 – Statement of Cash Flows','5.1–5.9',121],
+['Ind AS 8 – Accounting Policies, Changes in Estimates & Errors','6.1–6.8',192],
+['Ind AS 10 – Events After the Reporting Period','7.1–7.5',375],
+['Ind AS 12 – Income Taxes','8.1–8.10',375],
+['Ind AS 16 – Property, Plant & Equipment','9.1–9.10',240],
+['Ind AS 19 – Employee Benefits','10.1–10.17',283],
+['Ind AS 20 – Government Grants & Assistance','11.1–11.3',240],
+['Ind AS 21 – Effects of Changes in Foreign Exchange Rates','12.1–12.11',375],
+['Ind AS 23 – Borrowing Costs','13.1–13.5',240],
+['Ind AS 24 – Related Party Disclosures','14.1–14.8',469],
+['Ind AS 33 – Earnings Per Share','15.1–15.9',375],
+['Ind AS 34 – Interim Financial Reporting','16.1–16.6',121],
+['Ind AS 36 – Impairment of Assets','17.1–17.8',240],
+['Ind AS 37 – Provisions, Contingent Liabilities & Assets','18.1–18.8',283],
+['Ind AS 38 – Intangible Assets','19.1–19.11',240],
+['Ind AS 40 – Investment Property','20.1–20.7',240],
+['Ind AS 41 – Agriculture','21.1–21.4',658],
+['Ind AS 101 – First Time Adoption of Ind AS','22.1–22.15',856],
+['Ind AS 105 – Non-Current Assets Held for Sale & Discontinued Ops','23.1–23.6',240],
+['Ind AS 108 – Operating Segments','24.1–24.4',469],
+['Ind AS 113 – Fair Value Measurement','25.1–25.4',469],
+['Ind AS 115 – Revenue from Contracts with Customers','26.1–26.28',502],
+['Ind AS 116 – Leases','27.1–27.29',283],
+['Ind AS 102 – Share Based Payments','28.1–28.11',283],
+['Ind AS 103 – Business Combination','29.1–29.18',718],
+['Ind AS 110, 27, 112 – Consolidated, Separate FS & Interests in Other Entities','30.1–30.37',852],
+['Ind AS 111 – Joint Arrangements','31.1–31.3',852],
+['Ind AS 28 – Investments in Associates & Joint Ventures','32.1–32.9',852],
+['Ind AS 32, 107, 109 – Financial Instruments','33.1–33.34',689],
+['Professional & Ethical Duty of a CA','34.1–34.12',972],
+['Accounting & Technology','35.1–35.13',null]],
+AFM:[
+['Valuation of Securities (Bonds, Equity, Convertibles, Rights, Money Market)','',159,[119,'Security analysis']],
+['Mergers, Acquisitions & Corporate Restructuring','',767],
+['Portfolio Management','',231],
+['Advanced Capital Budgeting Decisions','',29],
+['Mutual Funds','',377],
+['Risk Management','',19],
+['Business Valuation','',699],
+['Foreign Exchange Exposure & Risk Management (Parts A–G)','',519],
+['International Financial Management','',627],
+['Derivatives Analysis & Valuation (Futures, Options, Greeks, Exotics)','',431],
+['Interest Rate Risk Management','',671],
+['Financial Policy & Corporate Strategy','',1],
+['Securitization','',361],
+['Startup Finance','',851],
+['AFM Theory Compiler','',null]],
+IBS:[
+['IBS Case Study Digest – Volume II','',null,null,'https://resource.cdn.icai.org/86797bos-aps1317-ibs-csd-vol-2.pdf'],
+['IBS Case Study Digest','',null,null,'https://resource.cdn.icai.org/80945bos65122.pdf'],
+['Case Studies in Students\u2019 Journal','',null,null,'https://www.icai.org/post/bos-case-published-stu-journal'],
+['Notes, Assignments & Additional Guidance','',null,null,'https://www.icai.org/post/bos-notes-assignments-and-additional-guidance-content'],
+['Strategic Management – theory revision','',null],
+['Case study writing practice / mocks','',null]]
+};
+const L={};
+ORDER.forEach(s=>{let g='';L[s]=[];RAW[s].forEach(r=>{if(r[0]==='#'){g=r[1];return}L[s].push({i:L[s].length,t:r[0],nb:r[1]||'',pg:r[2],alt:r[3],url:r[4],g})})});
 
-  var root = document.documentElement;
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* ---------- STATE ---------- */
+const K='caFinalPlanner.v1';
+const DEF={sessions:[],notes:[],del:[],progress:{},active:null,set:{exam:'2027-05-02',target:6,base:'',files:{DT:'Study material/DT module.pdf',IDT:'Study material/IDT module.pdf',AUD:'Study material/Audit Module.pdf',FR:'Study material/FR module.pdf',AFM:'Study material/AFM module.pdf'}}};
+const $=s=>document.querySelector(s);
+const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const dk=t=>{const d=new Date(t);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+const UK='caFinalPlanner.users',LK='caFinalPlanner.lastUser',KP='caFinalPlanner.keep';
+let storeOK=true,USER=null,AUTH=null,FH=null,DH=null,PD=false,S=JSON.parse(JSON.stringify(DEF)),syncTxt='';
+const ukey=u=>K+'.u.'+u;
+const users=()=>{try{return JSON.parse(localStorage.getItem(UK))||{}}catch(e){return{}}};
+function norm(r){const d=JSON.parse(JSON.stringify(DEF));r=r||{};return{...d,...r,set:{...d.set,...(r.set||{}),files:{...d.set.files,...((r.set||{}).files||{})}}}}
+function loadLocal(u){try{const r=JSON.parse(localStorage.getItem(ukey(u)));if(r)return norm(r)}catch(e){storeOK=false}return null}
+function fixNames(){const o={DT:'DT_module.pdf',IDT:'IDT_module.pdf',AUD:'Audit_Module.pdf',FR:'FR_module.pdf',AFM:'AFM_module.pdf'};for(const k in o)if(S.set.files[k]===o[k])S.set.files[k]=DEF.set.files[k]}
+/* --- merge two or more copies of the same account (laptop + mobile) --- */
+function mergeS(list){list=list.slice().sort((a,b)=>(b.savedAt||0)-(a.savedAt||0));const base=JSON.parse(JSON.stringify(list[0])),del=new Set(),ss=new Map(),nn=new Map(),pr={};
+ list.forEach(x=>(x.del||[]).forEach(i=>del.add(i)));
+ list.slice().reverse().forEach(x=>{(x.sessions||[]).forEach(v=>ss.set(v.id,v));(x.notes||[]).forEach(v=>nn.set(v.id,v));for(const k in x.progress||{}){pr[k]=pr[k]||{};for(const f in x.progress[k])pr[k][f]=(pr[k][f]||x.progress[k][f])?1:0}});
+ base.sessions=[...ss.values()].filter(v=>!del.has(v.id));base.notes=[...nn.values()].filter(v=>!del.has(v.id));base.progress=pr;base.del=[...del];return base}
+/* --- password hashing (PBKDF2, browser built-in) --- */
+const b64=x=>btoa(String.fromCharCode(...new Uint8Array(x))),unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function hashPw(pw,salt,it){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);return b64(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:unb64(salt),iterations:it},k,256))}
+async function mkAuth(pw){const salt=b64(crypto.getRandomValues(new Uint8Array(16)));return{salt,it:150000,hash:await hashPw(pw,salt,150000)}}
+async function chk(pw,a){return !!a&&await hashPw(pw,a.salt,a.it)===a.hash}
+/* --- export envelope: account (salt+hash) + all data --- */
+const pack=()=>({app:'ca-final-planner',v:2,user:USER,auth:AUTH,savedAt:S.savedAt||0,data:S});
+function unpack(j){if(j&&j.data&&j.auth)return j;if(j&&Array.isArray(j.sessions))return{data:j};throw 0}
+function dlBackup(){const b=new Blob([JSON.stringify(pack(),null,1)],{type:'application/json'});const u=document.createElement('a');u.href=URL.createObjectURL(b);u.download='ca-final-planner-'+USER+'-'+dk(Date.now())+'.json';u.click()}
+/* --- auto-save: localStorage (instant) + linked JSON file (silent, Chrome/Edge) --- */
+function save(){if(!USER)return;S.savedAt=Date.now();try{localStorage.setItem(ukey(USER),JSON.stringify(S))}catch(e){storeOK=false;warn()}flush();if(AUTH&&AUTH.google){clearTimeout(gT);gT=setTimeout(()=>gSync(),2500)}}
+let busy=false,dirty=false,lastW=0;
+/* shared file (SMB/NAS): before every write, merge in anything another device wrote meanwhile */
+async function pullRemote(){if(!FH)return false;try{const e=unpack(JSON.parse(await(await FH.getFile()).text()));
+ if(e.auth&&e.auth.hash===AUTH.hash&&e.data&&(e.data.savedAt||0)>lastW){const before=JSON.stringify(S);S=mergeS([S,norm(e.data)]);fixNames();lastW=e.data.savedAt||0;return before!==JSON.stringify(S)}}catch(err){}return false}
+function uiRefresh(){try{localStorage.setItem(ukey(USER),JSON.stringify(S))}catch(e){}syncMsg('🔄 merged changes from another device');if(!$('#dlg').open&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||''))render()}
+async function flush(){if(!FH)return;if(busy){dirty=true;return}busy=true;try{do{dirty=false;const ch=await pullRemote();const txt=JSON.stringify(pack(),null,1);const w=await FH.createWritable();await w.write(txt);await w.close();lastW=S.savedAt||0;if(ch)uiRefresh();
+  if(DH){try{const bd=await DH.getDirectoryHandle('backups',{create:true}),bh=await bd.getFileHandle('ca-final-planner-'+USER+'-backup-'+dk(Date.now())+'.json',{create:true}),w2=await bh.createWritable();await w2.write(txt);await w2.close()}catch(e){}}
+  syncMsg('💾 saved to file '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'}))}while(dirty)}catch(e){syncMsg('⚠ file write failed — use “Change save file”')}busy=false}
+function syncMsg(t){syncTxt=t;const e=$('#sync');if(e)e.textContent=t}
+function ubar(){$('#ubar').innerHTML=USER?`<span class="mono">👤 ${esc(USER)}</span><span class="mono mute" id="sync">${esc(syncTxt||(AUTH&&AUTH.google?'☁ Google Drive':FH?'💾 file linked':'💾 saved in browser only'))}</span>${AUTH&&AUTH.google&&GNEED?'<button class="btn acc sm" data-act="gre">Reconnect Google</button>':''}${PD&&!FH?'<button class="btn acc sm" data-act="reconnect">Reconnect save file</button>':''}<button class="btn ghost sm" data-act="link">${FH?'Change save file':'Link auto-save file'}</button><button class="btn ghost sm" data-act="logout">Sign out</button>`:''}
+const FT=[{description:'JSON',accept:{'application/json':['.json']}}];
+function linkDlg(){const d=$('#dlg'),ok=!!window.showSaveFilePicker;
+ d.innerHTML=`<h2 style="font:700 20px var(--fh);margin:0 0 6px">Auto-save file</h2>`+(ok?`<p style="font-size:13px">Select the folder where this HTML file lives (once). The planner then creates <b>ca-final-planner-${esc(USER)}.json</b> in it by itself and silently saves every punch-in, punch-out and change there, plus a daily backup copy in a <b>backups</b> sub-folder (last 30 days kept). On later sign-ins it reopens that file automatically — no file dialogs.</p><div style="display:grid;gap:8px"><button class="btn acc" id="lD">Select planner folder…</button><button class="btn ghost" id="lN">Or: create a specific file…</button><button class="btn ghost" id="lE">Or: use an existing file…</button><button class="btn ghost" id="lX">Not now</button></div>`:`<p style="font-size:13px">This browser can’t write files silently (use Chrome or Edge for that). Your data is still saved in the browser on every event, and a backup .json is downloaded on every punch-out and sign-out.</p><button class="btn ghost" id="lX">OK</button>`);
+ d.showModal();$('#lX').onclick=()=>{localStorage.setItem('caPlanner.skipLink.'+USER,'1');d.close()};if(!ok)return;
+ const go=async(pick,ex)=>{try{const h=await pick();if(ex){const env=unpack(JSON.parse(await(await h.getFile()).text()));if(!env.auth||env.auth.hash!==AUTH.hash)return alert('That file belongs to a different account.');if((env.data.savedAt||0)>(S.savedAt||0))S=norm(env.data)}FH=h;DH=null;try{await hPut('fh:'+USER,h);await hPut('dir',null)}catch(e){}d.close();save();render()}catch(e){if(e&&e.name!=='AbortError')alert('Could not use that file.')}};
+ $('#lN').onclick=()=>go(()=>showSaveFilePicker({suggestedName:'ca-final-planner-'+USER+'.json',types:FT}));
+ $('#lE').onclick=async()=>go(async()=>(await showOpenFilePicker({types:FT}))[0],1);
+ $('#lD').onclick=async()=>{try{const dh=await showDirectoryPicker({id:'caplanner',mode:'readwrite'});const h=await dh.getFileHandle(dirFile(USER),{create:true});
+  try{const env=unpack(JSON.parse(await(await h.getFile()).text()));if(env.auth&&env.auth.hash===AUTH.hash&&(env.data.savedAt||0)>(S.savedAt||0))S=norm(env.data)}catch(e){}
+  FH=h;DH=dh;try{await hPut('dir',dh)}catch(e){}d.close();save();render()}catch(e){if(e&&e.name!=='AbortError')alert('Could not use that folder. Choose a normal folder — Chrome blocks Desktop, Documents and Downloads themselves (a sub-folder inside them is fine).')}}}
+const dirFile=u=>'ca-final-planner-'+u+'.json';
+const idb=()=>new Promise((res,rej)=>{const r=indexedDB.open('caPlannerH',1);r.onupgradeneeded=()=>r.result.createObjectStore('h');r.onsuccess=()=>res(r.result);r.onerror=rej});
+async function hPut(k,v){const d=await idb();return new Promise(r=>{const t=d.transaction('h','readwrite');t.objectStore('h').put(v,k);t.oncomplete=r;t.onerror=r})}
+async function hGet(k){try{const d=await idb();return await new Promise(r=>{const q=d.transaction('h').objectStore('h').get(k);q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)})}catch(e){return null}}
+/* --- CSV export / import for every dataset (sessions, sticky notes, chapter progress) --- */
+const csvQ=v=>{let t=String(v??'');if(/^[=+\-@]/.test(t))t="'"+t;return'"'+t.replace(/"/g,'""')+'"'};
+function csvOut(name,rows){const b=new Blob(['\ufeff'+rows.map(r=>r.map(csvQ).join(',')).join('\r\n')],{type:'text/csv'});const u=document.createElement('a');u.href=URL.createObjectURL(b);u.download=name+'-'+USER+'-'+dk(Date.now())+'.csv';u.click()}
+const hm=t=>{const d=new Date(t);return pad(d.getHours())+':'+pad(d.getMinutes())};
+function exportLog(){const rows=[['ID','Date','Start','End','Minutes','Hours','SubjectCode','Subject','ChapterNo','Chapter','Activity','Note','StickyNotes']];
+ [...S.sessions].sort((a,b)=>a.st-b.st).forEach(x=>{const c=L[x.s][x.i];rows.push([x.id,dk(x.st),hm(x.st),hm(x.en),Math.round((x.en-x.st)/6e4),hrs(x).toFixed(2),x.s,META[x.s].n,x.i+1,c?c.t:'',x.a,x.n||'',S.notes.filter(z=>z.sid===x.id).map(z=>z.t+': '+z.x).join(' | ')])});csvOut('ca-study-sessions',rows)}
+function exportNotes(){const rows=[['ID','Created','SubjectCode','Subject','ChapterNo','Chapter','Type','Note','Status','SessionID','LDRQuestions','LDRData']];
+ [...S.notes].sort((a,b)=>a.c-b.c).forEach(n=>{const c=L[n.s][n.i];rows.push([n.id,new Date(n.c).toISOString(),n.s,META[n.s].n,n.i+1,c?c.t:'',n.t,n.x,n.d?'Done':'Open',n.sid||'',ldrAll(n),ldrList(n).length?JSON.stringify(ldrList(n)):''])});csvOut('ca-sticky-notes',rows)}
+function exportProg(){const rows=[['SubjectCode','ChapterNo','Chapter','Study','Rev1','Rev2','Practice']];
+ ORDER.forEach(s=>L[s].forEach(c=>{const p=prog(s,c.i);rows.push([s,c.i+1,c.t,p.s?1:0,p.r1?1:0,p.r2?1:0,p.p?1:0])}));csvOut('ca-chapter-progress',rows)}
+function exportDaily(){const m=byDay(),rows=[['Date','TotalHours',...ORDER.map(s=>s+'Hours')]];
+ Object.keys(m).sort().forEach(k=>rows.push([k,m[k].t.toFixed(2),...ORDER.map(s=>(m[k].by[s]||0).toFixed(2))]));csvOut('ca-daily-summary',rows)}
+function exportAll(){[exportLog,exportNotes,exportProg,exportDaily].forEach((f,i)=>setTimeout(f,i*400))}
+function csvParse(t){t=t.replace(/^\ufeff/,'');const rows=[];let r=[],c='',q=false;
+ for(let i=0;i<t.length;i++){const ch=t[i];if(q){if(ch==='"'){if(t[i+1]==='"'){c+='"';i++}else q=false}else c+=ch}
+  else if(ch==='"')q=true;else if(ch===','){r.push(c);c=''}else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;r.push(c);c='';if(r.some(x=>x!==''))rows.push(r);r=[]}else c+=ch}
+ r.push(c);if(r.some(x=>x!==''))rows.push(r);return rows}
+const cv=v=>String(v??'').trim().replace(/^'([=+\-@])/,'$1');
+function pdate(v){v=(v||'').trim();let m=v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return m[1]+'-'+pad(+m[2])+'-'+pad(+m[3]);m=v.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/);return m?m[3]+'-'+pad(+m[2])+'-'+pad(+m[1]):''}
+function ptime(v){const m=(v||'').match(/^(\d{1,2}):(\d{2})/);return m?pad(+m[1])+':'+m[2]:'00:00'}
+function importCsv(text){const rows=csvParse(text);if(rows.length<2)throw new Error('empty CSV');const H=rows[0].map(x=>cv(x).toLowerCase()),body=rows.slice(1);
+ const g=(r,n)=>cv(r[H.indexOf(n)]),sub=r=>g(r,'subjectcode').toUpperCase(),chi=r=>(+g(r,'chapterno'))-1,ok=(s,i)=>META[s]&&L[s][i];let add=0,skip=0;
+ if(H.includes('minutes')&&H.includes('date')){const have=new Set(S.sessions.map(x=>x.id));
+  body.forEach(r=>{const s=sub(r),i=chi(r),d=pdate(g(r,'date')),mn=+g(r,'minutes');if(!ok(s,i)||!d||!(mn>0)){skip++;return}
+   const st=new Date(d+'T'+ptime(g(r,'start'))).getTime();if(!st){skip++;return}const id=g(r,'id')||('csv-'+st+'-'+s+'-'+i);if(have.has(id)){skip++;return}
+   have.add(id);S.del=(S.del||[]).filter(x=>x!==id);S.sessions.push({id,s,i,a:ACTS.includes(g(r,'activity'))?g(r,'activity'):'Study',n:g(r,'note'),st,en:st+mn*6e4});add++});return'sessions: '+add+' added, '+skip+' skipped'}
+ if(H.includes('type')&&H.includes('note')&&H.includes('status')){const have=new Set(S.notes.map(x=>x.id));
+  body.forEach(r=>{const s=sub(r),i=chi(r),t=NT.find(k=>k.toLowerCase()===g(r,'type').toLowerCase()),x=g(r,'note');if(!ok(s,i)||!t||(!x&&!g(r,'ldrdata'))){skip++;return}
+   const id=g(r,'id')||uid();if(have.has(id)){skip++;return}have.add(id);S.del=(S.del||[]).filter(z=>z!==id);
+   S.notes.push({id,s,i,t,x,c:Date.parse(g(r,'created'))||Date.now(),d:/^done$/i.test(g(r,'status'))?1:0,sid:g(r,'sessionid'),q:(()=>{try{const a=JSON.parse(g(r,'ldrdata')||'[]');return Array.isArray(a)?a.map(o=>({q:String(o.q||''),p:String(o.p||''),s:String(o.s||'')})):[]}catch(e){return[]}})()});add++});return'sticky notes: '+add+' added, '+skip+' skipped'}
+ if(H.includes('rev1')&&H.includes('study')){const on=v=>/^(1|y|yes|true|x|✓|done)$/i.test(v);
+  body.forEach(r=>{const s=sub(r),i=chi(r);if(!ok(s,i)){skip++;return}const p=S.progress[pk(s,i)]=S.progress[pk(s,i)]||{};
+   [['s','study'],['r1','rev1'],['r2','rev2'],['p','practice']].forEach(([k,c])=>{if(on(g(r,c)))p[k]=1});add++});return'chapter progress: '+add+' rows applied, '+skip+' skipped'}
+ throw new Error('not a planner CSV (export one from this planner first)')}
+const dataBar=k=>`<span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="${k==='sessions'?'exportLog':k==='notes'?'exportNotes':'exportProg'}">Export CSV</button><label class="btn ghost sm" style="cursor:pointer">Import CSV<input type="file" id="impCsv" accept=".csv,text/csv" multiple hidden></label></span>`;
+/* --- account management --- */
+const sleep=ms=>new Promise(r=>setTimeout(r,ms)),BP=()=>'ca-final-planner-'+USER+'-backup-';
+async function prune(){if(!DH)return;try{const bd=await DH.getDirectoryHandle('backups'),a=[];for await(const [n] of bd.entries())if(n.startsWith(BP()))a.push(n);a.sort();for(const n of a.slice(0,-30))await bd.removeEntry(n)}catch(e){}}
+function chPwDlg(){const d=$('#dlg');
+ d.innerHTML=`<h2 style="font:700 20px var(--fh);margin:0 0 6px">Change password</h2><label class="f">CURRENT PASSWORD</label><input type="password" id="cpO" autocomplete="current-password"><label class="f">NEW PASSWORD</label><input type="password" id="cpN" autocomplete="new-password"><label class="f">CONFIRM NEW PASSWORD</label><input type="password" id="cpC" autocomplete="new-password"><div class="amsg" id="cpM"></div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn acc" id="cpOK">Change password</button><button class="btn ghost" id="cpNo">Cancel</button></div>`;
+ d.showModal();$('#cpNo').onclick=()=>d.close();
+ $('#cpOK').onclick=async()=>{const m=t=>$('#cpM').textContent=t,n=$('#cpN').value;
+  if(!await chk($('#cpO').value,AUTH))return m('Current password is wrong.');if(n.length<4)return m('Use at least 4 characters.');if(n!==$('#cpC').value)return m('New passwords do not match.');
+  AUTH=await mkAuth(n);const U=users();U[USER]=AUTH;localStorage.setItem(UK,JSON.stringify(U));save();d.close();
+  alert('Password changed. Your linked file and new backups use the new password. Older backup files you saved earlier still accept the old one.')}}
+function delAccDlg(){const d=$('#dlg'),has=!!DH;
+ d.innerHTML=`<h2 style="font:700 20px var(--fh);margin:0 0 6px">Delete account “${esc(USER)}”</h2><p style="font-size:13px">Removes this login and its study data from this browser. A final backup is ${has?'kept in your planner folder':'saved/downloaded first'} unless you tick the box below.</p>${AUTH.google?'':'<label class="f">PASSWORD</label><input type="password" id="daP" autocomplete="current-password">'}${has?`<label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px"><input type="checkbox" id="daF" style="width:auto"> Also permanently delete this account’s JSON file and backups from the folder</label>`:''}<div class="amsg" id="daM"></div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn acc" id="daOK">Delete account</button><button class="btn ghost" id="daNo">Cancel</button></div>`;
+ d.showModal();$('#daNo').onclick=()=>d.close();
+ $('#daOK').onclick=async()=>{const m=t=>$('#daM').textContent=t;if(!AUTH.google&&!await chk($('#daP').value,AUTH))return m('Wrong password.');
+  const wipe=has&&$('#daF').checked;if(!confirm(wipe?'Permanently delete this account AND its files in the folder?':'Delete this account from this browser?'))return;
+  const u=USER;try{save();while(busy)await sleep(50);await sleep(100);while(busy)await sleep(50);
+   if(wipe){try{await DH.removeEntry(dirFile(u))}catch(e){}try{const bd=await DH.getDirectoryHandle('backups');for await(const [n] of bd.entries())if(n.startsWith(BP()))await bd.removeEntry(n)}catch(e){}FH=null;DH=null}
+   else if(!FH)dlBackup();
+   try{await hPut('fh:'+u,null)}catch(e){}
+  }catch(e){return m('Something went wrong — nothing was deleted.')}
+  const U=users();delete U[u];localStorage.setItem(UK,JSON.stringify(U));localStorage.removeItem(ukey(u));localStorage.removeItem('caPlanner.skipLink.'+u);if(localStorage.getItem(LK)===u)localStorage.removeItem(LK);if(localStorage.getItem(KP)===u)localStorage.removeItem(KP);if(!Object.keys(U).length)localStorage.removeItem(K);
+  d.close();showAuth()}}
+/* --- link the saved file/folder; ask=true only when called from a click (permission prompt) --- */
+async function attach(u,c,ask){FH=null;DH=null;PD=false;
+ const perm=async h=>{let pm=await h.queryPermission({mode:'readwrite'});if(pm!=='granted'&&ask)pm=await h.requestPermission({mode:'readwrite'});return pm==='granted'};
+ let h=null;const dh=await hGet('dir');
+ if(dh){try{if(await perm(dh)){h=await dh.getFileHandle(dirFile(u),{create:true});DH=dh}else PD=true}catch(e){}}
+ if(!h){const fh=await hGet('fh:'+u);if(fh){try{if(await perm(fh))h=fh;else PD=true}catch(e){}}}
+ if(h){FH=h;try{const e2=unpack(JSON.parse(await(await h.getFile()).text()));if(e2.auth&&AUTH&&e2.auth.hash===AUTH.hash&&e2.data)c.push(norm(e2.data))}catch(e){}}}
+async function reconnect(){const c=[];await attach(USER,c,true);if(c.length){S=mergeS([S,...c]);fixNames()}syncMsg(FH?'💾 file linked':'');save();render();prune()}
+async function autoLogin(u){try{AUTH=users()[u];USER=u;const c=[],lo=loadLocal(u);if(lo)c.push(lo);await attach(u,c,false);S=c.length?mergeS(c):norm();fixNames();
+ $('#auth').hidden=true;document.querySelector('.wrap').style.display='';syncMsg(FH?'💾 file linked':PD?'⚠ click “Reconnect save file” to resume file saving':'');save();render();tickAll();prune();if(AUTH&&AUTH.google)gSync()}catch(e){showAuth()}}
+/* --- login / logout --- */
+let amode='in';const am=t=>$('#aM').textContent=t;
+function showAuth(){GTOK=null;GID=null;GLW=-1;GNEED=false;PD=false;lastW=0;USER=null;AUTH=null;FH=null;DH=null;S=norm();syncTxt='';document.querySelector('.wrap').style.display='none';$('#auth').hidden=false;$('#aP').value='';$('#aU').value=localStorage.getItem(LK)||'';am('');ubar();const ci=$('#aCid');if(ci){ci.value=gcid();ci.closest('details').hidden=!!GCID_DEFAULT}}
+function setMode(m){amode=m;$('#amIn').classList.toggle('on',m==='in');$('#amNew').classList.toggle('on',m==='new');$('#aFw').style.display=m==='in'?'':'none';$('#aGo').textContent=m==='in'?'Sign in':'Create account';$('#aP').autocomplete=m==='in'?'current-password':'new-password';am('')}
+async function doAuth(){
+ const u=$('#aU').value.trim().toLowerCase(),p=$('#aP').value,f=$('#aF').files[0],create=amode==='new';
+ if(!u||!p)return am('Enter a username and password.');if(!(window.crypto&&crypto.subtle))return am('Open this file in Chrome, Edge or Firefox (secure crypto is unavailable here).');
+ am('Checking…');
+ try{const U=users();let auth=U[u],env=null,legacy=null;if(auth&&auth.google)return am('That account uses Google sign-in — tap “Sign in with Google”.');
+  if(create){if(auth)return am('That username already exists here — use Sign in.');if(p.length<4)return am('Use at least 4 characters for the password.');auth=await mkAuth(p);if(!Object.keys(U).length){try{legacy=JSON.parse(localStorage.getItem(K))}catch(e){}}}
+  else if(auth){if(!await chk(p,auth))return am('Wrong username or password.');
+   if(f){env=unpack(JSON.parse(await f.text()));if(!env.auth||env.user!==u)return am('That backup belongs to a different account.');if(env.auth.hash!==auth.hash){if(!await chk(p,env.auth))return am('That backup belongs to a different account, or has a different password.');auth=env.auth}}}
+  else{if(!f)return am('No account “'+u+'” on this browser yet. Choose your backup .json file below, or create an account.');
+   env=unpack(JSON.parse(await f.text()));if(!env.auth||env.user!==u||!await chk(p,env.auth))return am('Wrong username/password for that backup file.');auth=env.auth}
+  USER=u;AUTH=auth;U[u]=auth;localStorage.setItem(UK,JSON.stringify(U));if($('#aRu').checked)localStorage.setItem(LK,u);else localStorage.removeItem(LK);if($('#aKs').checked)localStorage.setItem(KP,u);else localStorage.removeItem(KP);
+  const c=[];const lo=loadLocal(u);if(lo)c.push(lo);if(legacy&&legacy.sessions)c.push(norm(legacy));if(env&&env.data)c.push(norm(env.data));
+  await attach(u,c,true);
+  S=c.length?mergeS(c):norm();fixNames();
+  $('#auth').hidden=true;document.querySelector('.wrap').style.display='';$('#aF').value='';
+  syncMsg(FH?'💾 file linked':'');save();render();tickAll();prune();
+  if(!FH&&!localStorage.getItem('caPlanner.skipLink.'+u))linkDlg();
+ }catch(e){USER=null;AUTH=null;am('Could not read that file, or something went wrong.')}}
+function logout(){if(!USER)return;localStorage.removeItem(KP);clearTimeout(gT);const g=AUTH&&AUTH.google;save();clearTimeout(gT);if(!FH&&!g)dlBackup();const w=g?Promise.race([gSync(),new Promise(r=>setTimeout(r,3000))]):busy?new Promise(r=>setTimeout(r,600)):Promise.resolve();w.then(showAuth)}
+function warn(){document.getElementById('warn').innerHTML=storeOK?'':'<div class="warn">Browser storage is blocked, so progress is only kept in the linked file / backups. Use “Link auto-save file” or export regularly.</div>'}
+$('#amIn').onclick=()=>setMode('in');$('#amNew').onclick=()=>setMode('new');$('#aForm').addEventListener('submit',e=>{e.preventDefault();doAuth()});
+/* save on every possible exit / interval so a sudden shutdown loses nothing */
+addEventListener('visibilitychange',()=>{if(document.hidden)save()});addEventListener('pagehide',save);addEventListener('beforeunload',save);setInterval(async()=>{if(USER&&FH&&!busy&&await pullRemote()){uiRefresh();flush()}},15000);
 
-  /* ---------- Theme ---------- */
-  var themeBtn = document.getElementById('theme-btn');
-  function currentTheme() {
-    var set = root.getAttribute('data-theme');
-    if (set) return set;
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-  }
-  function syncThemeLabel() { themeBtn.setAttribute('aria-label', currentTheme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'); }
-  try { var saved = localStorage.getItem('theme'); if (saved === 'light' || saved === 'dark') root.setAttribute('data-theme', saved); } catch (e) {}
-  syncThemeLabel();
-  themeBtn.addEventListener('click', function () {
-    var next = currentTheme() === 'dark' ? 'light' : 'dark';
-    root.setAttribute('data-theme', next);
-    try { localStorage.setItem('theme', next); } catch (e) {}
-    syncThemeLabel(); req();
-  });
+/* ---------- HELPERS ---------- */
+const hrs=s=>(s.en-s.st)/36e5;
+function fh(h){const m=Math.round(h*60);return m<60?m+'m':Math.floor(m/60)+'h '+pad(m%60)+'m'}
+function clk(ms){const s=Math.max(0,Math.floor(ms/1000));return pad(Math.floor(s/3600))+':'+pad(Math.floor((s%3600)/60))+':'+pad(s%60)}
+const ACTS=['Study','Revision 1','Revision 2','Practice'];
+const PK=['s','r1','r2','p'];
+const pk=(s,i)=>s+':'+i;
+const prog=(s,i)=>S.progress[pk(s,i)]||{};
+function pdfHref(s,pg){const f=S.set.files[s];if(!f||pg==null)return null;return(S.set.base||'')+encodeURI(f)+'#page='+pg}
+function links(s,c){let h='';if(c.url)h+=`<a href="${esc(c.url)}" target="_blank" rel="noopener">Open on ICAI ↗</a>`;const a=pdfHref(s,c.pg);if(a)h+=`<a href="${a}" target="_blank" rel="noopener">Module p.${c.pg} ↗</a>`;if(c.alt){const b=pdfHref(s,c.alt[0]);if(b)h+=`<a href="${b}" target="_blank" rel="noopener">${esc(c.alt[1])} p.${c.alt[0]} ↗</a>`}return h}
+function hoursOf(f){return S.sessions.filter(f).reduce((a,s)=>a+hrs(s),0)}
+function byDay(){const m={};S.sessions.forEach(s=>{const k=dk(s.st);(m[k]=m[k]||{t:0,by:{}});const h=hrs(s);m[k].t+=h;m[k].by[s.s]=(m[k].by[s.s]||0)+h});return m}
+function streak(m){let n=0,d=new Date();if(!m[dk(d)])d.setDate(d.getDate()-1);while(m[dk(d)]){n++;d.setDate(d.getDate()-1)}return n}
+const daysLeft=()=>Math.ceil((new Date(S.set.exam+'T09:00')-new Date())/864e5);
 
-  /* ---------- Menu ---------- */
-  var menuBtn = document.getElementById('menu-btn'), navList = document.getElementById('nav-list');
-  function setMenu(open) {
-    navList.classList.toggle('open', open);
-    menuBtn.setAttribute('aria-expanded', String(open));
-    menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
-  }
-  menuBtn.addEventListener('click', function () { setMenu(menuBtn.getAttribute('aria-expanded') !== 'true'); });
-  navList.addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
-  window.matchMedia('(min-width: 768px)').addEventListener('change', function (e) { if (e.matches) setMenu(false); });
+/* ---------- VIEWS ---------- */
+let tab='dash',pS='DT',pC=0,pA='Study',pN='',cS='DT',cQ='',cF='all';
+const TABS=[['dash','Dashboard'],['punch','Punch In / Out'],['chap','Chapters & Links'],['notes','Sticky Notes'],['log','Session Log'],['set','Settings']];
+function nav(){$('#nav').innerHTML=TABS.map(([k,n])=>`<button class="${tab===k?'on':''}" data-tab="${k}">${n}${k==='punch'&&S.active?' ●':''}${k==='notes'&&S.notes.some(x=>!x.d)?' ('+S.notes.filter(x=>!x.d).length+')':''}</button>`).join('')}
+function render(){if(!USER)return;nav();ubar();warn();const d=daysLeft();$('#dl').textContent=d>0?d:0;$('#main').innerHTML=({dash:vDash,punch:vPunch,chap:vChap,notes:vNotes,log:vLog,set:vSet})[tab]();}
 
-  /* ---------- Scroll-driven background ---------- */
-  var IDS = ['top', 'reel', 'work', 'services', 'process', 'about', 'contact'];
-  var NAMES = ['Intro', 'Reel', 'Work', 'Services', 'Process', 'About', 'Contact'];
-  var LOOKS = ['Teal and orange', 'Noir', 'Golden hour', 'Blue hour', 'Forest', 'Dusk', 'Teal and orange'];
-  var EXPO = ['ISO 400  f/2.8  1/50', 'ISO 100  f/4  1/48', 'ISO 200  f/5.6  1/250', 'ISO 800  f/2  1/60', 'ISO 100  f/8  1/125', 'ISO 1600  f/1.8  1/30', 'ISO 400  f/2.8  1/50'];
-  var HUES = [195, 220, 35, 225, 150, 300, 195];
-  function hex(h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; }
-  function pal(list) { return list.map(function (p) { return [hex(p[0]), hex(p[1])]; }); }
-  /* One colour grade per section: top and bottom of the wash. */
-  var PAL = {
-    dark: pal([['#08161A','#1A1410'],['#0B0B0D','#18181C'],['#1A120A','#2B1A0E'],['#0A1124','#142040'],['#0A1712','#12251C'],['#1A0F1E','#2A1630'],['#08161A','#1A1410']]),
-    light: pal([['#E6F0F2','#F4E8DA'],['#ECECEF','#D8D8DE'],['#F8EBD8','#F0DABC'],['#E3E9F7','#CDD8F0'],['#E3F0E7','#D1E4D8'],['#F3E5F3','#E7D1EA'],['#E6F0F2','#F4E8DA']])
-  };
-  function mix(a, b, f) { return 'rgb(' + Math.round(a[0] + (b[0] - a[0]) * f) + ',' + Math.round(a[1] + (b[1] - a[1]) * f) + ',' + Math.round(a[2] + (b[2] - a[2]) * f) + ')'; }
-  function rng(seed) { return function () { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; }; }
-  var secs = IDS.map(function (id) { return document.getElementById(id); });
+function vDash(){
+ const m=byDay(),tod=dk(Date.now()),tot=hoursOf(()=>true),td=(m[tod]||{}).t||0;
+ let wk=0;for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);wk+=(m[dk(d)]||{}).t||0}
+ let all=0,done=0,pend=0;ORDER.forEach(s=>L[s].forEach(c=>{const p=prog(s,c.i);all+=4;PK.forEach(k=>{if(p[k])done++});if(!p.s)pend++}));
+ const dl=Math.max(1,daysLeft()),tg=+S.set.target||0;
+ const need=pend?(pend/(dl/7)).toFixed(1):'0';
+ const kp=(v,l)=>`<div class="card kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`;
+ let h=`<div class="grid kpis">${kp(fh(td)+' <small>/ '+tg+'h</small>','today vs daily target')}${kp(fh(wk),'last 7 days')}${kp(fh(tot),'total logged')}${kp(streak(m)+' d','current streak')}${kp(Math.round(done/all*100)+'%','syllabus (study + revisions + practice)')}${kp(need,'study-chapters/week needed ('+pend+' pending)')}${kp(S.notes.filter(n=>!n.d&&n.t==='Pending').length,'open pending items')}</div>`;
+ if(S.active){const c=L[S.active.s][S.active.i];h+=`<div class="card live" style="margin-top:12px"><span class="dot"></span><b>Punched in:</b> ${esc(META[S.active.s].n)} — ${esc(c.t)} · <span class="mono tick"></span> <button class="btn acc sm" data-act="goPunch">Go to punch out</button></div>`}
+ h+=`<div class="grid two" style="margin-top:12px"><div class="card"><h2>Last 14 days</h2>${chart14(m)}</div><div class="card"><h2>Consistency (16 weeks)</h2>${heat(m)}<div class="hint">Darker = closer to your daily target.</div></div></div>`;
+ h+=`<h2 style="font:700 20px var(--fh);margin:20px 0 8px">Subjects</h2><div class="grid two">`;
+ ORDER.forEach(s=>{const M=META[s],ls=L[s],n=ls.length;const cnt=k=>ls.filter(c=>prog(s,c.i)[k]).length;const hh=hoursOf(x=>x.s===s);const nx=ls.find(c=>!prog(s,c.i).s);
+  h+=`<div class="card subcard" style="--c:${M.c}"><div class="top"><h3>${M.n}</h3><small class="mono">${M.p}</small></div>
+  <div class="mono" style="margin:6px 0">${fh(hh)} logged · ${cnt('s')}/${n} chapters studied</div>
+  <div class="bar"><i style="width:${cnt('s')/n*100}%;background:${M.c}"></i></div>
+  <div class="pips"><span>Rev-1 ${cnt('r1')}/${n}</span><span>Rev-2 ${cnt('r2')}/${n}</span><span>Practice ${cnt('p')}/${n}</span></div>
+  <div style="margin-top:8px;font-size:13px">${nx?`<b>Next:</b> ${esc(nx.t)} <span class="lkin">${links(s,nx).split('</a>').filter(Boolean).map(x=>x+'</a>').join(' · ')}</span>`:'<b>All chapters studied 🎉</b>'}</div></div>`});
+ h+=`</div><div class="grid two" style="margin-top:12px"><div class="card"><h2>Hours by subject</h2>${subBars()}</div><div class="card"><h2>Recent sessions</h2>${recent(8)}</div><div class="card" style="grid-column:1/-1"><h2>Open pending, doubts &amp; important</h2>${pendList()}</div></div>`;
+ return h}
 
-  var bgEl = document.querySelector('.bg');
-  var wash = bgEl.querySelector('.bg-wash'), grain = bgEl.querySelector('.bg-grain');
-  var bokehBox = bgEl.querySelector('.bg-bokeh');
-  var strips = bgEl.querySelectorAll('.bg-strip');
-  var lensRing = document.getElementById('lens-ring'), iris = document.getElementById('iris'), irisLines = document.getElementById('iris-lines');
-  var hudScene = document.getElementById('hud-scene'), hudLook = document.getElementById('hud-look'), hudExp = document.getElementById('hud-exp');
-  var NS = 'http://www.w3.org/2000/svg';
+function chart14(m){const days=[];for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(d)}
+ const tg=+S.set.target||0;let mx=Math.max(tg,...days.map(d=>(m[dk(d)]||{}).t||0),1)*1.1;const W=700,H=190,bw=38,g=(W-14*bw)/15;
+ let sv=`<svg viewBox="0 0 ${W} ${H+24}" width="100%" role="img" aria-label="Hours per day">`;
+ days.forEach((d,i)=>{const e=m[dk(d)];let y=H;const x=g+i*(bw+g);if(e)ORDER.forEach(s=>{const v=e.by[s];if(v){const hh=v/mx*H;y-=hh;sv+=`<rect x="${x}" y="${y}" width="${bw}" height="${hh}" fill="${META[s].c}"><title>${META[s].n}: ${fh(v)}</title></rect>`}});
+  sv+=`<text x="${x+bw/2}" y="${H+16}" text-anchor="middle" font-size="11" fill="currentColor" opacity=".6" font-family="monospace">${d.getDate()}/${d.getMonth()+1}</text>`});
+ if(tg){const y=H-tg/mx*H;sv+=`<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="#d8432a" stroke-dasharray="5 4"/><text x="4" y="${y-4}" font-size="11" fill="#d8432a" font-family="monospace">target ${tg}h</text>`}
+ return sv+'</svg>'}
+function heat(m){const tg=+S.set.target||4;const end=new Date();end.setDate(end.getDate()+(6-end.getDay()));const cells=[];for(let i=16*7-1;i>=0;i--){const d=new Date(end);d.setDate(d.getDate()-i);cells.push(d)}
+ return'<div class="heat">'+cells.map(d=>{const v=(m[dk(d)]||{}).t||0;const fut=d>new Date();const a=v?Math.min(1,.2+v/tg*.8):0;return`<i title="${dk(d)}: ${fh(v)}" style="${fut?'opacity:.25':''}${a?`;background:rgba(216,67,42,${a})`:''}"></i>`}).join('')+'</div>'}
+function subBars(){const t=hoursOf(()=>true)||1;const mx=Math.max(...ORDER.map(s=>hoursOf(x=>x.s===s)),.01);return ORDER.map(s=>{const h=hoursOf(x=>x.s===s);return`<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:13px"><span>${META[s].n}</span><span class="mono">${fh(h)}</span></div><div class="bar"><i style="width:${h/mx*100}%;background:${META[s].c}"></i></div></div>`}).join('')}
+function recent(n){const r=[...S.sessions].sort((a,b)=>b.st-a.st).slice(0,n);if(!r.length)return'<small>No sessions yet — punch in to start.</small>';return'<table>'+r.map(x=>{const c=L[x.s][x.i];return`<tr><td class="mono">${dk(x.st)}</td><td><b style="color:${META[x.s].c}">${x.s}</b> ${esc(c?c.t:'')}<br><small>${esc(x.a)}${x.n?' · '+esc(x.n):''}</small></td><td class="mono">${fh(hrs(x))}</td></tr>`}).join('')+'</table>'}
 
-  /* Bokeh: soft discs that drift, and lose focus while you scroll fast */
-  var bokeh = [];
-  (function () {
-    var r = rng(11);
-    for (var i = 0; i < 14; i++) {
-      var el = document.createElement('span'), size = 40 + r() * 130;
-      el.style.width = el.style.height = size + 'px';
-      el.style.left = (r() * 96) + '%';
-      el.style.opacity = (0.35 + r() * 0.55).toFixed(2);
-      bokehBox.appendChild(el);
-      bokeh.push({ el: el, base: r(), speed: 0.05 + r() * 0.22, size: size });
-    }
-  })();
+function vPunch(){
+ const td=(byDay()[dk(Date.now())]||{}).t||0;
+ if(S.active){const a=S.active,c=L[a.s][a.i];return`<div class="card live"><h2><span class="dot"></span>You are punched in</h2><div style="color:${META[a.s].c};font-weight:700">${esc(META[a.s].n)}</div><div style="font-size:18px">${esc(c.t)}</div><small>${esc(a.a)}${a.n?' · '+esc(a.n):''} · since ${new Date(a.st).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</small>
+ <div class="clock tick">00:00:00</div><button class="btn acc big" data-act="out">PUNCH OUT</button>
+ <button class="btn ghost" style="width:100%;margin-top:8px" data-act="addNote" data-s="${a.s}" data-i="${a.i}">＋ Sticky note (pending / doubt / important)</button>${chNotes(a.s,a.i)}<div class="hint">The timer keeps running even if you close this tab. <a href="#" data-act="discard">Discard this session</a></div><div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">${links(a.s,c)}</div></div>`}
+ const opts=ORDER.map(s=>`<option value="${s}" ${s===pS?'selected':''}>${META[s].p} · ${META[s].n}</option>`).join('');
+ const ch=L[pS].map(c=>`<option value="${c.i}" ${c.i===pC?'selected':''}>${pad(c.i+1)}. ${esc(c.t)}</option>`).join('');
+ const c=L[pS][pC]||L[pS][0];
+ return`<div class="punch"><div class="card"><h2>Punch in</h2>
+ <label class="f">SUBJECT</label><select id="pS">${opts}</select>
+ <label class="f">CHAPTER / TOPIC</label><select id="pC">${ch}</select>
+ <label class="f">ACTIVITY</label><select id="pA">${ACTS.map(a=>`<option ${a===pA?'selected':''}>${a}</option>`).join('')}</select>
+ <label class="f">NOTE (optional)</label><input id="pN" value="${esc(pN)}" placeholder="e.g. RTP questions, exam-oriented notes">
+ <div style="margin-top:14px"><button class="btn acc big" data-act="in">PUNCH IN</button></div>
+ <div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">${links(pS,c)}</div></div>
+ <div class="card"><h2>Today</h2><div class="clock" style="text-align:left">${fh(td)}</div><small>Target ${S.set.target}h · ${td>=S.set.target?'target reached 🎯':fh(Math.max(0,S.set.target-td))+' to go'}</small><h2 style="margin-top:18px">Recent</h2>${recent(5)}</div></div>`}
 
-  /* Lens iris: 8 blades whose opening follows the scroll */
-  var blades = [];
-  for (var b = 0; b < 8; b++) { var ln = document.createElementNS(NS, 'line'); irisLines.appendChild(ln); blades.push(ln); }
-  function drawIris(R, rot) {
-    var pts = [];
-    for (var k = 0; k < 8; k++) {
-      var a = (k * 45 + rot) * Math.PI / 180, x = R * Math.cos(a), y = R * Math.sin(a);
-      pts.push(x.toFixed(1) + ',' + y.toFixed(1));
-      var a2 = a + 62 * Math.PI / 180;
-      blades[k].setAttribute('x1', x.toFixed(1)); blades[k].setAttribute('y1', y.toFixed(1));
-      blades[k].setAttribute('x2', (200 * Math.cos(a2)).toFixed(1)); blades[k].setAttribute('y2', (200 * Math.sin(a2)).toFixed(1));
-    }
-    iris.setAttribute('points', pts.join(' '));
-  }
+function vChap(){
+ const chips=ORDER.map(s=>`<button class="chip ${cS===s?'on':''}" style="--c:${META[s].c}" data-sub="${s}">${s}</button>`).join('');
+ let g='',rows='';const q=cQ.toLowerCase();
+ L[cS].forEach(c=>{const p=prog(cS,c.i);if(q&&!c.t.toLowerCase().includes(q))return;if(cF==='pend'&&p.s)return;
+  if(c.g!==g){g=c.g;if(g)rows+=`<div class="grp">${esc(g)}</div>`}
+  const tm=hoursOf(x=>x.s===cS&&x.i===c.i);
+  rows+=`<div class="row"><span class="no">${pad(c.i+1)}</span><div class="tt">${esc(c.t)}<small>${c.nb?'Notebook p.'+esc(c.nb)+' ':''}${nbadge(cS,c.i)}</small></div><div class="tm mono">${tm?fh(tm):'–'}</div>
+  <div class="chk">${PK.map((k,j)=>`<label title="${ACTS[j]}"><input type="checkbox" data-pk="${k}" data-i="${c.i}" ${p[k]?'checked':''}>${['S','R1','R2','P'][j]}</label>`).join('')}</div>
+  <div class="lk">${links(cS,c)}<a href="#" data-go="${c.i}">▶ punch in</a><a href="#" data-nadd="${c.i}">＋ sticky note</a></div></div>`});
+ return`<div class="card"><div class="chips">${chips}</div><div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap"><input id="cQ" style="flex:1;min-width:180px" placeholder="Search chapters…" value="${esc(cQ)}"><select id="cF" style="width:auto"><option value="all">All</option><option value="pend" ${cF==='pend'?'selected':''}>Study pending</option></select>${dataBar("prog")}</div>
+ <div class="hint" style="margin:0 0 6px">S = Study done · R1/R2 = Revision 1/2 · P = Practice. Module links open the ICAI PDF at that page (PDF page number) — PDFs are expected in the “Study material” folder next to this file.</div>${rows||'<small>No chapters match.</small>'}</div>`}
 
-  /* ---------- Timeline ---------- */
-  var tl = document.getElementById('tl'), track = document.getElementById('tl-track'), tlV = document.getElementById('tl-v');
-  var tlHead = document.getElementById('tl-head'), tlTc = document.getElementById('tl-tc'), wave = document.getElementById('tl-wave');
-  var clips = IDS.map(function (id, i) {
-    var a = document.createElement('a');
-    a.className = 'clip'; a.href = '#' + id; a.textContent = NAMES[i]; a.style.setProperty('--h', HUES[i]);
-    tlV.appendChild(a); return a;
-  });
-  var trackW = 1, activeIdx = -1;
-  function layoutTimeline() {
-    var sy = window.pageYOffset, max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-    var n = secs.length, starts = secs.map(function (el, i) { return Math.min(1, Math.max(0, (el.getBoundingClientRect().top + sy) / max)); });
-    starts[0] = 0;
-    for (var i = 1; i < n; i++) starts[i] = Math.min(starts[i], 1 - (n - i) * 0.04);
-    for (var j = 1; j < n; j++) starts[j] = Math.max(starts[j], starts[j - 1] + 0.04);
-    clips.forEach(function (c, k) {
-      var end = k < n - 1 ? starts[k + 1] : 1;
-      c.style.left = (starts[k] * 100) + '%';
-      c.style.width = 'calc(' + ((end - starts[k]) * 100) + '% - 2px)';
-    });
-    trackW = track.clientWidth || 1;
-    var r = rng(5), w = trackW, h = wave.clientHeight || 14, d = '';
-    for (var x = 2; x < w; x += 4) {
-      var amp = (0.25 + 0.75 * Math.abs(Math.sin(x * 0.045) * (0.4 + r() * 0.6))) * h / 2;
-      d += 'M' + x + ' ' + (h / 2 - amp).toFixed(1) + 'L' + x + ' ' + (h / 2 + amp).toFixed(1);
-    }
-    wave.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
-    wave.innerHTML = '<path d="' + d + '"/>';
-  }
-  function pad(n, l) { n = String(n); while (n.length < l) n = '0' + n; return n; }
-  function timecode(p) {
-    var f = Math.round(p * 120 * 24), ff = f % 24, s = Math.floor(f / 24);
-    return '00:' + pad(Math.floor(s / 60), 2) + ':' + pad(s % 60, 2) + ':' + pad(ff, 2);
-  }
-  /* Scrub: drag along the ruler or audio track to move through the page */
-  function seek(e) {
-    var rect = track.getBoundingClientRect(), f = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-    var max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-    window.scrollTo({ top: f * max, behavior: 'instant' });
-  }
-  Array.prototype.forEach.call(document.querySelectorAll('.scrub'), function (el) {
-    el.addEventListener('pointerdown', function (e) { el.setPointerCapture(e.pointerId); seek(e); el._drag = true; });
-    el.addEventListener('pointermove', function (e) { if (el._drag) seek(e); });
-    el.addEventListener('pointerup', function () { el._drag = false; });
-    el.addEventListener('pointercancel', function () { el._drag = false; });
-  });
-  track.addEventListener('keydown', function (e) {
-    var max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight), step = max * 0.05;
-    if (e.key === 'ArrowRight') { window.scrollBy({ top: step, behavior: 'instant' }); e.preventDefault(); }
-    else if (e.key === 'ArrowLeft') { window.scrollBy({ top: -step, behavior: 'instant' }); e.preventDefault(); }
-    else if (e.key === 'Home') { window.scrollTo({ top: 0, behavior: 'instant' }); e.preventDefault(); }
-    else if (e.key === 'End') { window.scrollTo({ top: max, behavior: 'instant' }); e.preventDefault(); }
-  });
+function vLog(){
+ const r=[...S.sessions].sort((a,b)=>b.st-a.st).slice(0,300);const m=byDay();let last='',t='';
+ r.forEach(x=>{const k=dk(x.st);if(k!==last){last=k;t+=`<tr><td colspan="4" style="background:var(--line)"><b class="mono">${k}</b> — ${fh(m[k].t)}</td></tr>`}const c=L[x.s][x.i];
+  t+=`<tr><td class="mono">${new Date(x.st).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</td><td><b style="color:${META[x.s].c}">${x.s}</b> ${esc(c?c.t:'')}<br><small>${esc(x.a)}${x.n?' · '+esc(x.n):''}${S.notes.filter(z=>z.sid===x.id).map(z=>'<br>'+NI[z.t]+' '+esc(z.x.slice(0,80))).join('')}</small></td><td class="mono">${fh(hrs(x))}</td><td><button class="btn ghost sm" data-del="${x.id}">✕</button></td></tr>`});
+ const opts=ORDER.map(s=>`<option value="${s}">${META[s].n}</option>`).join('');
+ return`<div class="grid two"><div class="card"><h2>Add a past session</h2>
+ <label class="f">DATE</label><input type="date" id="mD" value="${dk(Date.now())}"><label class="f">START TIME</label><input type="time" id="mT" value="09:00"><label class="f">MINUTES</label><input type="number" id="mM" value="60" min="1">
+ <label class="f">SUBJECT</label><select id="mS">${opts}</select><label class="f">CHAPTER</label><select id="mC"></select><label class="f">ACTIVITY</label><select id="mA">${ACTS.map(a=>`<option>${a}</option>`).join('')}</select>
+ <div style="margin-top:12px"><button class="btn" data-act="addManual">Add session</button></div></div>
+ <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><h2 style="margin:0">All sessions</h2>${dataBar("sessions")}</div>${r.length?`<table>${t}</table>`:'<small>Nothing logged yet.</small>'}</div></div>`}
 
-  /* ---------- Frame loop ---------- */
-  var ticking = false, lastSy = 0, vel = 0, blurNow = 2, lastIdx = -1;
-  function update() {
-    ticking = false;
-    var sy = window.pageYOffset, vh = window.innerHeight;
-    var max = Math.max(1, document.documentElement.scrollHeight - vh);
-    var p = Math.min(1, Math.max(0, sy / max));
-    vel = vel * 0.8 + Math.abs(sy - lastSy) * 0.2;
-    var moved = sy !== lastSy; lastSy = sy;
+function vSet(){
+ const f=ORDER.filter(s=>s!=='IBS').map(s=>`<label class="f">${META[s].n} — PDF file name</label><input data-file="${s}" value="${esc(S.set.files[s])}">`).join('');
+ return`<div class="grid two"><div class="card"><h2>Goals</h2><label class="f">EXAM START DATE</label><input type="date" id="sE" value="${S.set.exam}"><small>Set to the date of your first paper once ICAI announces the schedule.</small><label class="f">DAILY TARGET (hours)</label><input type="number" id="sT" step="0.5" min="0" value="${S.set.target}"></div>
+ <div class="card"><h2>Module PDF links</h2><small>Paths are relative to this HTML file (default: Study material folder). Change if yours differ.</small><label class="f">FOLDER PREFIX (optional, e.g. file:///D:/CA/ or ../pdf/)</label><input id="sB" value="${esc(S.set.base)}">${f}</div>
+ <div class="card"><h2>Account · ${esc(USER)}</h2><small>Change your password, or remove this account from this browser.</small><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">${AUTH&&AUTH.google?'<small>Signed in with Google — no password to change.</small>':'<button class="btn" data-act="chpw">Change password</button>'}<button class="btn ghost" data-act="delacc">Delete account</button></div></div>
+ <div class="card"><h2>Google Drive sync</h2>${AUTH&&AUTH.google?`<small>Signed in as ${esc(USER)}. Your data is saved to a private app folder in your Google Drive (only this planner can see it). Open the same planner link on your phone, tap “Sign in with Google”, and the same data appears.</small><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="gsync">Sync now</button>${GNEED?'<button class="btn acc" data-act="gre">Reconnect Google</button>':''}</div>`:'<small>Sign out and choose “Sign in with Google” to sync across PC and mobile.</small>'}${GCID_DEFAULT?'':`<label class="f">GOOGLE CLIENT ID</label><input id="sG" value="${esc(gcid())}" placeholder="xxxx.apps.googleusercontent.com">`}</div>
+ <div class="card"><h2>Backup</h2><small>Data is auto-saved on every event in this browser and in your linked file. You can also export manually.</small><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="export">Export backup</button><label class="btn ghost" style="cursor:pointer">Import<input type="file" id="imp" accept=".json" hidden></label><button class="btn ghost" data-act="exportAll">Export all CSVs</button><label class="btn ghost" style="cursor:pointer">Import CSV<input type="file" id="impCsv" accept=".csv,text/csv" multiple hidden></label><button class="btn ghost" data-act="reset">Reset everything</button></div></div></div>`}
 
-    /* Position across sections: 0 = intro, 6 = contact */
-    var vy = sy + vh * 0.45, last = secs.length - 1;
-    var centers = secs.map(function (el) { return el.getBoundingClientRect().top + sy + el.offsetHeight / 2; });
-    var pos = 0;
-    if (vy >= centers[last]) pos = last;
-    else if (vy > centers[0]) { for (var i = 0; i < last; i++) { if (vy < centers[i + 1]) { pos = i + (vy - centers[i]) / (centers[i + 1] - centers[i]); break; } } }
+/* ---------- STICKY NOTES ---------- */
+const NT=['Note','Pending','Doubt','Important','LDR'],NC={Note:'#fff1a8',Pending:'#ffc999',Doubt:'#bfe0ff',Important:'#ffb3b3',LDR:'#c9efc4'},NI={Note:'📝',Pending:'📌',Doubt:'❓',Important:'⭐',LDR:'📖'};
+const ldrList=n=>Array.isArray(n.q)?n.q:((n.qn||n.qp||n.qs)?[{q:n.qn||'',p:n.qp||'',s:n.qs||''}]:[]);
+const ldrHead=o=>[o.q?'Q. '+o.q:'',o.p?'p. '+o.p:''].filter(Boolean).join(' · ');
+const ldrAll=n=>ldrList(n).map(o=>[ldrHead(o),o.s].filter(Boolean).join(': ')).join(' | ');
+const ldrHtml=n=>ldrList(n).map(o=>`<div style="margin-top:3px"><b>${esc(ldrHead(o)||'Question')}</b>${o.s?'<div style="opacity:.9">'+esc(o.s)+'</div>':''}</div>`).join('');
+/* voice typing (Web Speech API) */
+let REC=null,vLang='en-IN';
+function micToggle(btn){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR)return alert('Voice typing is not supported in this browser. Please use Chrome or Edge (desktop/Android), or use the microphone key on your phone keyboard.');
+ if(REC){REC.stop();return}
+ const ta=btn.closest('.mf').querySelector('textarea'),r=new SR();r.lang=vLang;r.continuous=true;r.interimResults=true;
+ const base=ta.value+(ta.value&&!/\s$/.test(ta.value)?' ':'');let fin='';
+ r.onresult=e=>{let it='';for(let k=e.resultIndex;k<e.results.length;k++){const t=e.results[k][0].transcript;if(e.results[k].isFinal)fin+=t+' ';else it+=t}ta.value=(base+fin+it).replace(/\s+$/,'')};
+ r.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed')alert('Microphone permission is blocked. Allow the microphone for this page and try again.');else if(e.error==='network')alert('Voice typing needs an internet connection.')};
+ r.onend=()=>{btn.classList.remove('rec');btn.textContent='🎤';REC=null};
+ try{r.start();REC=r;btn.classList.add('rec');btn.textContent='⏹'}catch(x){}}
+const micField=(html)=>`<div class="mf">${html}<button type="button" class="mic" title="Voice typing — tap to start / stop">🎤</button></div>`;
+function qRenum(){document.querySelectorAll('#nfQs .qb .qh').forEach((h,k)=>h.textContent='Question '+(k+1))}
+function addQ(v){v=v||{};const d=document.createElement('div');d.className='qb';
+ d.innerHTML=`<div style="display:flex;align-items:center;gap:6px"><b class="qh"></b><span style="flex:1"></span><button type="button" class="btn ghost sm qx" title="Remove this question">✕</button></div>
+ <div style="display:flex;gap:8px"><div style="flex:1"><label class="f">QUESTION NO.</label><input class="qn" autocomplete="off" placeholder="e.g. 7"></div><div style="flex:1"><label class="f">PAGE NO.</label><input class="qp" autocomplete="off" placeholder="e.g. 45"></div></div>
+ <label class="f">SUMMARY — what it deals with / adjustments</label>${micField('<textarea class="qs" rows="3" placeholder="e.g. Turnover changed to 3 Cr; ITC reversal under Rule 42 added; RCM on GTA"></textarea>')}`;
+ d.querySelector('.qn').value=v.q||'';d.querySelector('.qp').value=v.p||'';d.querySelector('.qs').value=v.s||'';
+ $('#nfQs').appendChild(d);qRenum()}
+document.addEventListener('click',e=>{const m=e.target.closest('.mic');if(m){e.preventDefault();micToggle(m);return}
+ const x=e.target.closest('.qx');if(x){e.preventDefault();const bs=document.querySelectorAll('#nfQs .qb');if(bs.length>1)x.closest('.qb').remove();else{const b=x.closest('.qb');b.querySelectorAll('input,textarea').forEach(i=>i.value='')}qRenum();return}
+ if(e.target.id==='nfAddQ'){e.preventDefault();addQ();const bs=document.querySelectorAll('#nfQs .qb');bs[bs.length-1].scrollIntoView({block:'nearest'});bs[bs.length-1].querySelector('.qn').focus()}});
+let nT='all',nS='all',nSt='open',nQ='',nC=-1,nCq='';
+const nWords=q=>q.toLowerCase().split(/\s+/).filter(Boolean),nHit=(t,w)=>w.every(x=>t.toLowerCase().includes(x));
+function nSug(){const w=nWords(nCq);if(nC>=0||!w.length)return'';const r=[];(nS==='all'?ORDER:[nS]).forEach(s=>L[s].forEach(c=>{if(nHit(c.t,w))r.push([s,c])}));
+ if(!r.length)return'<div class="nsug"><div style="padding:8px 10px;opacity:.6;font-size:13px">No matching chapter</div></div>';
+ return'<div class="nsug">'+r.slice(0,12).map(([s,c])=>`<a href="#" data-npick="${s}:${c.i}"><b style="color:${META[s].c}">${s}</b> ${pad(c.i+1)}. ${esc(c.t)}</a>`).join('')+(r.length>12?`<div style="padding:6px 10px;opacity:.6;font-size:12px">+${r.length-12} more — keep typing</div>`:'')+'</div>'}
+function nbadge(s,i){const a=S.notes.filter(n=>n.s===s&&n.i===i&&!n.d);if(!a.length)return'';return NT.filter(k=>a.some(n=>n.t===k)).map(k=>`<a href="#" class="nb" style="background:${NC[k]}" data-nview="${s}:${i}" title="${k}">${NI[k]} ${a.filter(n=>n.t===k).length}</a>`).join('')}
+function chNotes(s,i){const a=S.notes.filter(n=>n.s===s&&n.i===i&&!n.d);if(!a.length)return'';return'<div style="margin-top:12px"><small>Open notes for this chapter</small>'+a.map(n=>`<div style="background:${NC[n.t]};color:#2a2415;border-radius:4px;padding:6px 8px;margin-top:5px;font-size:13px">${NI[n.t]} ${esc((n.x||ldrAll(n)).slice(0,140))}${n.t==='LDR'?'<br><small>'+esc(ldrAll(n))+'</small>':''}</div>`).join('')+'</div>'}
+function pendList(){const a=S.notes.filter(n=>!n.d&&n.t!=='Note').sort((x,y)=>y.c-x.c).slice(0,8);if(!a.length)return'<small>Nothing pending. Add sticky notes from the punch-out box or the Chapters tab.</small>';
+ return'<table>'+a.map(n=>`<tr><td>${NI[n.t]}</td><td><b style="color:${META[n.s].c}">${n.s}</b> ${esc(L[n.s][n.i].t)}<br><small>${esc((n.x||ldrAll(n)).slice(0,120))}</small></td><td><button class="btn ghost sm" data-nact="done" data-nid="${n.id}">✓ Done</button></td></tr>`).join('')+'</table>'}
+function vNotes(){
+ const q=nQ.toLowerCase();
+ const ns=S.notes.filter(n=>(nT==='all'||n.t===nT)&&(nS==='all'||n.s===nS)&&(nC<0||n.i===nC)&&(nC>=0||!nCq||nHit(L[n.s][n.i].t,nWords(nCq)))&&(nSt==='all'||(nSt==='open'?!n.d:!!n.d))&&(!q||n.x.toLowerCase().includes(q)||ldrAll(n).toLowerCase().includes(q)||L[n.s][n.i].t.toLowerCase().includes(q))).sort((a,b)=>b.c-a.c);
+ const cnt=k=>S.notes.filter(n=>!n.d&&(k==='all'||n.t===k)).length;
+ const chips=['all',...NT].map(k=>`<button class="chip ${nT===k?'on':''}" style="--c:${k==='all'?'var(--ink)':'#b98a00'}" data-ntype="${k}">${k==='all'?'All':NI[k]+' '+k} (${cnt(k)})</button>`).join('');
+ const so=['<option value="all">All subjects</option>',...ORDER.map(s=>`<option value="${s}" ${nS===s?'selected':''}>${META[s].p} · ${META[s].n}</option>`)].join('');
+ return`<div class="card"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><div class="chips" style="margin:0">${chips}</div><button class="btn acc sm" data-act="addNoteAny">＋ New sticky note</button>${dataBar("notes")}</div>
+ <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap"><select id="nvS" style="width:auto">${so}</select><select id="nvSt" style="width:auto"><option value="open" ${nSt==='open'?'selected':''}>Open</option><option value="done" ${nSt==='done'?'selected':''}>Done</option><option value="all" ${nSt==='all'?'selected':''}>Open + done</option></select><div style="position:relative;min-width:200px;flex:1"><input id="nvCh" autocomplete="off" style="width:100%" placeholder="Filter by chapter… (type to get suggestions)" value="${esc(nC>=0&&nS!=='all'?L[nS][nC].t:nCq)}">${nSug()}</div><input id="nvQ" style="flex:1;min-width:160px" placeholder="Search notes…" value="${esc(nQ)}"></div>
+ ${nC>=0&&nS!=='all'?`<div class="hint" style="margin:0 0 8px">Showing only: <b>${esc(L[nS][nC].t)}</b> · <a href="#" data-act="clearC">show all chapters</a></div>`:''}
+ ${ns.length?`<div class="notes">${ns.map((n,k)=>`<div class="sticky ${n.d?'done':''}" style="--bg:${NC[n.t]};--r:${(k%5)-2}deg"><div class="hd"><span>${NI[n.t]} ${n.t}</span><span style="color:${META[n.s].c};filter:brightness(.6)">${n.s}</span></div><div class="tx">${esc(n.x)}</div>${n.t==='LDR'&&ldrList(n).length?`<div style="font-size:12px;border-top:1px dashed #0004;padding-top:5px">${ldrHtml(n)}</div>`:''}<div class="ft"><span style="flex:1;min-width:100%;opacity:.75">${esc(L[n.s][n.i].t)} · ${dk(n.c)}</span><button data-nact="done" data-nid="${n.id}">${n.d?'↺ Reopen':'✓ Done'}</button><button data-nact="edit" data-nid="${n.id}">Edit</button><button data-nact="del" data-nid="${n.id}">✕</button></div></div>`).join('')}</div>`:'<small>No notes here. Add one with “＋ New sticky note”, from the punch-out box, or from a chapter row.</small>'}</div>`}
+function openNote(o){
+ const n=o.id?S.notes.find(x=>x.id===o.id):null,d=$('#dlg');
+ const s0=n?n.s:o.s,i0=n?n.i:(o.i||0),t0=n?n.t:(o.t||'Note');
+ d.innerHTML=`<h2 style="font:700 20px var(--fh);margin:0 0 6px">${n?'Edit':'New'} sticky note</h2>
+ <label class="f">SUBJECT</label><select id="nfS">${ORDER.map(s=>`<option value="${s}" ${s===s0?'selected':''}>${META[s].p} · ${META[s].n}</option>`).join('')}</select>
+ <label class="f">CHAPTER / TOPIC</label><select id="nfC"></select>
+ <label class="f">TYPE</label><select id="nfT">${NT.map(k=>`<option ${k===t0?'selected':''}>${k}</option>`).join('')}</select>
+ <label class="f">NOTE</label>${micField('<textarea id="nfX" rows="4" placeholder="e.g. Revise section 54F conditions again / doubt on ITC blocked credit"></textarea>')}
+ <div style="margin-top:6px;font-size:12px;opacity:.8">🎤 Voice language: <select id="nfVL" style="width:auto;padding:3px 6px"><option value="en-IN">English (India)</option><option value="ml-IN">Malayalam</option><option value="hi-IN">Hindi</option><option value="en-US">English (US)</option></select></div>
+ <div id="nfL" style="display:none"><div class="hint" style="margin:10px 0 0">📖 Last Day Revision — add each question with its own page number and summary</div><div id="nfQs"></div><button type="button" class="btn ghost sm" id="nfAddQ" style="margin-top:8px">＋ Add another question</button></div>
+ <div style="display:flex;gap:8px;margin-top:14px"><button class="btn acc" id="nfOK">Save</button><button class="btn ghost" id="nfNo">Cancel</button></div>`;
+ const fill=(sel)=>{$('#nfC').innerHTML=L[$('#nfS').value].map(c=>`<option value="${c.i}">${pad(c.i+1)}. ${esc(c.t)}</option>`).join('');$('#nfC').value=sel};
+ fill(i0);$('#nfS').onchange=()=>fill(0);if(n)$('#nfX').value=n.x;const ql=n?ldrList(n):[];(ql.length?ql:[{}]).forEach(addQ);
+ $('#nfVL').value=vLang;$('#nfVL').onchange=()=>{vLang=$('#nfVL').value;if(REC)REC.stop()};d.onclose=()=>{if(REC)REC.stop()};
+ const tg=()=>{$('#nfL').style.display=$('#nfT').value==='LDR'?'block':'none'};$('#nfT').onchange=tg;tg();
+ d.showModal();$('#nfNo').onclick=()=>d.close();
+ $('#nfOK').onclick=()=>{if(REC)REC.stop();const x=$('#nfX').value.trim(),L1=$('#nfT').value==='LDR',q=L1?[...document.querySelectorAll('#nfQs .qb')].map(b=>({q:b.querySelector('.qn').value.trim(),p:b.querySelector('.qp').value.trim(),s:b.querySelector('.qs').value.trim()})).filter(o=>o.q||o.p||o.s):[];if(!x&&!q.length)return alert(L1?'Add at least one question (number, page or summary), or write a note.':'Write something on the note.');
+  const v={s:$('#nfS').value,i:+$('#nfC').value,t:$('#nfT').value,x,q};
+  if(n){Object.assign(n,v);delete n.qn;delete n.qp;delete n.qs}else S.notes.push({id:uid(),...v,c:Date.now(),d:0,sid:(S.active&&S.active.s===v.s&&S.active.i===v.i)?'':''});
+  save();d.close();render()}}
 
-    /* Colour grade wash */
-    var P = PAL[currentTheme()], i0 = Math.min(last - 1, Math.floor(pos)), f = pos - i0;
-    f = f * f * (3 - 2 * f);
-    wash.style.background = 'linear-gradient(180deg,' + mix(P[i0][0], P[i0 + 1][0], f) + ',' + mix(P[i0][1], P[i0 + 1][1], f) + ')';
+/* ---------- ACTIONS ---------- */
+function tickAll(){if(!S.active)return;const t=clk(Date.now()-S.active.st);document.querySelectorAll('.tick').forEach(e=>e.textContent=t)}
+setInterval(tickAll,1000);
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function fillMC(){const s=$('#mS');if(!s)return;$('#mC').innerHTML=L[s.value].map(c=>`<option value="${c.i}">${pad(c.i+1)}. ${esc(c.t)}</option>`).join('')}
 
-    /* Film grain flickers when the page moves */
-    if (moved && !reduce) grain.style.backgroundPosition = Math.floor(Math.random() * 220) + 'px ' + Math.floor(Math.random() * 220) + 'px';
+document.addEventListener('click',e=>{
+ const t=e.target.closest('[data-tab],[data-act],[data-sub],[data-go],[data-del],[data-nadd],[data-nview],[data-npick],[data-nact],[data-ntype]');if(!t)return;
+ if(t.dataset.tab){tab=t.dataset.tab;render();if(tab==='log')fillMC();tickAll();return}
+ if(t.dataset.sub){cS=t.dataset.sub;render();return}
+ if(t.dataset.go!==undefined){e.preventDefault();pS=cS;pC=+t.dataset.go;tab='punch';render();return}
+ if(t.dataset.del){if(confirm('Delete this session?')){(S.del=S.del||[]).push(t.dataset.del);S.sessions=S.sessions.filter(x=>x.id!==t.dataset.del);save();render();fillMC()}return}
+ if(t.dataset.nadd!==undefined){e.preventDefault();openNote({s:cS,i:+t.dataset.nadd});return}
+ if(t.dataset.npick){e.preventDefault();const[s,i]=t.dataset.npick.split(':');nS=s;nC=+i;nCq='';render();return}
+ if(t.dataset.nview){e.preventDefault();const[s,i]=t.dataset.nview.split(':');nS=s;nC=+i;nCq='';nSt='open';nT='all';tab='notes';render();return}
+ if(t.dataset.nact){const id=t.dataset.nid,n=S.notes.find(x=>x.id===id);if(n){if(t.dataset.nact==='done'){n.d=n.d?0:1;save();render()}else if(t.dataset.nact==='edit')openNote({id});else if(t.dataset.nact==='del'&&confirm('Delete this note?')){(S.del=S.del||[]).push(id);S.notes=S.notes.filter(x=>x.id!==id);save();render()}}return}
+ if(t.dataset.ntype!==undefined){nT=t.dataset.ntype;render();return}
+ const a=t.dataset.act;e.preventDefault();
+ if(a==='addNote')openNote({s:t.dataset.s,i:+t.dataset.i});
+ if(a==='addNoteAny')openNote({s:nS!=='all'?nS:ORDER[0],i:nC>=0?nC:0,t:nT!=='all'?nT:'Note'});
+ if(a==='clearC'){nC=-1;nCq='';render()}
+ if(a==='goPunch'){tab='punch';render();tickAll()}
+ if(a==='in'){S.active={s:pS,i:pC,a:pA,n:$('#pN').value.trim(),st:Date.now()};save();render();tickAll()}
+ if(a==='discard'){if(confirm('Discard this running session without saving?')){S.active=null;save();render()}}
+ if(a==='out')openOut();
+ if(a==='addManual'){const st=new Date($('#mD').value+'T'+$('#mT').value).getTime(),mn=+$('#mM').value;if(!st||!mn)return alert('Enter a valid date, time and minutes.');S.sessions.push({id:uid(),s:$('#mS').value,i:+$('#mC').value,a:$('#mA').value,n:'',st,en:st+mn*6e4});save();render();fillMC()}
+ if(a==='export')dlBackup();
+ if(a==='link')linkDlg();
+ if(a==='logout')logout();
+ if(a==='reconnect')reconnect();
+ if(a==='exportLog')exportLog();
+ if(a==='exportNotes')exportNotes();
+ if(a==='exportProg')exportProg();
+ if(a==='exportAll')exportAll();
+ if(a==='chpw')chPwDlg();
+ if(a==='gsync')gSync();
+ if(a==='gre')gReconnect();
+ if(a==='delacc')delAccDlg();
+ if(a==='reset'){if(confirm('Delete ALL sessions and progress?')&&confirm('Really sure? This cannot be undone.')){S=JSON.parse(JSON.stringify(DEF));save();render()}}
+});
+function openOut(){
+ const a=S.active,c=L[a.s][a.i],mn=Math.max(1,Math.round((Date.now()-a.st)/6e4)),j=ACTS.indexOf(a.a),already=prog(a.s,a.i)[PK[j]];
+ const d=$('#dlg');d.innerHTML=`<h2 style="font:700 20px var(--fh);margin:0 0 6px">Punch out</h2><div style="color:${META[a.s].c};font-weight:700">${esc(c.t)}</div><small>${esc(a.a)}</small>
+ <label class="f">MINUTES STUDIED (edit if you took a break)</label><input type="number" id="oM" min="0" value="${mn}"><label class="f">NOTE</label><input id="oN" value="${esc(a.n)}">
+ <label class="f">STICKY NOTE (optional) — what is pending / unclear / important?</label>${micField('<textarea id="oX" rows="2"></textarea>')}<select id="oT" style="margin-top:6px">${NT.filter(x=>x!=='LDR').map(x=>`<option>${x}</option>`).join('')}</select>
+ <label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:14px"><input type="checkbox" id="oD" style="width:auto" ${already?'disabled checked':''}> Mark “${a.a}” complete for this chapter</label>
+ <div style="display:flex;gap:8px;margin-top:16px"><button class="btn acc" id="oS">Save session</button><button class="btn ghost" id="oC">Keep running</button></div>`;
+ d.showModal();$('#oC').onclick=()=>d.close();
+ $('#oS').onclick=()=>{const m=+$('#oM').value||0;const sid=uid();if(m>0)S.sessions.push({id:sid,s:a.s,i:a.i,a:a.a,n:$('#oN').value.trim(),st:a.st,en:a.st+m*6e4});const nx=$('#oX').value.trim();if(nx)S.notes.push({id:uid(),s:a.s,i:a.i,t:$('#oT').value,x:nx,c:Date.now(),d:0,sid:m>0?sid:''});
+  if($('#oD').checked&&!$('#oD').disabled){const p=S.progress[pk(a.s,a.i)]=S.progress[pk(a.s,a.i)]||{};p[PK[j]]=1}
+  S.active=null;save();d.close();render();if(!FH)dlBackup()}}
+document.addEventListener('change',e=>{const t=e.target;
+ if(t.id==='pS'){pS=t.value;pC=0;render()}
+ else if(t.id==='pC')pC=+t.value;else if(t.id==='pA')pA=t.value;
+ else if(t.id==='cF'){cF=t.value;render()}
+ else if(t.id==='nvS'){nS=t.value;nC=-1;nCq='';render()}
+ else if(t.id==='nvSt'){nSt=t.value;render()}
+ else if(t.id==='mS')fillMC();
+ else if(t.dataset.pk){const k=pk(cS,+t.dataset.i);S.progress[k]=S.progress[k]||{};S.progress[k][t.dataset.pk]=t.checked?1:0;save();const y=window.scrollY;render();scrollTo(0,y)}
+ else if(t.id==='sE'){S.set.exam=t.value;save();render()}
+ else if(t.id==='sT'){S.set.target=+t.value;save()}
+ else if(t.id==='sB'){S.set.base=t.value.trim();save()}
+ else if(t.dataset.file){S.set.files[t.dataset.file]=t.value.trim();save()}
+ else if(t.id==='impCsv'){const fs=[...t.files];if(!fs.length)return;Promise.all(fs.map(f=>f.text())).then(tx=>{const out=tx.map((x,k)=>{try{return fs[k].name+' → '+importCsv(x)}catch(e){return fs[k].name+' → '+((e&&e.message)||'could not read')}});save();render();if(tab==='log')fillMC();alert(out.join('\n'))});t.value=''}
+ else if(t.id==='imp'){const f=t.files[0];if(!f)return;f.text().then(x=>{try{const r=unpack(JSON.parse(x));if(!Array.isArray(r.data.sessions))throw 0;S=mergeS([S,norm(r.data)]);fixNames();save();render();alert('Backup merged into your data.')}catch(_){alert('That file is not a valid backup.')}})}
+});
+document.addEventListener('input',e=>{if(e.target.id==='nvCh'){nCq=e.target.value;nC=-1;const p=e.target.selectionStart;render();const n=$('#nvCh');n.focus();n.setSelectionRange(p,p);return}if(e.target.id==='nvQ'){nQ=e.target.value;const p=e.target.selectionStart;render();const n=$('#nvQ');n.focus();n.setSelectionRange(p,p)}if(e.target.id==='pN')pN=e.target.value;if(e.target.id==='cQ'){cQ=e.target.value;const p=e.target.selectionStart;render();const n=$('#cQ');n.focus();n.setSelectionRange(p,p)}});
 
-    /* Film edge holes slide with scroll */
-    var shift = reduce ? 0 : -((sy * 0.6) % 28);
-    for (var s = 0; s < strips.length; s++) strips[s].style.setProperty('--sy', shift + 'px');
-
-    /* Lens: focus ring turns, iris opens and closes */
-    var open = 0.5 + 0.5 * Math.sin(p * Math.PI * 6);
-    lensRing.setAttribute('transform', 'rotate(' + (reduce ? 0 : sy * 0.04).toFixed(2) + ')');
-    drawIris(reduce ? 110 : 50 + 115 * open, reduce ? 0 : -p * 160);
-
-    /* Bokeh drifts and goes soft when you scroll fast (rack focus) */
-    var span = vh + 300;
-    for (var k = 0; k < bokeh.length; k++) {
-      var bk = bokeh[k], y = reduce ? bk.base * vh : ((bk.base * span - sy * bk.speed) % span + span) % span - 150;
-      bk.el.style.transform = 'translate3d(0,' + y.toFixed(1) + 'px,0)';
-    }
-    var blur = reduce ? 2 : 1.5 + Math.min(11, vel * 0.45);
-    if (Math.abs(blur - blurNow) > 0.25) { blurNow = blur; bokehBox.style.filter = 'blur(' + blur.toFixed(1) + 'px)'; }
-
-    /* Viewfinder readout changes with the scene */
-    var idx = Math.round(pos);
-    if (idx !== lastIdx) {
-      lastIdx = idx;
-      hudScene.textContent = 'Scene ' + (idx + 1) + ' of ' + secs.length + ', ' + NAMES[idx];
-      hudLook.textContent = 'Look: ' + LOOKS[idx];
-      hudExp.textContent = EXPO[idx];
-      clips.forEach(function (c, n) { c.classList.toggle('on', n === idx); });
-    }
-
-    /* Timeline playhead and timecode */
-    tlHead.style.transform = 'translateX(' + (p * trackW).toFixed(1) + 'px)';
-    tlTc.textContent = timecode(p);
-
-    if (vel > 0.15) { lastSy = sy; req(); }
-  }
-  function req() { if (!ticking) { ticking = true; window.requestAnimationFrame(update); } }
-  function relayout() { layoutTimeline(); req(); }
-  window.addEventListener('scroll', req, { passive: true });
-  window.addEventListener('resize', relayout);
-  window.addEventListener('load', relayout);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(relayout);
-  window.addEventListener('pointermove', function (e) {
-    if (e.pointerType === 'touch') return;
-    bgEl.style.setProperty('--mx', e.clientX + 'px'); bgEl.style.setProperty('--my', e.clientY + 'px');
-  }, { passive: true });
-  layoutTimeline(); req();
-
-  /* ---------- Showreel ---------- */
-  function embedUrl(u) {
-    var m;
-    if ((m = u.match(/youtu\.be\/([\w-]{6,})/)) || (m = u.match(/[?&]v=([\w-]{6,})/)) || (m = u.match(/youtube\.com\/(?:embed|shorts)\/([\w-]{6,})/)))
-      return 'https://www.youtube-nocookie.com/embed/' + m[1] + '?autoplay=1&rel=0';
-    if ((m = u.match(/vimeo\.com\/(\d+)/))) return 'https://player.vimeo.com/video/' + m[1] + '?autoplay=1';
-    return '';
-  }
-  document.getElementById('reel-btn').addEventListener('click', function () {
-    var note = document.getElementById('reel-note'), box = document.getElementById('reel-box');
-    var src = CONFIG.showreel ? embedUrl(CONFIG.showreel) : '';
-    if (!src) { note.textContent = 'No showreel linked yet. Add a YouTube or Vimeo link to CONFIG.showreel near the end of this file.'; return; }
-    var ifr = document.createElement('iframe');
-    ifr.src = src; ifr.title = 'Showreel'; ifr.allow = 'autoplay; fullscreen; picture-in-picture'; ifr.allowFullscreen = true;
-    box.innerHTML = ''; box.appendChild(ifr); note.textContent = '';
-  });
-
-  /* ---------- Work grid: filter and viewer ---------- */
-  var tiles = Array.prototype.slice.call(document.querySelectorAll('.tile'));
-  tiles.forEach(function (t) { var img = t.getAttribute('data-img'); if (img) t.style.backgroundImage = 'url("' + img + '")'; });
-  var chips = document.querySelectorAll('.chip');
-  Array.prototype.forEach.call(chips, function (c) {
-    c.addEventListener('click', function () {
-      var f = c.getAttribute('data-f');
-      Array.prototype.forEach.call(chips, function (o) { o.setAttribute('aria-pressed', String(o === c)); });
-      tiles.forEach(function (t) { t.hidden = !(f === 'all' || t.getAttribute('data-cat') === f); });
-      layoutTimeline(); req();
-    });
-  });
-  var lb = document.getElementById('lb'), lbView = document.getElementById('lb-view'), lbCap = document.getElementById('lb-cap'), cur = 0, list = [];
-  function show(i) {
-    cur = (i + list.length) % list.length;
-    var t = list[cur];
-    lbView.setAttribute('style', t.getAttribute('style') || '');
-    lbCap.textContent = t.getAttribute('data-cattext') + ': ' + t.querySelector('.ttl').textContent;
-  }
-  tiles.forEach(function (t) {
-    t.addEventListener('click', function () {
-      list = tiles.filter(function (x) { return !x.hidden; });
-      show(list.indexOf(t));
-      if (lb.showModal) lb.showModal(); else lb.setAttribute('open', '');
-    });
-  });
-  document.getElementById('lb-prev').addEventListener('click', function () { show(cur - 1); });
-  document.getElementById('lb-next').addEventListener('click', function () { show(cur + 1); });
-  document.getElementById('lb-close').addEventListener('click', function () { lb.close(); });
-  lb.addEventListener('click', function (e) { if (e.target === lb) lb.close(); });
-  lb.addEventListener('keydown', function (e) { if (e.key === 'ArrowLeft') show(cur - 1); if (e.key === 'ArrowRight') show(cur + 1); });
-
-  /* ---------- Before / after ---------- */
-  var ba = document.getElementById('ba'), baRange = document.getElementById('ba-range');
-  var bImg = ba.getAttribute('data-before'), aImg = ba.getAttribute('data-after');
-  if (bImg) { var bl = document.getElementById('ba-before'); bl.classList.remove('scene-art'); bl.style.backgroundImage = 'url("' + bImg + '")'; }
-  if (aImg) { var al = document.getElementById('ba-after'); al.classList.remove('scene-art'); al.style.backgroundImage = 'url("' + aImg + '")'; }
-  baRange.addEventListener('input', function () { ba.style.setProperty('--pos', baRange.value + '%'); });
-
-  /* ---------- Quote form: opens an email draft ---------- */
-  var form = document.getElementById('enquiry'), note = document.getElementById('form-note');
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    if (!CONFIG.email) { note.textContent = 'Add your email address to CONFIG.email near the end of this file. Then this form opens an email draft to you.'; return; }
-    var d = new FormData(form);
-    var body = 'Name: ' + d.get('name') + '\nEmail: ' + d.get('email') + '\nNeed: ' + d.get('type') + '\nDate or deadline: ' + (d.get('date') || 'Not given') + '\n\n' + d.get('msg');
-    window.location.href = 'mailto:' + CONFIG.email + '?subject=' + encodeURIComponent('Project enquiry: ' + d.get('type')) + '&body=' + encodeURIComponent(body);
-    note.textContent = 'Opening your email app.';
-  });
-})();
+/* ---------- GOOGLE SIGN-IN + DRIVE SYNC (private appDataFolder) ---------- */
+const GSC='openid email profile https://www.googleapis.com/auth/drive.appdata',DNAME='ca-final-planner.json';
+let GTOK=null,GEXP=0,GBUSY=false,GDIRTY=false,GID=null,GLW=-1,GNEED=false,gT=0;
+const gcid=()=>(GCID_DEFAULT||localStorage.getItem('caPlanner.gcid')||'').trim();
+const gisReady=()=>!!(window.google&&google.accounts&&google.accounts.oauth2);
+function gToken(interactive,hint){return new Promise((res,rej)=>{
+ if(!gcid())return rej(new Error('Google Client ID is not set.'));
+ if(!gisReady())return rej(new Error('Google sign-in script not loaded — check your internet connection.'));
+ const tc=google.accounts.oauth2.initTokenClient({client_id:gcid(),scope:GSC,...(hint?{hint}:{}),prompt:interactive?'select_account':'',
+  callback:r=>{if(r.error||!r.access_token)return rej(new Error(r.error_description||r.error||'Google sign-in failed'));GTOK=r.access_token;GEXP=Date.now()+((+r.expires_in||3600)-90)*1000;GNEED=false;res(GTOK)},
+  error_callback:e=>rej(new Error(e&&e.type==='popup_closed'?'The Google sign-in window was closed.':'Google sign-in failed ('+((e&&e.type)||'unknown')+'). Allow pop-ups for this page and try again.'))});
+ tc.requestAccessToken()})}
+async function gf(url,o){o=o||{};o.headers={...(o.headers||{}),Authorization:'Bearer '+GTOK};const r=await fetch(url,o);
+ if(r.status===401){GTOK=null;GEXP=0;throw new Error('Google session expired')}
+ if(!r.ok){let m='';try{m=(await r.json()).error.message}catch(e){}throw new Error('Drive error '+r.status+(m?' — '+m:''))}return r}
+async function dFind(){const r=await gf('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id)&q='+encodeURIComponent("name='"+DNAME+"'"));const j=await r.json();return j.files&&j.files[0]?j.files[0].id:null}
+async function dRead(id){return(await gf('https://www.googleapis.com/drive/v3/files/'+id+'?alt=media')).json()}
+async function dWrite(id,txt){
+ if(id){await gf('https://www.googleapis.com/upload/drive/v3/files/'+id+'?uploadType=media',{method:'PATCH',headers:{'Content-Type':'application/json'},body:txt});return id}
+ const b='ca'+Date.now(),body='--'+b+'\r\nContent-Type: application/json\r\n\r\n'+JSON.stringify({name:DNAME,parents:['appDataFolder']})+'\r\n--'+b+'\r\nContent-Type: application/json\r\n\r\n'+txt+'\r\n--'+b+'--';
+ const r=await gf('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+b},body});return(await r.json()).id}
+const gSig=x=>[...(x.sessions||[]).map(v=>'s'+v.id),...(x.notes||[]).map(v=>'n'+v.id),...(x.del||[]).map(v=>'d'+v),...Object.keys(x.progress||{}).flatMap(k=>Object.keys(x.progress[k]).filter(f=>x.progress[k][f]).map(f=>'p'+k+f))].sort().join();
+async function gSync(){if(!AUTH||!AUTH.google||!USER)return;if(GBUSY){GDIRTY=true;return}GBUSY=true;
+ try{do{GDIRTY=false;
+  if(!GTOK||Date.now()>=GEXP){try{await gToken(false,USER)}catch(e){GNEED=true;syncMsg('☁ tap “Reconnect Google” to sync');ubar();GBUSY=false;return}}
+  if(!GID)GID=await dFind();let rs=-2,ch=false;
+  if(GID){const e=await dRead(GID);if(e&&e.data){rs=e.data.savedAt||0;
+   if(rs!==GLW){const b=JSON.stringify(S),rd=norm(e.data);S=mergeS([S,rd]);fixNames();ch=b!==JSON.stringify(S);if(gSig(S)!==gSig(rd)){S.savedAt=Date.now();ch=true}}}}
+  if(!GID||S.savedAt!==rs)GID=await dWrite(GID,JSON.stringify({app:'ca-final-planner',v:2,user:USER,savedAt:S.savedAt||0,data:S}));
+  GLW=S.savedAt||0;GNEED=false;
+  if(ch){try{localStorage.setItem(ukey(USER),JSON.stringify(S))}catch(x){}uiRefresh()}
+  syncMsg('☁ synced '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));ubar();
+ }while(GDIRTY)}catch(e){syncMsg('⚠ Google Drive: '+(e.message||e));if(/expired/.test(e.message||''))GNEED=true;ubar()}
+ GBUSY=false}
+async function gReconnect(){try{await gToken(true,USER)}catch(e){return alert(e.message)}GNEED=false;gSync()}
+async function gLogin(){
+ if(location.protocol==='file:')return am('Google sign-in only works when the planner is opened from a web address (e.g. GitHub Pages), not from a file on your computer.');
+ if(!gcid())return am('Google sign-in is not set up yet — open “Google setup” below and paste your Client ID.');
+ am('Opening Google…');
+ try{const tok=await gToken(true);
+  const ui=await(await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+tok}})).json();const u=(ui.email||'').toLowerCase();if(!u)throw new Error('Could not read your Gmail address.');
+  const U=users();if(U[u]&&!U[u].google)return am('A password account named “'+u+'” already exists here. Sign in with its password.');
+  const first=!U[u];AUTH={google:true,email:u,name:ui.name||''};U[u]=AUTH;USER=u;localStorage.setItem(UK,JSON.stringify(U));
+  if($('#aRu').checked)localStorage.setItem(LK,u);else localStorage.removeItem(LK);if($('#aKs').checked)localStorage.setItem(KP,u);else localStorage.removeItem(KP);
+  const c=[],lo=loadLocal(u);if(lo)c.push(lo);
+  if(first)for(const k of Object.keys(U)){if(k===u||U[k].google)continue;const o=loadLocal(k);if(o&&((o.sessions||[]).length||(o.notes||[]).length)&&confirm('Copy the existing study data from account “'+k+'” into this Google account?'))c.push(o)}
+  await attach(u,c,true);S=c.length?mergeS(c):norm();fixNames();
+  $('#auth').hidden=true;document.querySelector('.wrap').style.display='';$('#aF').value='';
+  syncMsg('☁ connecting to Google Drive…');render();tickAll();prune();
+  try{localStorage.setItem(ukey(USER),JSON.stringify(S))}catch(e){}
+  await gSync();render()
+ }catch(e){USER=null;AUTH=null;am(e&&e.message?e.message:'Google sign-in failed.')}}
+$('#aG').onclick=gLogin;
+document.addEventListener('change',e=>{if(e.target.id==='sG'||e.target.id==='aCid')localStorage.setItem('caPlanner.gcid',e.target.value.trim())});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&AUTH&&AUTH.google&&!GNEED)gSync()});
+setInterval(()=>{if(AUTH&&AUTH.google&&USER&&!GNEED&&!document.hidden&&GTOK&&Date.now()<GEXP)gSync()},30000);
+{const kp=localStorage.getItem(KP);if(kp&&users()[kp])autoLogin(kp);else showAuth()}
 </script>
 </body>
 </html>
