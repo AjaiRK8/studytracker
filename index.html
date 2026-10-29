@@ -513,8 +513,8 @@ function streak(m){let n=0,d=new Date();if(!m[dk(d)])d.setDate(d.getDate()-1);wh
 const daysLeft=()=>Math.ceil((new Date(S.set.exam+'T09:00')-new Date())/864e5);
 
 /* ---------- VIEWS ---------- */
-let tab='dash',pS='DT',pC=0,pA='Study',pN='',cS='DT',cQ='',cF='all';
-const TABS=[['dash','Dashboard'],['punch','Punch In / Out'],['chap','Chapters & Links'],['notes','Sticky Notes'],['log','Session Log'],['set','Settings']];
+let tab='punch',pS='DT',pC=0,pA='Study',pN='',cS='DT',cQ='',cF='all';
+const TABS=[['punch','Punch In / Out'],['dash','Dashboard'],['chap','Chapters & Links'],['notes','Sticky Notes'],['log','Session Log'],['set','Settings']];
 function nav(){$('#nav').innerHTML=TABS.map(([k,n])=>`<button class="${tab===k?'on':''}" data-tab="${k}">${n}${k==='punch'&&S.active?' ●':''}${k==='notes'&&S.notes.some(x=>!x.d)?' ('+S.notes.filter(x=>!x.d).length+')':''}</button>`).join('')}
 function render(){if(!USER)return;nav();ubar();warn();const d=daysLeft();$('#dl').textContent=d>0?d:0;$('#main').innerHTML=({dash:vDash,punch:vPunch,chap:vChap,notes:vNotes,log:vLog,set:vSet})[tab]();}
 
