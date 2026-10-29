@@ -50,7 +50,7 @@ label.f{display:block;font:11px var(--fm);color:var(--mute);margin:10px 0 4px}
 .btn{border:0;border-radius:8px;padding:10px 16px;font:700 14px var(--fs);cursor:pointer;background:var(--ink);color:var(--bg)}
 .btn.acc{background:var(--acc);color:#fff}.btn.ghost{background:none;border:1.5px solid var(--line);color:var(--ink)}
 .btn.sm{padding:5px 9px;font-size:12px}
-.punch{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.punch{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
 @media(max-width:760px){.punch{grid-template-columns:1fr}}
 .clock{font:600 clamp(44px,10vw,76px)/1 var(--fm);letter-spacing:-.03em;text-align:center;margin:8px 0}
 .big{width:100%;padding:16px;font-size:18px;border-radius:12px}
@@ -562,7 +562,7 @@ function heat(m){const tg=+S.set.target||4;const end=new Date();end.setDate(end.
 function subBars(){const t=hoursOf(()=>true)||1;const mx=Math.max(...ORDER.map(s=>hoursOf(x=>x.s===s)),.01);return ORDER.map(s=>{const h=hoursOf(x=>x.s===s);return`<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:13px"><span>${META[s].n}</span><span class="mono">${fh(h)}</span></div><div class="bar"><i style="width:${h/mx*100}%;background:${META[s].c}"></i></div></div>`}).join('')}
 function recent(n){const r=[...S.sessions].sort((a,b)=>b.st-a.st).slice(0,n);if(!r.length)return'<small>No sessions yet — punch in to start.</small>';return'<table>'+r.map(x=>{const c=L[x.s][x.i];return`<tr><td class="mono">${dk(x.st)}</td><td><b style="color:${META[x.s].c}">${x.s}</b> ${esc(c?c.t:'')}<br><small>${esc(x.a)}${x.n?' · '+esc(x.n):''}</small></td><td class="mono">${fh(hrs(x))}</td></tr>`}).join('')+'</table>'}
 
-function qTodo(a){const k=PK[ACTS.indexOf(a.a)];if(!k)return'';
+function qTodo(a,bare){const k=PK[ACTS.indexOf(a.a)];if(!k)return'';
  const all=[];S.notes.filter(n=>n.s===a.s&&n.i===a.i&&n.t==='LDR').forEach(n=>ldrList(n).forEach((o,x)=>all.push({n,o,x})));if(!all.length)return'';
  const showAll=!!S.set.qAll,mine=all.filter(z=>remindsIn(z.o,k)),it=showAll?all:mine,srt=(u,v)=>qCmp(u.o,v.o);
  const pend=it.filter(z=>!(z.o.rv&&z.o.rv[k])).sort(srt),dn=it.filter(z=>z.o.rv&&z.o.rv[k]).sort(srt);
@@ -570,17 +570,19 @@ function qTodo(a){const k=PK[ACTS.indexOf(a.a)];if(!k)return'';
  const ctl=`<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px;font-size:12px"><span>Order ${qSortSel('qSortT')}</span><label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="qAllT" style="width:auto" ${showAll?'checked':''}>Show all LDR questions of this chapter (${all.length})</label></div>`;
  const empty=!it.length?`<div style="margin-top:6px;font-size:13px">No LDR question is set to remind in ${esc(a.a)}. ${all.length} hidden — tick “Show all” to see them, or edit the sticky note to add this session to a question’s reminders.</div>`
   :(!pend.length?'<div style="margin-top:6px;font-size:13px">All LDR questions'+(showAll?'':' due')+' of this chapter are done for '+esc(a.a)+' 🎉</div>':'');
- return`<div style="margin-top:14px;border-top:1px dashed var(--line);padding-top:10px"><b>📖 LDR questions for ${esc(a.a)}</b> <small>· ${pend.length} pending · ${dn.length} done${showAll?'':' · '+(all.length-mine.length)+' not set for this session'}</small>${ctl}`+
+ return`<div style="${bare?'':'margin-top:14px;border-top:1px dashed var(--line);padding-top:10px'}"><b>📖 LDR questions for ${esc(a.a)}</b> <small>· ${pend.length} pending · ${dn.length} done${showAll?'':' · '+(all.length-mine.length)+' not set for this session'}</small>${ctl}`+
   empty+pend.map(z=>row(z,0)).join('')+
   (dn.length?`<details style="margin-top:8px"><summary class="hint" style="cursor:pointer">Done in ${esc(a.a)} (${dn.length})</summary>${dn.map(z=>row(z,1)).join('')}</details>`:'')+'</div>'}
 function vPunch(){
  /* default the form to the most recent saved session until the user picks something else */
  if(!pTouched&&!S.active){const l=[...S.sessions].sort((a,b)=>b.st-a.st)[0];if(l&&l.id!==pInit&&L[l.s]&&L[l.s][l.i]){pInit=l.id;pS=l.s;pC=l.i;cS=l.s;if(ACTS.includes(l.a))pA=l.a}}
  const td=(byDay()[dk(Date.now())]||{}).t||0;
- if(S.active){const a=S.active,c=L[a.s][a.i];return`<div class="card live"><h2><span class="dot"></span>You are punched in</h2><div style="color:${META[a.s].c};font-weight:700">${esc(META[a.s].n)}</div><div style="font-size:18px">${esc(c.t)}</div><small>${esc(a.a)}${a.n?' · '+esc(a.n):''} · since ${new Date(a.st).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</small>
+ if(S.active){const a=S.active,c=L[a.s][a.i];
+  const ql=qTodo(a,1),hasN=S.notes.some(n=>n.s===a.s&&n.i===a.i),right=ql?`<div class="card">${ql}</div>`:hasN?`<div class="card"><h2 style="margin-bottom:0">Sticky notes</h2>${chNotes(a.s,a.i)}</div>`:`<div class="card"><h2>Today</h2><div class="clock" style="text-align:left">${fh(td)}</div><small>Target ${S.set.target}h · ${td>=S.set.target?'target reached 🎯':fh(Math.max(0,S.set.target-td))+' to go'}</small><div class="hint" style="margin-top:14px">No LDR questions or sticky notes for this chapter yet.</div></div>`;
+  return`<div class="punch"><div class="card live"><h2><span class="dot"></span>You are punched in</h2><div style="color:${META[a.s].c};font-weight:700">${esc(META[a.s].n)}</div><div style="font-size:18px">${esc(c.t)}</div><small>${esc(a.a)}${a.n?' · '+esc(a.n):''} · since ${new Date(a.st).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</small>
  <div class="clock tick">00:00:00</div><button class="btn acc big" data-act="out">PUNCH OUT</button>
  <div style="text-align:center;margin-top:6px;font-size:13px"><a href="#" data-act="discard" style="color:var(--acc,#d8432a)">✕ Discard this session</a></div>
- <button class="btn ghost" style="width:100%;margin-top:8px" data-act="addNote" data-s="${a.s}" data-i="${a.i}">＋ Sticky note (pending / doubt / important)</button>${qTodo(a)}${chNotes(a.s,a.i)}<div class="hint">The timer keeps running even if you close this tab.</div><div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">${links(a.s,c)}</div></div>`}
+ <button class="btn ghost" style="width:100%;margin-top:8px" data-act="addNote" data-s="${a.s}" data-i="${a.i}">＋ Sticky note (pending / doubt / important)</button>${ql||!hasN?chNotes(a.s,a.i):''}<div class="hint">The timer keeps running even if you close this tab.</div><div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">${links(a.s,c)}</div></div>${right}</div>`}
  const opts=ORDER.map(s=>`<option value="${s}" ${s===pS?'selected':''}>${META[s].p} · ${META[s].n}</option>`).join('');
  const ch=L[pS].map(c=>`<option value="${c.i}" ${c.i===pC?'selected':''}>${pad(c.i+1)}. ${esc(c.t)}</option>`).join('');
  const c=L[pS][pC]||L[pS][0];
