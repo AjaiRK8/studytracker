@@ -579,7 +579,8 @@ function vPunch(){
  const td=(byDay()[dk(Date.now())]||{}).t||0;
  if(S.active){const a=S.active,c=L[a.s][a.i];return`<div class="card live"><h2><span class="dot"></span>You are punched in</h2><div style="color:${META[a.s].c};font-weight:700">${esc(META[a.s].n)}</div><div style="font-size:18px">${esc(c.t)}</div><small>${esc(a.a)}${a.n?' · '+esc(a.n):''} · since ${new Date(a.st).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</small>
  <div class="clock tick">00:00:00</div><button class="btn acc big" data-act="out">PUNCH OUT</button>
- <button class="btn ghost" style="width:100%;margin-top:8px" data-act="addNote" data-s="${a.s}" data-i="${a.i}">＋ Sticky note (pending / doubt / important)</button>${qTodo(a)}${chNotes(a.s,a.i)}<div class="hint">The timer keeps running even if you close this tab. <a href="#" data-act="discard">Discard this session</a></div><div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">${links(a.s,c)}</div></div>`}
+ <div style="text-align:center;margin-top:6px;font-size:13px"><a href="#" data-act="discard" style="color:var(--acc,#d8432a)">✕ Discard this session</a></div>
+ <button class="btn ghost" style="width:100%;margin-top:8px" data-act="addNote" data-s="${a.s}" data-i="${a.i}">＋ Sticky note (pending / doubt / important)</button>${qTodo(a)}${chNotes(a.s,a.i)}<div class="hint">The timer keeps running even if you close this tab.</div><div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">${links(a.s,c)}</div></div>`}
  const opts=ORDER.map(s=>`<option value="${s}" ${s===pS?'selected':''}>${META[s].p} · ${META[s].n}</option>`).join('');
  const ch=L[pS].map(c=>`<option value="${c.i}" ${c.i===pC?'selected':''}>${pad(c.i+1)}. ${esc(c.t)}</option>`).join('');
  const c=L[pS][pC]||L[pS][0];
