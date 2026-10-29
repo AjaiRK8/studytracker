@@ -63,7 +63,7 @@ label.f{display:block;font:11px var(--fm);color:var(--mute);margin:10px 0 4px}
 .row{display:grid;grid-template-columns:34px 1fr 64px auto auto;gap:10px;align-items:center;padding:9px 4px;border-bottom:1px dashed var(--line)}
 .row .no{font:12px var(--fm);color:var(--mute)}
 .row .tt{font-weight:500}.row .tt small{display:block;font:11px var(--fm)}
-.chk{display:flex;gap:8px;font:11px var(--fm)}.chk label{display:flex;gap:3px;align-items:center;cursor:pointer}
+.chk{display:flex;gap:8px;flex-wrap:wrap;font:11px var(--fm)}.chk label{display:flex;gap:3px;align-items:center;cursor:pointer}
 .chk input{width:auto;accent-color:var(--ok)}
 .lk{font-size:12px;display:flex;flex-direction:column;gap:2px;align-items:flex-end}
 .grp{font:700 12px var(--fm);text-transform:none;background:var(--line);padding:5px 8px;border-radius:4px;margin:12px 0 2px}
@@ -81,6 +81,7 @@ td,th{padding:7px 6px;border-bottom:1px dashed var(--line);text-align:left;verti
 .mf{position:relative}.mf textarea{padding-right:44px;resize:vertical}.mic{position:absolute;right:6px;top:6px;border:0;border-radius:50%;width:30px;height:30px;cursor:pointer;background:#8883;font-size:15px;line-height:30px;padding:0}.mic.rec{background:#d8432a;color:#fff;animation:micp 1s infinite}@keyframes micp{50%{opacity:.55}}.qb{border:1px solid var(--line);border-radius:8px;padding:8px 10px 10px;margin-top:8px;background:#8881}
 .nsug{position:absolute;left:0;right:0;top:100%;z-index:30;background:var(--card,#fff);color:var(--ink,#222);border:1px solid #8884;border-radius:8px;box-shadow:0 8px 24px #0004;max-height:300px;overflow:auto;margin-top:2px}.nsug a{display:block;padding:8px 10px;text-decoration:none;color:inherit;font-size:13px;border-bottom:1px solid #8882}.nsug a:hover{background:#8883}
 .notes{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;padding:6px}
+.rvc{display:inline-block;border:1px solid #0006;border-radius:10px;padding:0 7px;margin:3px 4px 0 0;font:600 10px var(--fm);cursor:pointer;opacity:.55;user-select:none}.rvc.on{background:#2e7d5b;color:#fff;border-color:#2e7d5b;opacity:1}
 .nb{display:inline-block;background:#ffe27a;color:#2a2415;border-radius:4px;padding:0 6px;margin-left:4px;font:600 11px var(--fm)}
 dialog{border:2px solid var(--ink);border-radius:12px;background:var(--card);color:var(--ink);max-width:420px;width:92%}
 dialog::backdrop{background:#0008}
@@ -350,7 +351,7 @@ ORDER.forEach(s=>{let g='';L[s]=[];RAW[s].forEach(r=>{if(r[0]==='#'){g=r[1];retu
 
 /* ---------- STATE ---------- */
 const K='caFinalPlanner.v1';
-const DEF={sessions:[],notes:[],del:[],progress:{},active:null,set:{exam:'2027-05-02',target:6,base:'',files:{DT:'Study material/DT module.pdf',IDT:'Study material/IDT module.pdf',AUD:'Study material/Audit Module.pdf',FR:'Study material/FR module.pdf',AFM:'Study material/AFM module.pdf'}}};
+const DEF={sessions:[],notes:[],del:[],progress:{},active:null,set:{exam:'2027-05-02',target:6,revs:2,base:'',files:{DT:'Study material/DT module.pdf',IDT:'Study material/IDT module.pdf',AUD:'Study material/Audit Module.pdf',FR:'Study material/FR module.pdf',AFM:'Study material/AFM module.pdf'}}};
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pad=n=>String(n).padStart(2,'0');
@@ -410,8 +411,8 @@ function exportLog(){const rows=[['ID','Date','Start','End','Minutes','Hours','S
  [...S.sessions].sort((a,b)=>a.st-b.st).forEach(x=>{const c=L[x.s][x.i];rows.push([x.id,dk(x.st),hm(x.st),hm(x.en),Math.round((x.en-x.st)/6e4),hrs(x).toFixed(2),x.s,META[x.s].n,x.i+1,c?c.t:'',x.a,x.n||'',S.notes.filter(z=>z.sid===x.id).map(z=>z.t+': '+z.x).join(' | ')])});csvOut('ca-study-sessions',rows)}
 function exportNotes(){const rows=[['ID','Created','SubjectCode','Subject','ChapterNo','Chapter','Type','Note','Status','SessionID','LDRQuestions','LDRData']];
  [...S.notes].sort((a,b)=>a.c-b.c).forEach(n=>{const c=L[n.s][n.i];rows.push([n.id,new Date(n.c).toISOString(),n.s,META[n.s].n,n.i+1,c?c.t:'',n.t,n.x,n.d?'Done':'Open',n.sid||'',ldrAll(n),ldrList(n).length?JSON.stringify(ldrList(n)):''])});csvOut('ca-sticky-notes',rows)}
-function exportProg(){const rows=[['SubjectCode','ChapterNo','Chapter','Study','Rev1','Rev2','Practice']];
- ORDER.forEach(s=>L[s].forEach(c=>{const p=prog(s,c.i);rows.push([s,c.i+1,c.t,p.s?1:0,p.r1?1:0,p.r2?1:0,p.p?1:0])}));csvOut('ca-chapter-progress',rows)}
+function exportProg(){const rows=[['SubjectCode','ChapterNo','Chapter',...PK.map(pcolH)]];
+ ORDER.forEach(s=>L[s].forEach(c=>{const p=prog(s,c.i);rows.push([s,c.i+1,c.t,...PK.map(k=>p[k]?1:0)])}));csvOut('ca-chapter-progress',rows)}
 function exportDaily(){const m=byDay(),rows=[['Date','TotalHours',...ORDER.map(s=>s+'Hours')]];
  Object.keys(m).sort().forEach(k=>rows.push([k,m[k].t.toFixed(2),...ORDER.map(s=>(m[k].by[s]||0).toFixed(2))]));csvOut('ca-daily-summary',rows)}
 function exportAll(){[exportLog,exportNotes,exportProg,exportDaily].forEach((f,i)=>setTimeout(f,i*400))}
@@ -427,14 +428,14 @@ function importCsv(text){const rows=csvParse(text);if(rows.length<2)throw new Er
  if(H.includes('minutes')&&H.includes('date')){const have=new Set(S.sessions.map(x=>x.id));
   body.forEach(r=>{const s=sub(r),i=chi(r),d=pdate(g(r,'date')),mn=+g(r,'minutes');if(!ok(s,i)||!d||!(mn>0)){skip++;return}
    const st=new Date(d+'T'+ptime(g(r,'start'))).getTime();if(!st){skip++;return}const id=g(r,'id')||('csv-'+st+'-'+s+'-'+i);if(have.has(id)){skip++;return}
-   have.add(id);S.del=(S.del||[]).filter(x=>x!==id);S.sessions.push({id,s,i,a:ACTS.includes(g(r,'activity'))?g(r,'activity'):'Study',n:g(r,'note'),st,en:st+mn*6e4});add++});return'sessions: '+add+' added, '+skip+' skipped'}
+   have.add(id);S.del=(S.del||[]).filter(x=>x!==id);S.sessions.push({id,s,i,a:(ACTS.includes(g(r,'activity'))||/^Revision \d+$/.test(g(r,'activity')))?g(r,'activity'):'Study',n:g(r,'note'),st,en:st+mn*6e4});add++});return'sessions: '+add+' added, '+skip+' skipped'}
  if(H.includes('type')&&H.includes('note')&&H.includes('status')){const have=new Set(S.notes.map(x=>x.id));
   body.forEach(r=>{const s=sub(r),i=chi(r),t=NT.find(k=>k.toLowerCase()===g(r,'type').toLowerCase()),x=g(r,'note');if(!ok(s,i)||!t||(!x&&!g(r,'ldrdata'))){skip++;return}
    const id=g(r,'id')||uid();if(have.has(id)){skip++;return}have.add(id);S.del=(S.del||[]).filter(z=>z!==id);
-   S.notes.push({id,s,i,t,x,c:Date.parse(g(r,'created'))||Date.now(),d:/^done$/i.test(g(r,'status'))?1:0,sid:g(r,'sessionid'),q:(()=>{try{const a=JSON.parse(g(r,'ldrdata')||'[]');return Array.isArray(a)?a.map(o=>({q:String(o.q||''),p:String(o.p||''),s:String(o.s||''),r:PRI.includes(o.r)?o.r:''})):[]}catch(e){return[]}})()});add++});return'sticky notes: '+add+' added, '+skip+' skipped'}
+   S.notes.push({id,s,i,t,x,c:Date.parse(g(r,'created'))||Date.now(),d:/^done$/i.test(g(r,'status'))?1:0,sid:g(r,'sessionid'),q:(()=>{try{const a=JSON.parse(g(r,'ldrdata')||'[]');return Array.isArray(a)?a.map(o=>({q:String(o.q||''),p:String(o.p||''),s:String(o.s||''),r:PRI.includes(o.r)?o.r:'',rv:(o.rv&&typeof o.rv==='object')?o.rv:{}})):[]}catch(e){return[]}})()});add++});return'sticky notes: '+add+' added, '+skip+' skipped'}
  if(H.includes('rev1')&&H.includes('study')){const on=v=>/^(1|y|yes|true|x|✓|done)$/i.test(v);
   body.forEach(r=>{const s=sub(r),i=chi(r);if(!ok(s,i)){skip++;return}const p=S.progress[pk(s,i)]=S.progress[pk(s,i)]||{};
-   [['s','study'],['r1','rev1'],['r2','rev2'],['p','practice']].forEach(([k,c])=>{if(on(g(r,c)))p[k]=1});add++});return'chapter progress: '+add+' rows applied, '+skip+' skipped'}
+   PK.forEach(k=>{if(H.includes(pcol(k))&&on(g(r,pcol(k))))p[k]=1});add++});return'chapter progress: '+add+' rows applied, '+skip+' skipped'}
  throw new Error('not a planner CSV (export one from this planner first)')}
 const dataBar=k=>`<span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="${k==='sessions'?'exportLog':k==='notes'?'exportNotes':'exportProg'}">Export CSV</button><label class="btn ghost sm" style="cursor:pointer">Import CSV<input type="file" id="impCsv" accept=".csv,text/csv" multiple hidden></label></span>`;
 /* --- account management --- */
@@ -501,8 +502,13 @@ addEventListener('visibilitychange',()=>{if(document.hidden)save()});addEventLis
 const hrs=s=>(s.en-s.st)/36e5;
 function fh(h){const m=Math.round(h*60);return m<60?m+'m':Math.floor(m/60)+'h '+pad(m%60)+'m'}
 function clk(ms){const s=Math.max(0,Math.floor(ms/1000));return pad(Math.floor(s/3600))+':'+pad(Math.floor((s%3600)/60))+':'+pad(s%60)}
-const ACTS=['Study','Revision 1','Revision 2','Practice'];
-const PK=['s','r1','r2','p'];
+let ACTS=['Study','Revision 1','Revision 2','Last Day Revision','Practice'];
+let PK=['s','r1','r2','l','p'];
+function buildActs(){const n=Math.max(1,Math.min(10,Math.round(+(S&&S.set&&S.set.revs))||2)),r=Array.from({length:n},(_,k)=>k+1);
+ ACTS=['Study',...r.map(k=>'Revision '+k),'Last Day Revision','Practice'];PK=['s',...r.map(k=>'r'+k),'l','p']}
+const PL=k=>k==='s'?'S':k==='p'?'P':k==='l'?'LDR':k.toUpperCase();
+const pcol=k=>k==='s'?'study':k==='p'?'practice':k==='l'?'lastday':'rev'+k.slice(1);
+const pcolH=k=>k==='s'?'Study':k==='p'?'Practice':k==='l'?'LastDay':'Rev'+k.slice(1);
 const pk=(s,i)=>s+':'+i;
 const prog=(s,i)=>S.progress[pk(s,i)]||{};
 function pdfHref(s,pg){const f=S.set.files[s];if(!f||pg==null)return null;return(S.set.base||'')+encodeURI(f)+'#page='+pg}
@@ -516,12 +522,12 @@ const daysLeft=()=>Math.ceil((new Date(S.set.exam+'T09:00')-new Date())/864e5);
 let pTouched=false,pInit='',tab='punch',pS='DT',pC=0,pA='Study',pN='',cS='DT',cQ='',cF='all';
 const TABS=[['punch','Punch In / Out'],['dash','Dashboard'],['chap','Chapters & Links'],['notes','Sticky Notes'],['log','Session Log'],['set','Settings']];
 function nav(){$('#nav').innerHTML=TABS.map(([k,n])=>`<button class="${tab===k?'on':''}" data-tab="${k}">${n}${k==='punch'&&S.active?' ●':''}${k==='notes'&&S.notes.some(x=>!x.d)?' ('+S.notes.filter(x=>!x.d).length+')':''}</button>`).join('')}
-function render(){if(!USER)return;nav();ubar();warn();const d=daysLeft();$('#dl').textContent=d>0?d:0;$('#main').innerHTML=({dash:vDash,punch:vPunch,chap:vChap,notes:vNotes,log:vLog,set:vSet})[tab]();}
+function render(){if(!USER)return;buildActs();nav();ubar();warn();const d=daysLeft();$('#dl').textContent=d>0?d:0;$('#main').innerHTML=({dash:vDash,punch:vPunch,chap:vChap,notes:vNotes,log:vLog,set:vSet})[tab]();}
 
 function vDash(){
  const m=byDay(),tod=dk(Date.now()),tot=hoursOf(()=>true),td=(m[tod]||{}).t||0;
  let wk=0;for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);wk+=(m[dk(d)]||{}).t||0}
- let all=0,done=0,pend=0;ORDER.forEach(s=>L[s].forEach(c=>{const p=prog(s,c.i);all+=4;PK.forEach(k=>{if(p[k])done++});if(!p.s)pend++}));
+ let all=0,done=0,pend=0;ORDER.forEach(s=>L[s].forEach(c=>{const p=prog(s,c.i);all+=PK.length;PK.forEach(k=>{if(p[k])done++});if(!p.s)pend++}));
  const dl=Math.max(1,daysLeft()),tg=+S.set.target||0;
  const need=pend?(pend/(dl/7)).toFixed(1):'0';
  const kp=(v,l)=>`<div class="card kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`;
@@ -533,7 +539,7 @@ function vDash(){
   h+=`<div class="card subcard" style="--c:${M.c}"><div class="top"><h3>${M.n}</h3><small class="mono">${M.p}</small></div>
   <div class="mono" style="margin:6px 0">${fh(hh)} logged · ${cnt('s')}/${n} chapters studied</div>
   <div class="bar"><i style="width:${cnt('s')/n*100}%;background:${M.c}"></i></div>
-  <div class="pips"><span>Rev-1 ${cnt('r1')}/${n}</span><span>Rev-2 ${cnt('r2')}/${n}</span><span>Practice ${cnt('p')}/${n}</span></div>
+  <div class="pips">${PK.slice(1).map(k=>`<span>${k==='p'?'Practice':k==='l'?'Last Day':'Rev-'+k.slice(1)} ${cnt(k)}/${n}</span>`).join('')}</div>
   <div style="margin-top:8px;font-size:13px">${nx?`<b>Next:</b> ${esc(nx.t)} <span class="lkin">${links(s,nx).split('</a>').filter(Boolean).map(x=>x+'</a>').join(' · ')}</span>`:'<b>All chapters studied 🎉</b>'}</div></div>`});
  h+=`</div><div class="grid two" style="margin-top:12px"><div class="card"><h2>Hours by subject</h2>${subBars()}</div><div class="card"><h2>Recent sessions</h2>${recent(8)}</div><div class="card" style="grid-column:1/-1"><h2>Open pending, doubts &amp; important</h2>${pendList()}</div></div>`;
  return h}
@@ -577,10 +583,10 @@ function vChap(){
   if(c.g!==g){g=c.g;if(g)rows+=`<div class="grp">${esc(g)}</div>`}
   const tm=hoursOf(x=>x.s===cS&&x.i===c.i);
   rows+=`<div class="row"><span class="no">${pad(c.i+1)}</span><div class="tt">${esc(c.t)}<small>${c.nb?'Notebook p.'+esc(c.nb)+' ':''}${nbadge(cS,c.i)}</small></div><div class="tm mono">${tm?fh(tm):'–'}</div>
-  <div class="chk">${PK.map((k,j)=>`<label title="${ACTS[j]}"><input type="checkbox" data-pk="${k}" data-i="${c.i}" ${p[k]?'checked':''}>${['S','R1','R2','P'][j]}</label>`).join('')}</div>
+  <div class="chk">${PK.map((k,j)=>`<label title="${ACTS[j]}"><input type="checkbox" data-pk="${k}" data-i="${c.i}" ${p[k]?'checked':''}>${PL(k)}</label>`).join('')}</div>
   <div class="lk">${links(cS,c)}<a href="#" data-go="${c.i}">▶ punch in</a><a href="#" data-nadd="${c.i}">＋ sticky note</a></div></div>`});
  return`<div class="card"><div class="chips">${chips}</div><div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap"><input id="cQ" style="flex:1;min-width:180px" placeholder="Search chapters…" value="${esc(cQ)}"><select id="cF" style="width:auto"><option value="all">All</option><option value="pend" ${cF==='pend'?'selected':''}>Study pending</option></select>${dataBar("prog")}</div>
- <div class="hint" style="margin:0 0 6px">S = Study done · R1/R2 = Revision 1/2 · P = Practice. Module links open the ICAI PDF at that page (PDF page number) — PDFs are expected in the “Study material” folder next to this file.</div>${rows||'<small>No chapters match.</small>'}</div>`}
+ <div class="hint" style="margin:0 0 6px">S = Study done · R1, R2… = Revisions · LDR = Last Day Revision · P = Practice. Module links open the ICAI PDF at that page (PDF page number) — PDFs are expected in the “Study material” folder next to this file.</div>${rows||'<small>No chapters match.</small>'}</div>`}
 
 function vLog(){
  const r=[...S.sessions].sort((a,b)=>b.st-a.st).slice(0,300);const m=byDay();let last='',t='';
@@ -595,7 +601,7 @@ function vLog(){
 
 function vSet(){
  const f=ORDER.filter(s=>s!=='IBS').map(s=>`<label class="f">${META[s].n} — PDF file name</label><input data-file="${s}" value="${esc(S.set.files[s])}">`).join('');
- return`<div class="grid two"><div class="card"><h2>Goals</h2><label class="f">EXAM START DATE</label><input type="date" id="sE" value="${S.set.exam}"><small>Set to the date of your first paper once ICAI announces the schedule.</small><label class="f">DAILY TARGET (hours)</label><input type="number" id="sT" step="0.5" min="0" value="${S.set.target}"></div>
+ return`<div class="grid two"><div class="card"><h2>Goals</h2><label class="f">EXAM START DATE</label><input type="date" id="sE" value="${S.set.exam}"><small>Set to the date of your first paper once ICAI announces the schedule.</small><label class="f">DAILY TARGET (hours)</label><input type="number" id="sT" step="0.5" min="0" value="${S.set.target}"><label class="f">NUMBER OF REVISIONS</label><input type="number" id="sR" min="1" max="10" step="1" value="${S.set.revs||2}"><small>Adds Revision 3, 4… to the activity list, chapter tracker and LDR question tracking. Existing data is kept if you reduce it. “Last Day Revision” is always included.</small></div>
  <div class="card"><h2>Module PDF links</h2><small>Paths are relative to this HTML file (default: Study material folder). Change if yours differ.</small><label class="f">FOLDER PREFIX (optional, e.g. file:///D:/CA/ or ../pdf/)</label><input id="sB" value="${esc(S.set.base)}">${f}</div>
  <div class="card"><h2>Account · ${esc(USER)}</h2><small>Change your password, or remove this account from this browser.</small><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">${AUTH&&AUTH.google?'<small>Signed in with Google — no password to change.</small>':'<button class="btn" data-act="chpw">Change password</button>'}<button class="btn ghost" data-act="delacc">Delete account</button></div></div>
  <div class="card"><h2>Google Drive sync</h2>${AUTH&&AUTH.google?`<small>Signed in as ${esc(USER)}. Your data is saved to a private app folder in your Google Drive (only this planner can see it). Open the same planner link on your phone, tap “Sign in with Google”, and the same data appears.</small><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="gsync">Sync now</button>${GNEED?'<button class="btn acc" data-act="gre">Reconnect Google</button>':''}</div>`:'<small>Sign out and choose “Sign in with Google” to sync across PC and mobile.</small>'}${GCID_DEFAULT?'':`<label class="f">GOOGLE CLIENT ID</label><input id="sG" value="${esc(gcid())}" placeholder="xxxx.apps.googleusercontent.com">`}</div>
@@ -606,8 +612,10 @@ const NT=['Note','Pending','Doubt','Important','LDR'],NC={Note:'#fff1a8',Pending
 const ldrList=n=>Array.isArray(n.q)?n.q:((n.qn||n.qp||n.qs)?[{q:n.qn||'',p:n.qp||'',s:n.qs||''}]:[]);
 const PRI=['High','Medium','Low'],PI={High:'🔴',Medium:'🟡',Low:'🟢'},PR=o=>{const k=PRI.indexOf(o.r);return k<0?3:k};
 const ldrHead=o=>[o.r?'['+o.r+']':'',o.q?'Q. '+o.q:'',o.p?'p. '+o.p:''].filter(Boolean).join(' · ');
-const ldrAll=n=>ldrList(n).map(o=>[ldrHead(o),o.s].filter(Boolean).join(': ')).join(' | ');
-const ldrHtml=n=>[...ldrList(n)].sort((a,b)=>PR(a)-PR(b)).map(o=>`<div style="margin-top:3px"><b>${o.r?PI[o.r]+' ':''}${esc(ldrHead({q:o.q,p:o.p})||'Question')}</b>${o.s?'<div style="opacity:.9">'+esc(o.s)+'</div>':''}</div>`).join('');
+const rvKeys=()=>PK.filter(k=>/^r\d+$/.test(k)||k==='l'),rvLbl=k=>k==='l'?'LDR':'R'+k.slice(1);
+const rvTxt=o=>{const a=rvKeys().filter(k=>o.rv&&o.rv[k]).map(rvLbl);return a.length?'(done in '+a.join('/')+')':''};
+const ldrAll=n=>ldrList(n).map(o=>[ldrHead(o),o.s,rvTxt(o)].filter(Boolean).join(': ')).join(' | ');
+const ldrHtml=n=>ldrList(n).map((o,x)=>({o,x})).sort((a,b)=>PR(a.o)-PR(b.o)).map(({o,x})=>`<div style="margin-top:3px"><b>${o.r?PI[o.r]+' ':''}${esc(ldrHead({q:o.q,p:o.p})||'Question')}</b>${o.s?'<div style="opacity:.9">'+esc(o.s)+'</div>':''}<div>${rvKeys().map(k=>`<span class="rvc ${o.rv&&o.rv[k]?'on':''}" data-qrev="${n.id}|${x}|${k}" title="Tap to mark done / not done in ${k==='l'?'Last Day Revision':'Revision '+k.slice(1)}">${o.rv&&o.rv[k]?'✓ ':''}${rvLbl(k)}</span>`).join('')}</div></div>`).join('');
 /* voice typing (Web Speech API) */
 let REC=null,vLang='en-IN';
 function micToggle(btn){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -624,7 +632,8 @@ function qRenum(){document.querySelectorAll('#nfQs .qb .qh').forEach((h,k)=>h.te
 function addQ(v){v=v||{};const d=document.createElement('div');d.className='qb';
  d.innerHTML=`<div style="display:flex;align-items:center;gap:6px"><b class="qh"></b><span style="flex:1"></span><button type="button" class="btn ghost sm qx" title="Remove this question">✕</button></div>
  <div style="display:flex;gap:8px"><div style="flex:1"><label class="f">QUESTION NO.</label><input class="qn" autocomplete="off" placeholder="e.g. 7"></div><div style="flex:1"><label class="f">PAGE NO.</label><input class="qp" autocomplete="off" placeholder="e.g. 45"></div><div style="flex:1"><label class="f">PRIORITY</label><select class="qr">${PRI.map(k=>`<option value="${k}">${PI[k]} ${k}</option>`).join('')}</select></div></div>
- <label class="f">SUMMARY — what it deals with / adjustments</label>${micField('<textarea class="qs" rows="3" placeholder="e.g. Turnover changed to 3 Cr; ITC reversal under Rule 42 added; RCM on GTA"></textarea>')}`;
+ <label class="f">SUMMARY — what it deals with / adjustments</label>${micField('<textarea class="qs" rows="3" placeholder="e.g. Turnover changed to 3 Cr; ITC reversal under Rule 42 added; RCM on GTA"></textarea>')}
+ <label class="f">DONE IN (revision tracker)</label><div class="qd" style="display:flex;gap:12px;flex-wrap:wrap;font-size:13px">${rvKeys().map(k=>`<label style="display:flex;gap:4px;align-items:center"><input type="checkbox" data-k="${k}" style="width:auto" ${v.rv&&v.rv[k]?'checked':''}>${k==='l'?'Last Day Revision':'Revision '+k.slice(1)}</label>`).join('')}</div>`;
  d.querySelector('.qr').value=PRI.includes(v.r)?v.r:'Medium';d.querySelector('.qn').value=v.q||'';d.querySelector('.qp').value=v.p||'';d.querySelector('.qs').value=v.s||'';
  $('#nfQs').appendChild(d);qRenum()}
 document.addEventListener('click',e=>{const m=e.target.closest('.mic');if(m){e.preventDefault();micToggle(m);return}
@@ -667,7 +676,7 @@ function openNote(o){
  $('#nfVL').value=vLang;$('#nfVL').onchange=()=>{vLang=$('#nfVL').value;if(REC)REC.stop()};d.onclose=()=>{if(REC)REC.stop()};
  const tg=()=>{$('#nfL').style.display=$('#nfT').value==='LDR'?'block':'none'};$('#nfT').onchange=tg;tg();
  d.showModal();$('#nfNo').onclick=()=>d.close();
- $('#nfOK').onclick=()=>{if(REC)REC.stop();const x=$('#nfX').value.trim(),L1=$('#nfT').value==='LDR',q=L1?[...document.querySelectorAll('#nfQs .qb')].map(b=>({q:b.querySelector('.qn').value.trim(),p:b.querySelector('.qp').value.trim(),s:b.querySelector('.qs').value.trim(),r:b.querySelector('.qr').value})).filter(o=>o.q||o.p||o.s):[];if(!x&&!q.length)return alert(L1?'Add at least one question (number, page or summary), or write a note.':'Write something on the note.');
+ $('#nfOK').onclick=()=>{if(REC)REC.stop();const x=$('#nfX').value.trim(),L1=$('#nfT').value==='LDR',q=L1?[...document.querySelectorAll('#nfQs .qb')].map(b=>({q:b.querySelector('.qn').value.trim(),p:b.querySelector('.qp').value.trim(),s:b.querySelector('.qs').value.trim(),r:b.querySelector('.qr').value,rv:Object.fromEntries([...b.querySelectorAll('.qd input')].map(i=>[i.dataset.k,i.checked?1:0]))})).filter(o=>o.q||o.p||o.s):[];if(!x&&!q.length)return alert(L1?'Add at least one question (number, page or summary), or write a note.':'Write something on the note.');
   const v={s:$('#nfS').value,i:+$('#nfC').value,t:$('#nfT').value,x,q};
   if(n){Object.assign(n,v);delete n.qn;delete n.qp;delete n.qs}else S.notes.push({id:uid(),...v,c:Date.now(),d:0,sid:(S.active&&S.active.s===v.s&&S.active.i===v.i)?'':''});
   save();d.close();render()}}
@@ -679,7 +688,8 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 function fillMC(){const s=$('#mS');if(!s)return;$('#mC').innerHTML=L[s.value].map(c=>`<option value="${c.i}">${pad(c.i+1)}. ${esc(c.t)}</option>`).join('')}
 
 document.addEventListener('click',e=>{
- const t=e.target.closest('[data-tab],[data-act],[data-sub],[data-go],[data-del],[data-nadd],[data-nview],[data-npick],[data-nact],[data-ntype]');if(!t)return;
+ const t=e.target.closest('[data-tab],[data-act],[data-sub],[data-go],[data-del],[data-nadd],[data-nview],[data-npick],[data-nact],[data-ntype],[data-qrev]');if(!t)return;
+ if(t.dataset.qrev){e.preventDefault();const[id,x,k]=t.dataset.qrev.split('|'),n=S.notes.find(z=>z.id===id);if(n){if(!Array.isArray(n.q)){n.q=ldrList(n);delete n.qn;delete n.qp;delete n.qs}const o=n.q[+x];if(o){o.rv=o.rv||{};o.rv[k]=o.rv[k]?0:1;save();const y=window.scrollY;render();scrollTo(0,y)}}return}
  if(t.dataset.tab){tab=t.dataset.tab;render();if(tab==='log')fillMC();tickAll();return}
  if(t.dataset.sub){cS=t.dataset.sub;render();return}
  if(t.dataset.go!==undefined){e.preventDefault();pS=cS;pC=+t.dataset.go;tab='punch';render();return}
@@ -733,6 +743,7 @@ document.addEventListener('change',e=>{const t=e.target;if(t.id==='pS'||t.id==='
  else if(t.dataset.pk){const k=pk(cS,+t.dataset.i);S.progress[k]=S.progress[k]||{};S.progress[k][t.dataset.pk]=t.checked?1:0;save();const y=window.scrollY;render();scrollTo(0,y)}
  else if(t.id==='sE'){S.set.exam=t.value;save();render()}
  else if(t.id==='sT'){S.set.target=+t.value;save()}
+ else if(t.id==='sR'){S.set.revs=Math.max(1,Math.min(10,Math.round(+t.value)||2));save();render()}
  else if(t.id==='sB'){S.set.base=t.value.trim();save()}
  else if(t.dataset.file){S.set.files[t.dataset.file]=t.value.trim();save()}
  else if(t.id==='impCsv'){const fs=[...t.files];if(!fs.length)return;Promise.all(fs.map(f=>f.text())).then(tx=>{const out=tx.map((x,k)=>{try{return fs[k].name+' → '+importCsv(x)}catch(e){return fs[k].name+' → '+((e&&e.message)||'could not read')}});save();render();if(tab==='log')fillMC();alert(out.join('\n'))});t.value=''}
