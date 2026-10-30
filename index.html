@@ -739,17 +739,18 @@ function vDash(){
  return h}
 
 function chart14(m){
- const R=['14','30','all'].includes(S.set.cr)?S.set.cr:'14',tg=+S.set.target||0,td=new Date();td.setHours(0,0,0,0);
+ const CV=S.set.cv==='total'?'total':'stack',R=['14','30','all'].includes(S.set.cr)?S.set.cr:'14',tg=+S.set.target||0,td=new Date();td.setHours(0,0,0,0);
  let n=R==='14'?14:30;
  if(R==='all'){const ks=Object.keys(m).sort();if(ks.length){const f=new Date(ks[0]+'T00:00:00');n=Math.max(7,Math.round((td-f)/864e5)+1)}else n=14}
  const days=[];for(let i=n-1;i>=0;i--){const d=new Date(td);d.setDate(d.getDate()-i);days.push(d)}
  const tots=days.map(d=>(m[dk(d)]||{}).t||0),sum=tots.reduce((a,b)=>a+b,0),act=tots.filter(v=>v>0).length,best=Math.max(...tots);
  const mx=Math.max(tg,best,1)*1.15,W=700,H=190,T=14,g=n>60?1:n>30?2:n>14?3:6,bw=Math.max(1,(W-g*(n+1))/n);
  const lab=Math.max(1,Math.ceil(n/(n<=14?14:n<=30?10:9)));
- const ctl=`<div class="chips" style="margin:0 0 8px">${[['14','Last 14 days'],['30','Last 30 days'],['all','From start']].map(([k,l])=>`<button type="button" class="chip${R===k?' on':''}" data-act="chartR" data-r="${k}" style="${R===k?'background:var(--ink,#222);color:var(--bg,#fff);border-color:var(--ink,#222)':''}">${l}</button>`).join('')}</div>`;
+ const ctl=`<div class="chips" style="margin:0 0 8px">${[['14','Last 14 days'],['30','Last 30 days'],['all','From start']].map(([k,l])=>`<button type="button" class="chip${R===k?' on':''}" data-act="chartR" data-r="${k}" style="${R===k?'background:var(--ink,#222);color:var(--bg,#fff);border-color:var(--ink,#222)':''}">${l}</button>`).join('')}<span style="flex:1"></span>${[['stack','▥ By subject'],['total','▮ Total bar']].map(([k,l])=>`<button type="button" class="chip${CV===k?' on':''}" data-act="chartV" data-r="${k}" style="${CV===k?'background:var(--ink,#222);color:var(--bg,#fff);border-color:var(--ink,#222)':''}">${l}</button>`).join('')}</div>`;
  let sv=`<svg viewBox="0 0 ${W} ${H+T+24}" width="100%" role="img" aria-label="Total hours per day">`;
  days.forEach((d,i)=>{const e=m[dk(d)],x=g+i*(bw+g);let y=T+H;
-  if(e)ORDER.forEach(s=>{const v=e.by[s];if(v){const hh=v/mx*H;y-=hh;sv+=`<rect x="${x}" y="${y}" width="${bw}" height="${hh}" fill="${META[s].c}"><title>${dk(d)} · ${META[s].n}: ${fh(v)}</title></rect>`}});
+  if(e&&CV==='total'){const hh=e.t/mx*H;y-=hh;sv+=`<rect x="${x}" y="${y}" width="${bw}" height="${hh}" rx="2" fill="var(--acc,#d8432a)"><title>${dk(d)} · total ${fh(e.t)}</title></rect>`}
+  else if(e)ORDER.forEach(s=>{const v=e.by[s];if(v){const hh=v/mx*H;y-=hh;sv+=`<rect x="${x}" y="${y}" width="${bw}" height="${hh}" fill="${META[s].c}"><title>${dk(d)} · ${META[s].n}: ${fh(v)}</title></rect>`}});
   if(e&&n<=31)sv+=`<text x="${x+bw/2}" y="${y-3}" text-anchor="middle" font-size="${n<=14?11:9}" font-weight="600" fill="currentColor" font-family="monospace">${+e.t.toFixed(1)}</text>`;
   sv+=`<rect x="${x-g/2}" y="${T}" width="${bw+g}" height="${H}" fill="transparent"><title>${dk(d)} · total ${fh(tots[i])}</title></rect>`;
   if((n-1-i)%lab===0)sv+=`<text x="${x+bw/2}" y="${T+H+16}" text-anchor="middle" font-size="${n>30?10:11}" fill="currentColor" opacity=".6" font-family="monospace">${d.getDate()}/${d.getMonth()+1}</text>`});
@@ -989,6 +990,7 @@ document.addEventListener('click',e=>{
  if(t.dataset.ntype!==undefined){nT=t.dataset.ntype;render();return}
  const a=t.dataset.act;e.preventDefault();
  if(a==='subR'||a==='subV'){if(a==='subR')S.set.cr=t.dataset.r;else S.set.sv=t.dataset.r;save();const y=window.scrollY;render();scrollTo(0,y);return}
+ if(a==='chartV'){S.set.cv=t.dataset.r;save();const y=window.scrollY;render();scrollTo(0,y);return}
  if(a==='chartR'){S.set.cr=t.dataset.r;save();const y=window.scrollY;render();scrollTo(0,y);return}
  if(a==='addNote')openNote({s:t.dataset.s,i:+t.dataset.i});
  if(a==='addNoteAny')openNote({s:nS!=='all'?nS:ORDER[0],i:nC>=0?nC:0,t:nT!=='all'?nT:'Note'});
