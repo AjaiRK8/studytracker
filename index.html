@@ -388,7 +388,9 @@ function fixNames(){(S.notes||[]).forEach(n=>{if(n.t==='Faculty')n.t='Additional
 function mergeS(list){list=list.slice().sort((a,b)=>(b.savedAt||0)-(a.savedAt||0));const base=JSON.parse(JSON.stringify(list[0])),del=new Set(),ss=new Map(),nn=new Map(),pr={};
  list.forEach(x=>(x.del||[]).forEach(i=>del.add(i)));
  list.slice().reverse().forEach(x=>{(x.sessions||[]).forEach(v=>ss.set(v.id,v));(x.notes||[]).forEach(v=>nn.set(v.id,v));for(const k in x.progress||{}){pr[k]=pr[k]||{};for(const f in x.progress[k])pr[k][f]=(pr[k][f]||x.progress[k][f])?1:0}});
- base.sessions=[...ss.values()].filter(v=>!del.has(v.id));base.notes=[...nn.values()].filter(v=>!del.has(v.id));base.progress=pr;base.del=[...del];base.cust=Object.assign({},...list.slice().reverse().map(x=>x.cust||{}));return base}
+ base.sessions=[...ss.values()].filter(v=>!del.has(v.id));base.notes=[...nn.values()].filter(v=>!del.has(v.id));base.progress=pr;base.del=[...del];base.cust=Object.assign({},...list.slice().reverse().map(x=>x.cust||{}));
+ const pa=list.reduce((b,x)=>((x.actAt||0)>(b.actAt||0)||((x.actAt||0)===(b.actAt||0)&&!b.active&&x.active))?x:b,list[0]),ps=list.reduce((b,x)=>(x.setAt||0)>(b.setAt||0)?x:b,list[0]),cl=v=>v==null?null:JSON.parse(JSON.stringify(v));
+ base.active=cl(pa.active);base.actAt=pa.actAt||0;base.actSig=pa.actSig;if(ps.set){base.set=cl(ps.set);base.setAt=ps.setAt||0;base.setSig=ps.setSig}return base}
 /* --- password hashing (PBKDF2, browser built-in) --- */
 const b64=x=>btoa(String.fromCharCode(...new Uint8Array(x))),unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 async function hashPw(pw,salt,it){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);return b64(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:unb64(salt),iterations:it},k,256))}
@@ -399,7 +401,8 @@ const pack=()=>({app:'ca-final-planner',v:2,user:USER,auth:AUTH,savedAt:S.savedA
 function unpack(j){if(j&&j.data&&j.auth)return j;if(j&&Array.isArray(j.sessions))return{data:j};throw 0}
 function dlBackup(){const b=new Blob([JSON.stringify(pack(),null,1)],{type:'application/json'});const u=document.createElement('a');u.href=URL.createObjectURL(b);u.download='ca-final-planner-'+USER+'-'+dk(Date.now())+'.json';u.click()}
 /* --- auto-save: localStorage (instant) + linked JSON file (silent, Chrome/Edge) --- */
-function save(){if(!USER)return;S.savedAt=Date.now();try{localStorage.setItem(ukey(USER),JSON.stringify(S))}catch(e){storeOK=false;warn()}flush();if(DH){clearTimeout(mT2);mT2=setTimeout(mFolder,1500)}if(AUTH&&AUTH.google){clearTimeout(gT);gT=setTimeout(()=>gSync(),700)}}
+function stampF(){const a=JSON.stringify(S.active||null),t=JSON.stringify(S.set||{});if(S.actSig===undefined)S.actSig=a;else if(S.actSig!==a){S.actSig=a;S.actAt=Date.now()}if(S.setSig===undefined)S.setSig=t;else if(S.setSig!==t){S.setSig=t;S.setAt=Date.now()}}
+function save(noStamp){if(!USER)return;stampF();if(!noStamp)S.savedAt=Date.now();try{localStorage.setItem(ukey(USER),JSON.stringify(S))}catch(e){storeOK=false;warn()}flush();if(DH){clearTimeout(mT2);mT2=setTimeout(mFolder,1500)}if(AUTH&&AUTH.google){clearTimeout(gT);gT=setTimeout(()=>gSync(),700)}}
 let busy=false,dirty=false,lastW=0;
 /* shared file (SMB/NAS): before every write, merge in anything another device wrote meanwhile */
 async function pullRemote(){if(!FH)return false;try{const e=unpack(JSON.parse(await(await FH.getFile()).text()));
@@ -616,7 +619,7 @@ async function attach(u,c,ask){FH=null;DH=null;PD=false;
  if(h){FH=h;try{const e2=unpack(JSON.parse(await(await h.getFile()).text()));if(e2.auth&&AUTH&&e2.auth.hash===AUTH.hash&&e2.data)c.push(norm(e2.data))}catch(e){}}}
 async function reconnect(){const c=[];await attach(USER,c,true);if(c.length){S=mergeS([S,...c]);fixNames()}syncMsg(FH?'💾 file linked':'');save();render();prune()}
 async function autoLogin(u){try{AUTH=users()[u];USER=u;const c=[],lo=loadLocal(u);if(lo)c.push(lo);await attach(u,c,false);S=c.length?mergeS(c):norm();fixNames();
- $('#auth').hidden=true;document.querySelector('.wrap').style.display='';syncMsg(FH?'💾 file linked':PD?'⚠ click “Reconnect save file” to resume file saving':'');save();render();tickAll();prune();if(AUTH&&AUTH.google)gSync()}catch(e){showAuth()}}
+ $('#auth').hidden=true;document.querySelector('.wrap').style.display='';syncMsg(FH?'💾 file linked':PD?'⚠ click “Reconnect save file” to resume file saving':'');save(1);render();tickAll();prune();if(AUTH&&AUTH.google)gSync()}catch(e){showAuth()}}
 /* --- login / logout --- */
 let amode='in';const am=t=>$('#aM').textContent=t;
 function showAuth(){selUser='';pTouched=false;pInit='';try{sessionStorage.removeItem('caPlanner.gtok')}catch(x){}GTOK=null;GID=null;GLW=-1;GNEED=false;PD=false;lastW=0;USER=null;AUTH=null;FH=null;DH=null;S=norm();syncTxt='';document.querySelector('.wrap').style.display='none';$('#auth').hidden=false;$('#aP').value='';$('#aU').value=localStorage.getItem(LK)||'';am('');ubar();const ci=$('#aCid');if(ci){ci.value=gcid();ci.closest('details').hidden=!!GCID_DEFAULT}}
@@ -643,7 +646,7 @@ function logout(){if(!USER)return;localStorage.removeItem(KP);clearTimeout(gT);c
 function warn(){document.getElementById('warn').innerHTML=storeOK?'':'<div class="warn">Browser storage is blocked, so progress is only kept in the linked file / backups. Use “Link auto-save file” or export regularly.</div>'}
 $('#amIn').onclick=()=>setMode('in');$('#amNew').onclick=()=>setMode('new');$('#aForm').addEventListener('submit',e=>{e.preventDefault();doAuth()});
 /* save on every possible exit / interval so a sudden shutdown loses nothing */
-addEventListener('visibilitychange',()=>{if(document.hidden)save()});addEventListener('pagehide',save);addEventListener('beforeunload',save);setInterval(async()=>{if(USER&&FH&&!busy&&await pullRemote()){uiRefresh();flush()}},3000);
+addEventListener('visibilitychange',()=>{if(document.hidden)save(1)});addEventListener('pagehide',()=>save(1));addEventListener('beforeunload',()=>save(1));setInterval(async()=>{if(USER&&FH&&!busy&&await pullRemote()){uiRefresh();flush()}},3000);
 
 /* ---------- HELPERS ---------- */
 const hrs=s=>(s.en-s.st)/36e5;
