@@ -727,7 +727,7 @@ function vDash(){
  let h=`<div class="grid kpis">${kp(fh(td)+' <small>/ '+tg+'h</small>','today vs daily target')}${kp(fh(wk),'last 7 days')}${kp(fh(tot),'total logged')}${kp(streak(m)+' d','current streak')}${kp(Math.round(done/all*100)+'%','syllabus (study + revisions + practice)')}${kp(need,'study-chapters/week needed ('+pend+' pending)')}${kp(S.notes.filter(n=>nAct(n)&&n.t==='Pending').length,'open pending items')}</div>`;
  h+=vCoach(m);h+=vRemember();
  if(S.active){const c=L[S.active.s][S.active.i];h+=`<div class="card live" style="margin-top:12px"><span class="dot"></span><b>Punched in:</b> ${esc(META[S.active.s].n)} — ${esc(c.t)} · <span class="mono tick"></span> <button class="btn acc sm" data-act="goPunch">Go to punch out</button></div>`}
- h+=`<div class="grid two" style="margin-top:12px"><div class="card"><h2>Last 14 days</h2>${chart14(m)}</div><div class="card"><h2>Consistency (16 weeks)</h2>${heat(m)}<div class="hint">Darker = closer to your daily target.</div></div></div>`;
+ h+=`<div class="grid two" style="margin-top:12px"><div class="card"><h2>Daily total hours</h2>${chart14(m)}</div><div class="card"><h2>Consistency (16 weeks)</h2>${heat(m)}<div class="hint">Darker = closer to your daily target.</div></div></div>`;
  h+=`<h2 style="font:700 20px var(--fh);margin:20px 0 8px">Subjects</h2><div class="grid two">`;
  ORDER.forEach(s=>{const M=META[s],ls=L[s],n=ls.length;const cnt=k=>ls.filter(c=>prog(s,c.i)[k]).length;const hh=hoursOf(x=>x.s===s);const nx=ls.find(c=>!prog(s,c.i).s);
   h+=`<div class="card subcard" style="--c:${M.c}" data-dsub="${s}" title="Open chapters &amp; links of ${esc(M.n)}"><div class="top"><h3>${M.n}</h3><small class="mono">${M.p}</small></div>
@@ -738,13 +738,25 @@ function vDash(){
  h+=`</div><div class="grid two" style="margin-top:12px"><div class="card"><h2>Hours by subject</h2>${subBars()}</div><div class="card"><h2>Recent sessions</h2>${recent(8)}</div><div class="card" style="grid-column:1/-1"><h2>Open pending, doubts &amp; important</h2>${pendList()}</div></div>`;
  return h}
 
-function chart14(m){const days=[];for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(d)}
- const tg=+S.set.target||0;let mx=Math.max(tg,...days.map(d=>(m[dk(d)]||{}).t||0),1)*1.1;const W=700,H=190,bw=38,g=(W-14*bw)/15;
- let sv=`<svg viewBox="0 0 ${W} ${H+24}" width="100%" role="img" aria-label="Hours per day">`;
- days.forEach((d,i)=>{const e=m[dk(d)];let y=H;const x=g+i*(bw+g);if(e)ORDER.forEach(s=>{const v=e.by[s];if(v){const hh=v/mx*H;y-=hh;sv+=`<rect x="${x}" y="${y}" width="${bw}" height="${hh}" fill="${META[s].c}"><title>${META[s].n}: ${fh(v)}</title></rect>`}});
-  sv+=`<text x="${x+bw/2}" y="${H+16}" text-anchor="middle" font-size="11" fill="currentColor" opacity=".6" font-family="monospace">${d.getDate()}/${d.getMonth()+1}</text>`});
- if(tg){const y=H-tg/mx*H;sv+=`<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="#d8432a" stroke-dasharray="5 4"/><text x="4" y="${y-4}" font-size="11" fill="#d8432a" font-family="monospace">target ${tg}h</text>`}
- return sv+'</svg>'}
+function chart14(m){
+ const R=['14','30','all'].includes(S.set.cr)?S.set.cr:'14',tg=+S.set.target||0,td=new Date();td.setHours(0,0,0,0);
+ let n=R==='14'?14:30;
+ if(R==='all'){const ks=Object.keys(m).sort();if(ks.length){const f=new Date(ks[0]+'T00:00:00');n=Math.max(7,Math.round((td-f)/864e5)+1)}else n=14}
+ const days=[];for(let i=n-1;i>=0;i--){const d=new Date(td);d.setDate(d.getDate()-i);days.push(d)}
+ const tots=days.map(d=>(m[dk(d)]||{}).t||0),sum=tots.reduce((a,b)=>a+b,0),act=tots.filter(v=>v>0).length,best=Math.max(...tots);
+ const mx=Math.max(tg,best,1)*1.15,W=700,H=190,T=14,g=n>60?1:n>30?2:n>14?3:6,bw=Math.max(1,(W-g*(n+1))/n);
+ const lab=Math.max(1,Math.ceil(n/(n<=14?14:n<=30?10:9)));
+ const ctl=`<div class="chips" style="margin:0 0 8px">${[['14','Last 14 days'],['30','Last 30 days'],['all','From start']].map(([k,l])=>`<button type="button" class="chip${R===k?' on':''}" data-act="chartR" data-r="${k}" style="${R===k?'background:var(--ink,#222);color:var(--bg,#fff);border-color:var(--ink,#222)':''}">${l}</button>`).join('')}</div>`;
+ let sv=`<svg viewBox="0 0 ${W} ${H+T+24}" width="100%" role="img" aria-label="Total hours per day">`;
+ days.forEach((d,i)=>{const e=m[dk(d)],x=g+i*(bw+g);let y=T+H;
+  if(e)ORDER.forEach(s=>{const v=e.by[s];if(v){const hh=v/mx*H;y-=hh;sv+=`<rect x="${x}" y="${y}" width="${bw}" height="${hh}" fill="${META[s].c}"><title>${dk(d)} · ${META[s].n}: ${fh(v)}</title></rect>`}});
+  if(e&&n<=31)sv+=`<text x="${x+bw/2}" y="${y-3}" text-anchor="middle" font-size="${n<=14?11:9}" font-weight="600" fill="currentColor" font-family="monospace">${+e.t.toFixed(1)}</text>`;
+  sv+=`<rect x="${x-g/2}" y="${T}" width="${bw+g}" height="${H}" fill="transparent"><title>${dk(d)} · total ${fh(tots[i])}</title></rect>`;
+  if((n-1-i)%lab===0)sv+=`<text x="${x+bw/2}" y="${T+H+16}" text-anchor="middle" font-size="${n>30?10:11}" fill="currentColor" opacity=".6" font-family="monospace">${d.getDate()}/${d.getMonth()+1}</text>`});
+ if(tg){const y=T+H-tg/mx*H;sv+=`<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="#d8432a" stroke-dasharray="5 4"/><text x="4" y="${y-4}" font-size="11" fill="#d8432a" font-family="monospace">target ${tg}h</text>`}
+ sv+='</svg>';
+ const sm=`<div class="hint">Total ${fh(sum)} · avg ${fh(sum/n)}/day · ${act}/${n} days studied · best day ${fh(best)}</div>`;
+ return ctl+sv+sm}
 function heat(m){const tg=+S.set.target||4;const end=new Date();end.setDate(end.getDate()+(6-end.getDay()));const cells=[];for(let i=16*7-1;i>=0;i--){const d=new Date(end);d.setDate(d.getDate()-i);cells.push(d)}
  return'<div class="heat">'+cells.map(d=>{const v=(m[dk(d)]||{}).t||0;const fut=d>new Date();const a=v?Math.min(1,.2+v/tg*.8):0;return`<i title="${dk(d)}: ${fh(v)}" style="${fut?'opacity:.25':''}${a?`;background:rgba(216,67,42,${a})`:''}"></i>`}).join('')+'</div>'}
 function subBars(){const t=hoursOf(()=>true)||1;const mx=Math.max(...ORDER.map(s=>hoursOf(x=>x.s===s)),.01);return ORDER.map(s=>{const h=hoursOf(x=>x.s===s);return`<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:13px"><span>${META[s].n}</span><span class="mono">${fh(h)}</span></div><div class="bar"><i style="width:${h/mx*100}%;background:${META[s].c}"></i></div></div>`}).join('')}
@@ -958,6 +970,7 @@ document.addEventListener('click',e=>{
  if(t.dataset.nact){const id=t.dataset.nid,n=S.notes.find(x=>x.id===id);if(n){if(t.dataset.nact==='done'){n.d=n.d?0:1;save();render()}else if(t.dataset.nact==='edit')openNote({id});else if(t.dataset.nact==='addq')quickQ(id);else if(t.dataset.nact==='rm'){n.rm=Date.now();save();render()}else if(t.dataset.nact==='restore'){delete n.rm;save();render()}else if(t.dataset.nact==='del'&&confirm('Delete this note permanently? This cannot be undone.')){(S.del=S.del||[]).push(id);S.notes=S.notes.filter(x=>x.id!==id);save();render()}}return}
  if(t.dataset.ntype!==undefined){nT=t.dataset.ntype;render();return}
  const a=t.dataset.act;e.preventDefault();
+ if(a==='chartR'){S.set.cr=t.dataset.r;save();const y=window.scrollY;render();scrollTo(0,y);return}
  if(a==='addNote')openNote({s:t.dataset.s,i:+t.dataset.i});
  if(a==='addNoteAny')openNote({s:nS!=='all'?nS:ORDER[0],i:nC>=0?nC:0,t:nT!=='all'?nT:'Note'});
  if(a==='clearC'){nC=-1;nCq='';render()}
