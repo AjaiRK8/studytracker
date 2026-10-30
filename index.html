@@ -669,8 +669,9 @@ const cOpen=new Set(),cLog=new Set();let selUser='',pTouched=false,pInit='',tab=
 const TABS=[['punch','Punch In / Out'],['dash','Dashboard'],['chap','Chapters & Links'],['notes','Sticky Notes'],['log','Session Log'],['set','Settings']];
 function nav(){$('#nav').innerHTML=TABS.map(([k,n])=>`<button class="${tab===k?'on':''}" data-tab="${k}">${n}${k==='punch'&&S.active?' ●':''}${k==='notes'&&S.notes.some(x=>!x.d)?' ('+S.notes.filter(x=>!x.d).length+')':''}</button>`).join('')}
 const SELK=()=>'caPlanner.sel.'+USER;
+function lastChap(s){if(!L[s])return null;let i=null,t=-1;S.sessions.forEach(x=>{if(x.s===s&&L[s][x.i]&&x.st>t){t=x.st;i=x.i}});if(S.active&&S.active.s===s&&L[s][S.active.i]&&S.active.st>t)i=S.active.i;return i}
 function selSave(){try{localStorage.setItem(SELK(),JSON.stringify({pS,pC,pA,cS}))}catch(e){}}
-function selLoad(){try{const o=JSON.parse(localStorage.getItem(SELK())||'null');if(!o)return false;if(L[o.pS]&&L[o.pS][o.pC]){pS=o.pS;pC=o.pC;if(ACTS.includes(o.pA))pA=o.pA}if(L[o.cS])cS=o.cS;return true}catch(e){return false}}
+function selLoad(){try{const o=JSON.parse(localStorage.getItem(SELK())||'null');if(!o)return false;if(L[o.cS])cS=o.cS;return false}catch(e){return false}}
 function render(){if(!USER)return;applyCust();buildActs();if(selUser!==USER){selUser=USER;if(selLoad())pTouched=true}nav();ubar();warn();const d=daysLeft();$('#dl').textContent=d>0?d:0;$('#main').innerHTML=({dash:vDash,punch:vPunch,chap:vChap,notes:vNotes,log:vLog,set:vSet})[tab]();hydrate();}
 
 function coachData(m){
@@ -979,7 +980,7 @@ function openOut(){
   S.active=null;save();d.close();render();if(!FH&&!(AUTH&&AUTH.google))dlBackup()}}
 document.addEventListener('change',e=>{const t=e.target;if(t.id==='pS'||t.id==='pC'||t.id==='pA')pTouched=true;
  if(t.dataset.qdone!==undefined){const[id,x,k]=t.dataset.qdone.split('|'),n=S.notes.find(z=>z.id===id);if(n){if(!Array.isArray(n.q)){n.q=ldrList(n);delete n.qn;delete n.qp;delete n.qs}const o=n.q[+x];if(o){o.rv=o.rv||{};o.rv[k]=t.checked?1:0;save();const y=window.scrollY;render();tickAll();scrollTo(0,y)}}return}
- if(t.id==='pS'){pS=t.value;pC=0;selSave();render()}
+ if(t.id==='pS'){pS=t.value;pC=lastChap(pS)??0;selSave();render()}
  else if(t.id==='pC'){pC=+t.value;selSave();const b=$('#pNotes');if(b){b.innerHTML=chNotes(pS,pC);hydrate(b)}}else if(t.id==='pA'){pA=t.value;selSave()}
  else if(t.id==='cF'){cF=t.value;render()}
  else if(t.id==='nvS'){nS=t.value;nC=-1;nCq='';render()}
@@ -1031,7 +1032,7 @@ async function gSync(){if(!AUTH||!AUTH.google||!USER)return;if(!navigator.onLine
   if(!GTOK||Date.now()>=GEXP){try{await gToken(false,USER)}catch(e){GNEED=true;gArm();syncMsg('☁ reconnecting… (or tap anywhere)');ubar();GBUSY=false;return}}
   if(!GID)GID=await dFind();let rs=-2,ch=false;
   if(GID){const e=await dRead(GID);if(e&&e.data){rs=e.data.savedAt||0;
-   if(rs!==GLW){const b=JSON.stringify(S),rd=norm(e.data);S=mergeS([S,rd]);fixNames();ch=b!==JSON.stringify(S);if(gSig(S)!==gSig(rd)){S.savedAt=Date.now();ch=true}}}}
+   if(rs!==GLW){const b=JSON.stringify(S),rd=norm(e.data),l0=Math.max(0,...S.sessions.map(z=>z.st));S=mergeS([S,rd]);fixNames();if(Math.max(0,...S.sessions.map(z=>z.st))>l0&&!S.active)pTouched=false;ch=b!==JSON.stringify(S);if(gSig(S)!==gSig(rd)){S.savedAt=Date.now();ch=true}}}}
   if(!GID||S.savedAt!==rs)GID=await dWrite(GID,JSON.stringify({app:'ca-final-planner',v:2,user:USER,savedAt:S.savedAt||0,data:S}));
   GLW=S.savedAt||0;GNEED=false;try{await mDrive()}catch(e){}try{GVER=(await(await gf('https://www.googleapis.com/drive/v3/files/'+GID+'?spaces=appDataFolder&fields=version')).json()).version}catch(x){}
   if(ch){try{localStorage.setItem(ukey(USER),JSON.stringify(S))}catch(x){}uiRefresh()}
