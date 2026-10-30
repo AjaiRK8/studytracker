@@ -112,6 +112,7 @@ dialog::backdrop{background:#0008}
 .att{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.att img{max-width:100%;max-height:160px;border-radius:4px;cursor:zoom-in;background:#fff8}.att audio{width:100%;height:34px}
 .ai{display:flex;gap:6px;align-items:center;margin-top:6px}.ai img{max-height:70px;max-width:120px;border-radius:4px}.ai audio{flex:1;min-width:0;height:34px}
 .katex{font-size:1.05em}.katex-display{margin:.5em 0;overflow-x:auto;overflow-y:hidden}
+.cmp{width:100%;border-collapse:collapse;font-size:13px}.cmp th,.cmp td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}.cmp th:first-child,.cmp td:first-child{text-align:left;white-space:normal}.cmp td.z{color:var(--mute)}.cmp tr.cl{cursor:pointer}
 </style>
 </head>
 <body>
@@ -666,13 +667,13 @@ const daysLeft=()=>Math.ceil((new Date(S.set.exam+'T09:00')-new Date())/864e5);
 
 /* ---------- VIEWS ---------- */
 const cOpen=new Set(),cLog=new Set();let selUser='',pTouched=false,pInit='',tab='punch',pS='DT',pC=0,pA='Study',pN='',cS='DT',cQ='',cF='all';
-const TABS=[['punch','Punch In / Out'],['dash','Dashboard'],['chap','Chapters & Links'],['notes','Sticky Notes'],['log','Session Log'],['set','Settings']];
+const TABS=[['punch','Punch In / Out'],['dash','Dashboard'],['cmp','Compare'],['chap','Chapters & Links'],['notes','Sticky Notes'],['log','Session Log'],['set','Settings']];
 function nav(){$('#nav').innerHTML=TABS.map(([k,n])=>`<button class="${tab===k?'on':''}" data-tab="${k}">${n}${k==='punch'&&S.active?' ●':''}${k==='notes'&&S.notes.some(x=>!x.d)?' ('+S.notes.filter(x=>!x.d).length+')':''}</button>`).join('')}
 const SELK=()=>'caPlanner.sel.'+USER;
 function lastChap(s){if(!L[s])return null;let i=null,t=-1;S.sessions.forEach(x=>{if(x.s===s&&L[s][x.i]&&x.st>t){t=x.st;i=x.i}});if(S.active&&S.active.s===s&&L[s][S.active.i]&&S.active.st>t)i=S.active.i;return i}
 function selSave(){try{localStorage.setItem(SELK(),JSON.stringify({pS,pC,pA,cS}))}catch(e){}}
 function selLoad(){try{const o=JSON.parse(localStorage.getItem(SELK())||'null');if(!o)return false;if(L[o.cS])cS=o.cS;return false}catch(e){return false}}
-function render(){if(!USER)return;applyCust();buildActs();if(selUser!==USER){selUser=USER;if(selLoad())pTouched=true}nav();ubar();warn();const d=daysLeft();$('#dl').textContent=d>0?d:0;$('#main').innerHTML=({dash:vDash,punch:vPunch,chap:vChap,notes:vNotes,log:vLog,set:vSet})[tab]();hydrate();}
+function render(){if(!USER)return;applyCust();buildActs();if(selUser!==USER){selUser=USER;if(selLoad())pTouched=true}nav();ubar();warn();const d=daysLeft();$('#dl').textContent=d>0?d:0;$('#main').innerHTML=({dash:vDash,cmp:vCmp,punch:vPunch,chap:vChap,notes:vNotes,log:vLog,set:vSet})[tab]();hydrate();}
 
 function coachData(m){
  const day=n=>{const d=new Date();d.setDate(d.getDate()-n);return(m[dk(d)]||{}).t||0},tg=+S.set.target||0,dl=daysLeft(),T=[];
@@ -1076,6 +1077,54 @@ let GVER=null,gPn=0;addEventListener('focus',()=>{if(AUTH&&AUTH.google&&USER&&!G
 setInterval(async()=>{if(!(AUTH&&AUTH.google&&USER&&!GNEED&&!document.hidden&&GTOK&&Date.now()<GEXP&&navigator.onLine)||GBUSY)return;
  if(!GID||++gPn%15===0){gSync();return}
  try{const v=(await(await gf('https://www.googleapis.com/drive/v3/files/'+GID+'?spaces=appDataFolder&fields=version')).json()).version;if(v&&v!==GVER)gSync()}catch(e){}},4000);
+/* ---------- COMPARE (time per pass / chapter / subject) ---------- */
+let cmV='sub',cmM='h',cmS='ALL',cmO=0;const cmOpen=new Set();
+const CMC=['#2f6da8','#2e7d5b','#c98a00','#8e44ad','#d8432a','#16a0a0','#7f8c8d'];
+const cmLab=a=>a==='Last Day Revision'?'LDR':a.replace('Revision ','R');
+const day0=t=>{const d=new Date(t);d.setHours(0,0,0,0);return d.getTime()};
+const cmSpan=g=>Math.round((day0(g.en)-day0(g.st))/864e5)+1;
+function cmPasses(){const x=[...ACTS];S.sessions.forEach(s=>{if(!x.includes(s.a))x.push(s.a)});return x}
+function cmAgg(f){const m={};S.sessions.forEach(s=>{if(!f(s))return;const g=m[s.a]=m[s.a]||{h:0,n:0,st:s.st,en:s.en};g.h+=hrs(s);g.n++;g.st=Math.min(g.st,s.st);g.en=Math.max(g.en,s.en)});return m}
+const cmVal=(g,sh)=>cmM==='h'?g.h:cmM==='r'?(sh?g.h/sh:0):cmSpan(g);
+const cmTxt=(g,sh)=>cmM==='h'?fh(g.h):cmM==='r'?(sh?Math.round(g.h/sh*100)+'%':'–'):cmSpan(g)+'d';
+function cmRow(m,ps){const sh=(m.Study||{}).h||0,mx=Math.max(.0001,...ps.map(p=>m[p]?cmVal(m[p],sh):0));
+ return ps.map(p=>{const g=m[p];if(!g)return'<td class="z">–</td>';return`<td style="background:color-mix(in srgb,var(--acc) ${Math.round(cmVal(g,sh)/mx*45)}%,transparent)">${cmTxt(g,sh)}</td>`}).join('')}
+const cmHead=(ps,first,last)=>`<tr><th>${first}</th>${ps.map(p=>`<th title="${esc(p)}">${cmLab(p)}</th>`).join('')}<th>${last}</th></tr>`;
+function cmSub(ps){let rows='',bars='',mxT=.01;const T={};ORDER.forEach(s=>{T[s]=hoursOf(x=>x.s===s);mxT=Math.max(mxT,T[s])});
+ ORDER.forEach(s=>{const m=cmAgg(x=>x.s===s),tot=T[s],nc=new Set(S.sessions.filter(x=>x.s===s).map(x=>x.i)).size;
+  rows+=`<tr><td><b style="color:${META[s].c}">${META[s].n}</b></td>${cmRow(m,ps)}<td><b>${tot?fh(tot):'–'}</b></td></tr>`;
+  bars+=`<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;gap:8px;font-size:13px"><span>${META[s].n}</span><span class="mono">${fh(tot)}${nc?' · avg '+fh(tot/nc)+' / chapter':''}</span></div><div class="bar" style="display:flex;height:12px">${ps.map((p,k)=>m[p]?`<i style="width:${m[p].h/mxT*100}%;background:${CMC[k%7]}" title="${esc(p)}: ${fh(m[p].h)}"></i>`:'').join('')}</div></div>`});
+ const lg=ps.map((p,k)=>`<span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${CMC[k%7]}"></i> ${esc(p)}</span>`).join('');
+ return`<div style="overflow-x:auto"><table class="cmp">${cmHead(ps,'Subject','Total time')}${rows}</table></div><h2 style="margin:18px 0 4px">Where the hours went</h2><div class="pips" style="margin:0 0 6px">${lg}</div>${bars}`}
+function cmChap(ps){const s=cmS,ls=L[s],A={};ls.forEach(c=>A[c.i]=cmAgg(x=>x.s===s&&x.i===c.i));
+ const tot=c=>Object.values(A[c.i]).reduce((a,g)=>a+g.h,0),sts=ls.map(c=>(A[c.i].Study||{}).h||0).filter(Boolean),avg=sts.length>2?sts.reduce((a,b)=>a+b,0)/sts.length:0;
+ const flags=c=>{const m=A[c.i],f=[];let pv=null;ps.forEach(p=>{if(!m[p]||p==='Practice'||p==='Last Day Revision')return;if(pv&&m[p].h>m[pv].h*1.05)f.push(cmLab(p)+' took longer than '+cmLab(pv));pv=p});
+  if(avg&&m.Study&&m.Study.h>avg*1.6)f.push('Study took '+(m.Study.h/avg).toFixed(1)+'× your average chapter');
+  if(m.Study&&!ps.some(p=>/^Revision/.test(p)&&m[p]))f.push('No revision logged yet');return f};
+ const list=ls.slice();if(cmO)list.sort((a,b)=>tot(b)-tot(a));
+ const rows=list.map(c=>{const m=A[c.i],t=tot(c),o=cmOpen.has(s+':'+c.i),fl=flags(c);
+  let r=`<tr class="cl" data-cmx="${c.i}"><td>${o?'▾':'▸'} ${pad(c.i+1)}. ${esc(c.t)}${fl.length?`<br><small style="color:var(--acc)">⚠ ${esc(fl.slice(0,2).join(' · '))}</small>`:''}</td>${cmRow(m,ps)}<td>${t?fh(t):'–'}</td></tr>`;
+  if(o)r+=`<tr><td colspan="${ps.length+2}" style="text-align:left;white-space:normal;background:var(--bg)">${t?ps.filter(p=>m[p]).map(p=>{const g=m[p];return`<div>${esc(p)} · ${g.n} session${g.n>1?'s':''} · <b>${fh(g.h)}</b> · ${dk(g.st)}${cmSpan(g)>1?' → '+dk(g.en)+' ('+cmSpan(g)+' days)':''}</div>`}).join(''):'<small>No sessions logged yet.</small>'}</td></tr>`;return r}).join('');
+ return`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><select id="cmO" style="width:auto"><option value="0">Syllabus order</option><option value="1" ${cmO?'selected':''}>Most time first</option></select><button class="btn ghost sm" data-cmcsv="1">⬇ Export CSV</button></div><div style="overflow-x:auto"><table class="cmp">${cmHead(ps,'Chapter (tap for details)','Total')}${rows}</table></div>`}
+function cmPass(ps){const f=x=>cmS==='ALL'||x.s===cmS;
+ const ch=[...new Set(S.sessions.filter(f).map(x=>x.s+':'+x.i))].map(k=>cmAgg(x=>f(x)&&x.s+':'+x.i===k));
+ const rs=ps.map((p,k)=>{const w=ch.filter(m=>m[p]);if(!w.length)return null;const tot=w.reduce((a,m)=>a+m[p].h,0),bo=w.filter(m=>m.Study),sh=bo.reduce((a,m)=>a+m.Study.h,0),ph=bo.reduce((a,m)=>a+m[p].h,0);
+  return{p,k,n:w.length,tot,avgH:tot/w.length,avgD:w.reduce((a,m)=>a+cmSpan(m[p]),0)/w.length,pct:p==='Study'?100:bo.length&&sh?Math.round(ph/sh*100):null}}).filter(Boolean);
+ if(!rs.length)return'<small>No sessions for this selection yet.</small>';const mx=Math.max(...rs.map(r=>r.avgH),.01);
+ return`<h2 style="margin:6px 0 0">Average time per chapter, pass by pass</h2>`+rs.map(r=>`<div style="margin:12px 0"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:14px"><b>${esc(r.p)}</b><span class="mono">${r.pct==null?'':r.pct+'% of Study time · '}avg ${fh(r.avgH)}</span></div><div class="bar" style="height:12px"><i style="width:${r.avgH/mx*100}%;background:${CMC[r.k%7]}"></i></div><small>${r.n} chapter${r.n>1?'s':''} · total ${fh(r.tot)} · about ${r.avgD<1.5?'1 day':Math.round(r.avgD)+' days'} from first to last session per chapter</small></div>`).join('')}
+function vCmp(){if(!S.sessions.length)return'<div class="card"><small>Log a few sessions first — then compare time across chapters, revisions and subjects here.</small></div>';
+ const ps=cmPasses(),pass=cmV==='pass';if(cmV==='chap'&&cmS==='ALL')cmS=ORDER[0];
+ const chip=(a,n,c,on)=>`<button class="chip ${on?'on':''}" style="--c:${c}" ${a}>${n}</button>`;
+ const views=`<div class="chips">${[['sub','Subjects'],['chap','Chapters'],['pass','Revisions']].map(([k,n])=>chip('data-cmv="'+k+'"',n,'var(--ink)',cmV===k)).join('')}</div>`;
+ const subs=cmV==='sub'?'':`<div class="chips">${(pass?['ALL',...ORDER]:ORDER).map(s=>chip('data-cms="'+s+'"',s==='ALL'?'All subjects':s,s==='ALL'?'var(--ink)':META[s].c,cmS===s)).join('')}</div>`;
+ const mode=pass?'':`<select id="cmM" style="width:auto;margin-bottom:10px"><option value="h">Show: time spent</option><option value="r" ${cmM==='r'?'selected':''}>Show: % of Study time</option><option value="d" ${cmM==='d'?'selected':''}>Show: calendar days taken</option></select>`;
+ return`<div class="card">${views}${subs}${mode}${cmV==='sub'?cmSub(ps):cmV==='chap'?cmChap(ps):cmPass(ps)}</div>`}
+function cmCsv(){const rows=[['SubjectCode','ChapterNo','Chapter','Pass','Hours','Sessions','FirstDate','LastDate','CalendarDays']];
+ ORDER.forEach(s=>L[s].forEach(c=>{const m=cmAgg(x=>x.s===s&&x.i===c.i);Object.keys(m).forEach(p=>{const g=m[p];rows.push([s,c.i+1,c.t,p,g.h.toFixed(2),g.n,dk(g.st),dk(g.en),cmSpan(g)])})}));csvOut('compare',rows)}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-cmv],[data-cms],[data-cmx],[data-cmcsv]');if(!t)return;const y=window.scrollY;
+ if(t.dataset.cmv)cmV=t.dataset.cmv;else if(t.dataset.cms)cmS=t.dataset.cms;else if(t.dataset.cmx!==undefined){const k=cmS+':'+t.dataset.cmx;cmOpen.has(k)?cmOpen.delete(k):cmOpen.add(k)}else{cmCsv();return}
+ render();scrollTo(0,y)});
+document.addEventListener('change',e=>{if(e.target.id==='cmM'){cmM=e.target.value;render()}else if(e.target.id==='cmO'){cmO=+e.target.value;render()}});
 {const kp=localStorage.getItem(KP);if(kp&&users()[kp])autoLogin(kp);else showAuth()}
 </script>
 </body>
