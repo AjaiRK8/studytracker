@@ -41,6 +41,12 @@ nav button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .mute{color:var(--mute)}
 small{color:var(--mute)}
 .bar{height:8px;background:var(--line);border-radius:5px;overflow:hidden}.bar i{display:block;height:100%}
+.coach{border-left:6px solid var(--cc,#2e7d5b);background:linear-gradient(135deg,color-mix(in srgb,var(--cc,#2e7d5b) 9%,var(--card)),var(--card));margin-top:12px}
+.coach .hd{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.coach .sc{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font:800 20px var(--fh);color:var(--ink);background:conic-gradient(var(--cc,#2e7d5b) calc(var(--p)*1%),var(--line) 0);position:relative;flex:none}.coach .sc:before{content:'';position:absolute;inset:6px;border-radius:50%;background:var(--card)}.coach .sc span{position:relative}
+.coach .hd h2{margin:0}.coach .hd p{margin:2px 0 0;color:var(--mute);font-size:13px}
+.coach .tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:8px;margin-top:12px}
+.coach .tip{border:1px solid var(--line);border-left:4px solid var(--tc);border-radius:8px;padding:9px 11px;background:var(--card);font-size:13.5px;line-height:1.45;animation:cin .35s both}.coach .tip b{display:block;margin-bottom:2px}.coach .tip a{display:inline-block;margin-top:5px;font:600 12px var(--fm,monospace);cursor:pointer;color:var(--tc);text-decoration:none}
+@keyframes cin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .subcard{border-left:6px solid var(--c);cursor:pointer;transition:transform .12s,box-shadow .12s}.subcard:hover{transform:translateY(-2px);box-shadow:0 4px 14px #0002}.subcard .gol{margin-top:10px;font:600 12px var(--fm,monospace);color:var(--c)}
 .subcard .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
 .subcard h3{margin:0;font:700 16px var(--fh)}
@@ -616,6 +622,42 @@ function selSave(){try{localStorage.setItem(SELK(),JSON.stringify({pS,pC,pA,cS})
 function selLoad(){try{const o=JSON.parse(localStorage.getItem(SELK())||'null');if(!o)return false;if(L[o.pS]&&L[o.pS][o.pC]){pS=o.pS;pC=o.pC;if(ACTS.includes(o.pA))pA=o.pA}if(L[o.cS])cS=o.cS;return true}catch(e){return false}}
 function render(){if(!USER)return;applyCust();buildActs();if(selUser!==USER){selUser=USER;if(selLoad())pTouched=true}nav();ubar();warn();const d=daysLeft();$('#dl').textContent=d>0?d:0;$('#main').innerHTML=({dash:vDash,punch:vPunch,chap:vChap,notes:vNotes,log:vLog,set:vSet})[tab]();hydrate();}
 
+function coachData(m){
+ const day=n=>{const d=new Date();d.setDate(d.getDate()-n);return(m[dk(d)]||{}).t||0},tg=+S.set.target||0,dl=daysLeft(),T=[];
+ let w1=0,w0=0,act=0;for(let i=0;i<7;i++){w1+=day(i);w0+=day(i+7)}for(let i=0;i<14;i++)if(day(i)>0)act++;
+ const avg=w1/7,td=day(0),hr=new Date().getHours(),st=streak(m),tip=(lv,t,x,act)=>T.push({lv,t,x,a:act||null});
+ const stat=ORDER.map(s=>{const ls=L[s],n=ls.length,c=k=>ls.filter(x=>prog(s,x.i)[k]).length;const last=Math.max(0,...S.sessions.filter(z=>z.s===s).map(z=>z.st));
+  return{s,n,st:c('s'),r1:c('r1'),p:c('p'),h:hoursOf(z=>z.s===s),gap:last?Math.floor((Date.now()-last)/864e5):999}});
+ const left=stat.filter(x=>x.st<x.n),pend=stat.reduce((a,x)=>a+x.n-x.st,0),need=pend&&dl>0?pend/(dl/7):0;
+ /* score: consistency 30 + daily-target 40 + syllabus pace 30 */
+ const sc=Math.round(act/14*30+(tg?Math.min(1,avg/tg):.6)*40+(pend?(need<=3?30:need<=5?22:need<=8?12:5):30));
+ if(!S.sessions.length){tip('i','👋 Start your first session','Punch in on a chapter. Once you have a few days of data, personalised advice shows up here.',{t:'punch',l:'Go to Punch In →'});return{sc:0,T,head:'Welcome! Let’s get your first session logged.'}}
+ if(td===0&&hr>=18)tip('r','🔴 Nothing logged today','It is evening and you have 0h logged. Even a 45-minute session keeps your streak'+(st?' of '+st+' days':'')+' alive.',{t:'punch',l:'Punch in now →'});
+ else if(td===0&&hr>=11)tip('w','⏰ Today has not started','No study logged yet. Begin with your weakest subject while your mind is fresh.',{t:'punch',l:'Punch in →'});
+ else if(tg&&td>=tg)tip('g','✅ Daily target hit','You logged '+fh(td)+' today against a '+tg+'h target. Use any extra time for practice questions or a revision.');
+ else if(tg&&td>0)tip('i','⏳ '+fh(Math.max(0,tg-td))+' to hit today’s target','You are at '+fh(td)+' of '+tg+'h.',{t:'punch',l:'Continue →'});
+ if(tg&&avg<tg*.7)tip('r','📉 Averaging '+fh(avg)+'/day','Your 7-day average is below 70% of your '+tg+'h target. Fix a fixed daily slot and protect it.');
+ else if(tg&&avg>=tg)tip('g','🔥 Strong week','Averaging '+fh(avg)+'/day, at or above target. Keep this rhythm and avoid burn-out: take one lighter day.');
+ if(w0>0){const ch=Math.round((w1-w0)/w0*100);if(ch<=-25)tip('w','📉 Study time down '+Math.abs(ch)+'%','This week '+fh(w1)+' vs '+fh(w0)+' last week. Find what disturbed your routine and fix it early.');else if(ch>=25)tip('g','📈 Study time up '+ch+'%','This week '+fh(w1)+' vs '+fh(w0)+' last week. Great momentum.')}
+ if(act<=7)tip('w','📅 Studied only '+act+' of the last 14 days','Aim for at least 6 days a week. Consistency beats occasional long marathons.');
+ else if(st>=5)tip('g','🏅 '+st+'-day streak','Consistency is your biggest asset. Do not break the chain.');
+ const nb=stat.filter(x=>x.st<x.n).sort((a,b)=>b.gap-a.gap)[0];
+ if(nb&&nb.gap>=4)tip('w','🕸 '+META[nb.s].n+' neglected',nb.gap>=999?'You have not logged a single session here yet.':'No session for '+nb.gap+' days. Schedule a block this week before it fades.',{sub:nb.s,l:'Open chapters →'});
+ const lag=stat.filter(x=>x.st>=3&&x.r1<x.st*.5).sort((a,b)=>(b.st-b.r1)-(a.st-a.r1))[0];
+ if(lag)tip('w','🔁 Revise '+META[lag.s].n,lag.st+' chapters studied but only '+lag.r1+' have Revision 1. Revise within 1–2 weeks to hold it in memory.',{sub:lag.s,l:'Start revising →'});
+ const np=stat.filter(x=>x.st>=3&&x.p<x.st*.4).sort((a,b)=>(b.st-b.p)-(a.st-a.p))[0];
+ if(np)tip('i','✍ Practice more in '+META[np.s].n,np.p+' of '+np.st+' studied chapters have practice done. Solve past papers and RTPs, as the exam tests application, not just reading.',{sub:np.s,l:'Open chapters →'});
+ if(left.length&&dl>0){const cls=need>8?'r':need>5?'w':need>0?'i':'g';tip(cls,(need>8?'🚨 ':need>5?'⚠ ':'🎯 ')+'Pace: '+need.toFixed(1)+' chapters/week needed',pend+' chapters left to study with '+dl+' days to exam.'+(need>8?' Prioritise high-weightage chapters and cut low-value reading.':need>5?' Increase daily hours or add a weekend block.':' You are on a comfortable track.'))}
+ const ho=stat.filter(x=>x.n-x.st>=5).sort((a,b)=>a.h/(a.n-a.st||1)-b.h/(b.n-b.st||1))[0];
+ const dbt=S.notes.filter(n=>!n.d&&(n.t==='Doubt'||n.t==='Pending')).length;
+ if(dbt>=5)tip('w','❓ '+dbt+' open doubts / pending items','Clear them in one dedicated sitting, as unresolved doubts compound.',{t:'notes',l:'Open sticky notes →'});
+ else if(dbt>0)tip('i','📌 '+dbt+' open doubt/pending note'+(dbt>1?'s':''),'Resolve them before starting new chapters.',{t:'notes',l:'Open sticky notes →'});
+ if(!T.some(x=>x.lv==='r'||x.lv==='w')&&!T.some(x=>x.lv==='g'))tip('g','👍 Steady progress','Nothing alarming right now. Keep logging sessions daily.');
+ const lv=sc>=75?'g':sc>=50?'w':'r';
+ return{sc,lv,T:T.sort((a,b)=>'rwig'.indexOf(a.lv)-'rwig'.indexOf(b.lv)).slice(0,6),head:sc>=75?'You are performing well. Keep it up!':sc>=50?'Decent, but a few things need attention.':'Needs attention. Small fixes now make a big difference.'}}
+function vCoach(m){const d=coachData(m),C={g:'#2e7d5b',i:'#2f6da8',w:'#c98a00',r:'#c0392b'};
+ return`<div class="card coach" style="--cc:${C[d.lv||'i']}"><div class="hd"><div class="sc" style="--p:${d.sc}"><span>${d.sc}</span></div><div style="flex:1;min-width:200px"><h2>Study coach</h2><p>${esc(d.head)} · based on your last 14 days, syllabus progress and exam date</p></div></div>
+ <div class="tips">${d.T.map((t,i)=>`<div class="tip" style="--tc:${C[t.lv]};animation-delay:${i*50}ms"><b>${esc(t.t)}</b>${esc(t.x)}${t.a?`<br><a ${t.a.sub?'data-dsub="'+t.a.sub+'"':'data-tab="'+t.a.t+'"'}>${esc(t.a.l)}</a>`:''}</div>`).join('')}</div></div>`}
 function vDash(){
  const m=byDay(),tod=dk(Date.now()),tot=hoursOf(()=>true),td=(m[tod]||{}).t||0;
  let wk=0;for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);wk+=(m[dk(d)]||{}).t||0}
@@ -624,6 +666,7 @@ function vDash(){
  const need=pend?(pend/(dl/7)).toFixed(1):'0';
  const kp=(v,l)=>`<div class="card kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`;
  let h=`<div class="grid kpis">${kp(fh(td)+' <small>/ '+tg+'h</small>','today vs daily target')}${kp(fh(wk),'last 7 days')}${kp(fh(tot),'total logged')}${kp(streak(m)+' d','current streak')}${kp(Math.round(done/all*100)+'%','syllabus (study + revisions + practice)')}${kp(need,'study-chapters/week needed ('+pend+' pending)')}${kp(S.notes.filter(n=>!n.d&&n.t==='Pending').length,'open pending items')}</div>`;
+ h+=vCoach(m);
  if(S.active){const c=L[S.active.s][S.active.i];h+=`<div class="card live" style="margin-top:12px"><span class="dot"></span><b>Punched in:</b> ${esc(META[S.active.s].n)} — ${esc(c.t)} · <span class="mono tick"></span> <button class="btn acc sm" data-act="goPunch">Go to punch out</button></div>`}
  h+=`<div class="grid two" style="margin-top:12px"><div class="card"><h2>Last 14 days</h2>${chart14(m)}</div><div class="card"><h2>Consistency (16 weeks)</h2>${heat(m)}<div class="hint">Darker = closer to your daily target.</div></div></div>`;
  h+=`<h2 style="font:700 20px var(--fh);margin:20px 0 8px">Subjects</h2><div class="grid two">`;
@@ -833,7 +876,7 @@ document.addEventListener('click',e=>{
  const t=e.target.closest('[data-tab],[data-act],[data-sub],[data-dsub],[data-go],[data-del],[data-nadd],[data-nview],[data-npick],[data-nact],[data-ntype],[data-qrev],[data-cexp],[data-clog]');if(!t)return;
  if(t.dataset.cexp!==undefined||t.dataset.clog!==undefined){e.preventDefault();const k=cS+':'+(t.dataset.cexp!==undefined?t.dataset.cexp:t.dataset.clog),St=t.dataset.cexp!==undefined?cOpen:cLog;St.has(k)?St.delete(k):St.add(k);const y=window.scrollY;render();scrollTo(0,y);return}
  if(t.dataset.qrev){e.preventDefault();const[id,x,k]=t.dataset.qrev.split('|'),n=S.notes.find(z=>z.id===id);if(n){if(!Array.isArray(n.q)){n.q=ldrList(n);delete n.qn;delete n.qp;delete n.qs}const o=n.q[+x];if(o){o.rv=o.rv||{};o.rv[k]=o.rv[k]?0:1;save();const y=window.scrollY;render();scrollTo(0,y)}}return}
- if(t.dataset.dsub){if(e.target.closest('a'))return;cS=t.dataset.dsub;cQ='';cF='all';selSave();tab='chap';render();scrollTo(0,0);return}
+ if(t.dataset.dsub){if(e.target.closest('a[href]'))return;cS=t.dataset.dsub;cQ='';cF='all';selSave();tab='chap';render();scrollTo(0,0);return}
  if(t.dataset.tab){tab=t.dataset.tab;render();if(tab==='log')fillMC();tickAll();return}
  if(t.dataset.sub){cS=t.dataset.sub;selSave();render();return}
  if(t.dataset.go!==undefined){e.preventDefault();pS=cS;pC=+t.dataset.go;selSave();tab='punch';render();return}
