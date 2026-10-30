@@ -104,6 +104,11 @@ dialog::backdrop{background:#0008}
 .rm{display:flex;gap:8px;align-items:center;font-size:13px;margin-top:8px}.rm input{width:auto}
 .amsg{font:12px var(--fm);color:var(--acc);margin-top:10px;min-height:16px}
 .copy{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);font:11px var(--fm);color:var(--mute);text-align:center}
+.ied{padding:0;max-width:none;width:min(96vw,900px);height:min(96vh,860px);border-radius:12px}.ied[open]{display:flex;flex-direction:column}
+.ied .ib{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line)}.ied .ib .btn.on{background:var(--ink);color:var(--card)}
+.ied .iw{flex:1;min-height:0;display:grid;place-items:center;background:#222;padding:8px;overflow:hidden;position:relative}.ied canvas,.ied video{max-width:100%;max-height:100%;touch-action:none;background:#fff}.ied video{background:#000}
+.ied .sw{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);padding:0;cursor:pointer}.ied .sw.on{outline:3px solid var(--ink);outline-offset:1px}
+.ied .if{display:flex;gap:8px;justify-content:flex-end;padding:8px 10px;border-top:1px solid var(--line)}
 .att{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.att img{max-width:100%;max-height:160px;border-radius:4px;cursor:zoom-in;background:#fff8}.att audio{width:100%;height:34px}
 .ai{display:flex;gap:6px;align-items:center;margin-top:6px}.ai img{max-height:70px;max-width:120px;border-radius:4px}.ai audio{flex:1;min-width:0;height:34px}
 .katex{font-size:1.05em}.katex-display{margin:.5em 0;overflow-x:auto;overflow-y:hidden}
@@ -438,9 +443,55 @@ function mx(t){t=String(t==null?'':t);const K=window.katex;if(!K||t.indexOf('$')
 function insTxt(ta,s){const a=ta.selectionStart==null?ta.value.length:ta.selectionStart,b=ta.selectionEnd==null?a:ta.selectionEnd;ta.value=ta.value.slice(0,a)+s+ta.value.slice(b);ta.focus();ta.selectionStart=ta.selectionEnd=a+s.length}
 function renderAtt(){const b=$('#nfAtt');if(!b)return;b.innerHTML=nfA.map((a,i)=>'<div class="ai">'+(a.k==='img'?'<img data-mid="'+esc(a.id)+'" alt="">':'<audio controls preload="none" data-mid="'+esc(a.id)+'"></audio>')+'<span class="mono" style="font-size:11px;color:var(--mute)">'+esc(a.nm)+' · '+Math.max(1,Math.round((a.sz||0)/1024))+' KB</span><button type="button" class="btn ghost sm" data-arm="'+i+'" title="Remove">✕</button></div>').join('');hydrate(b)}
 async function addMedia(b,k,mt,nm){const id=uid();await mPut(id,b);nfA.push({id,k,mt,x:extOf(mt),nm:nm||k,sz:b.size});renderAtt()}
-async function addImg(f){if(!f)return;let b=f,mt=f.type||'image/jpeg';
+/* ===== photo editor (crop / draw / highlight / rotate) and live camera ===== */
+function ieDlg(){let d=document.getElementById('ied');if(d)d.remove();d=document.createElement('dialog');d.id='ied';d.className='ied';document.body.appendChild(d);d.addEventListener('cancel',e=>e.preventDefault());return d}
+function editImg(src){return new Promise(async res=>{
+ let bm;try{bm=await createImageBitmap(src)}catch(e){return res(src)}
+ const sc=Math.min(1,1600/Math.max(bm.width,bm.height));let base=document.createElement('canvas');base.width=Math.round(bm.width*sc);base.height=Math.round(bm.height*sc);const bg=base.getContext('2d');bg.fillStyle='#fff';bg.fillRect(0,0,base.width,base.height);bg.drawImage(bm,0,0,base.width,base.height);
+ const hist=[],strokes=[];let mode='pen',col='#e11d48',cur=null,crop=null,drag=null;
+ const d=ieDlg(),COLS=['#e11d48','#2563eb','#16a34a','#111111','#ffffff','#facc15'];
+ d.innerHTML='<div class="ib"><button type="button" class="btn sm" data-m="pen">✏️ Pen</button><button type="button" class="btn sm" data-m="hl">🖍 Highlight</button><button type="button" class="btn sm" data-m="crop">✂️ Crop</button>'+COLS.map(c=>'<button type="button" class="sw" data-c="'+c+'" style="background:'+c+'" title="Colour"></button>').join('')+'<button type="button" class="btn ghost sm" data-a="rot">⟳ Rotate</button><button type="button" class="btn ghost sm" data-a="undo">↶ Undo</button><button type="button" class="btn ghost sm" data-a="clr">Clear marks</button></div><div class="iw"><canvas id="ic"></canvas></div><div class="ib" id="icr" style="display:none;border-top:1px solid var(--line);border-bottom:0"><small>Drag on the picture to select the area to keep.</small><button type="button" class="btn sm" data-a="ap">Apply crop</button><button type="button" class="btn ghost sm" data-a="nc">Cancel crop</button></div><div class="if"><button type="button" class="btn ghost" data-a="no">Cancel</button><button type="button" class="btn acc" data-a="ok">✔ Add photo</button></div>';
+ const cv=d.querySelector('#ic'),cx=cv.getContext('2d');
+ const wd=()=>Math.max(3,Math.round(Math.max(base.width,base.height)/220));
+ const paintStroke=(g,t)=>{if(!t.p.length)return;g.save();g.lineCap=g.lineJoin='round';g.strokeStyle=t.c;g.lineWidth=t.h?wd()*5:wd();g.globalAlpha=t.h?.38:1;g.beginPath();g.moveTo(t.p[0][0],t.p[0][1]);if(t.p.length===1)g.lineTo(t.p[0][0]+.1,t.p[0][1]);t.p.forEach(q=>g.lineTo(q[0],q[1]));g.stroke();g.restore()};
+ const draw=()=>{cv.width=base.width;cv.height=base.height;cx.drawImage(base,0,0);strokes.forEach(t=>paintStroke(cx,t));if(cur)paintStroke(cx,cur);
+  if(crop){const r=crop;cx.save();cx.fillStyle='#0007';cx.fillRect(0,0,cv.width,r.y);cx.fillRect(0,r.y+r.h,cv.width,cv.height-r.y-r.h);cx.fillRect(0,r.y,r.x,r.h);cx.fillRect(r.x+r.w,r.y,cv.width-r.x-r.w,r.h);cx.strokeStyle='#fff';cx.lineWidth=Math.max(2,wd()*.7);cx.setLineDash([wd()*3,wd()*2]);cx.strokeRect(r.x,r.y,r.w,r.h);cx.restore()}};
+ const bake=()=>{const c=document.createElement('canvas');c.width=base.width;c.height=base.height;const g=c.getContext('2d');g.drawImage(base,0,0);strokes.forEach(t=>paintStroke(g,t));return c};
+ const setMode=m=>{mode=m;crop=null;d.querySelectorAll('[data-m]').forEach(b=>b.classList.toggle('on',b.dataset.m===m));d.querySelector('#icr').style.display=m==='crop'?'flex':'none';d.querySelectorAll('[data-c]').forEach(b=>b.classList.toggle('on',b.dataset.c===col));cv.style.cursor=m==='crop'?'crosshair':'default';draw()};
+ const pt=e=>{const r=cv.getBoundingClientRect();return[Math.max(0,Math.min(cv.width,(e.clientX-r.left)*cv.width/r.width)),Math.max(0,Math.min(cv.height,(e.clientY-r.top)*cv.height/r.height))]};
+ cv.onpointerdown=e=>{e.preventDefault();cv.setPointerCapture(e.pointerId);const p=pt(e);if(mode==='crop'){drag=p;crop={x:p[0],y:p[1],w:0,h:0}}else cur={c:col,h:mode==='hl',p:[p]};draw()};
+ cv.onpointermove=e=>{if(!cur&&!drag)return;const p=pt(e);if(drag){crop={x:Math.min(drag[0],p[0]),y:Math.min(drag[1],p[1]),w:Math.abs(p[0]-drag[0]),h:Math.abs(p[1]-drag[1])}}else cur.p.push(p);draw()};
+ const up=()=>{if(cur){strokes.push(cur);cur=null}drag=null;draw()};cv.onpointerup=up;cv.onpointercancel=up;
+ const fin=v=>{d.close();d.remove();res(v)};
+ d.onclick=async e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.m)return setMode(b.dataset.m);
+  if(b.dataset.c){col=b.dataset.c;if(mode==='crop')mode='pen';return setMode(mode)}
+  const a=b.dataset.a;
+  if(a==='rot'){hist.push(base);const sb=bake(),c=document.createElement('canvas');c.width=sb.height;c.height=sb.width;const g=c.getContext('2d');g.translate(c.width,0);g.rotate(Math.PI/2);g.drawImage(sb,0,0);base=c;strokes.length=0;draw()}
+  else if(a==='undo'){if(strokes.length)strokes.pop();else if(hist.length)base=hist.pop();crop=null;draw()}
+  else if(a==='clr'){strokes.length=0;draw()}
+  else if(a==='nc'){setMode('pen')}
+  else if(a==='ap'){if(!crop||crop.w<12||crop.h<12)return;hist.push(base);const sb=bake(),c=document.createElement('canvas');c.width=Math.round(crop.w);c.height=Math.round(crop.h);c.getContext('2d').drawImage(sb,Math.round(crop.x),Math.round(crop.y),c.width,c.height,0,0,c.width,c.height);base=c;strokes.length=0;setMode('pen')}
+  else if(a==='no')fin(null);
+  else if(a==='ok'){if(mode==='crop'&&crop&&crop.w>=12&&crop.h>=12){hist.push(base);const sb=bake(),c=document.createElement('canvas');c.width=Math.round(crop.w);c.height=Math.round(crop.h);c.getContext('2d').drawImage(sb,Math.round(crop.x),Math.round(crop.y),c.width,c.height,0,0,c.width,c.height);base=c;strokes.length=0;crop=null}
+   const o=await new Promise(r=>bake().toBlob(r,'image/jpeg',.88));fin(o)}};
+ d.showModal();setMode('pen')})}
+function camShot(){return new Promise(async res=>{
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return res('fallback');
+ let st=null,face='environment';const d=ieDlg();
+ d.innerHTML='<div class="iw"><video id="cv" autoplay playsinline muted></video></div><div class="if" style="justify-content:space-between"><button type="button" class="btn ghost" data-a="no">Cancel</button><span style="display:flex;gap:8px"><button type="button" class="btn ghost" data-a="flip">🔄 Switch camera</button><button type="button" class="btn acc" data-a="snap">📸 Capture</button></span></div>';
+ const v=d.querySelector('#cv'),stop=()=>{if(st)st.getTracks().forEach(t=>t.stop());st=null};
+ const start=async()=>{stop();st=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:face},width:{ideal:1920},height:{ideal:1080}},audio:false});v.srcObject=st};
+ try{await start()}catch(e){stop();d.remove();return res('fallback')}
+ d.onclick=async e=>{const b=e.target.closest('button');if(!b)return;const a=b.dataset.a;
+  if(a==='no'){stop();d.close();d.remove();res(null)}
+  else if(a==='flip'){face=face==='environment'?'user':'environment';try{await start()}catch(x){}}
+  else if(a==='snap'){if(!v.videoWidth)return;const c=document.createElement('canvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);const bl=await new Promise(r=>c.toBlob(r,'image/jpeg',.92));stop();d.close();d.remove();res(bl)}};
+ d.showModal()})}
+async function camAdd(){const r=await camShot();if(r==='fallback'){$('#nfCamF').click();return}if(r)await addImg(r,0,1)}
+async function addImg(f,_u,cam){if(!f)return;if(!(f.type||'').startsWith('image/gif')){const ed=await editImg(f);if(!ed)return;f=ed}let b=f,mt=f.type||'image/jpeg';
  try{const bm=await createImageBitmap(f),sc=Math.min(1,1600/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*sc);c.height=Math.round(bm.height*sc);const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(bm,0,0,c.width,c.height);const o=await new Promise(r=>c.toBlob(r,'image/jpeg',.85));if(o){b=o;mt='image/jpeg'}}catch(e){}
- await addMedia(b,'img',mt,f.name||'Image '+hm(Date.now()))}
+ await addMedia(b,'img',mt,(cam?'Camera ':f.name||'Image ')+(cam||!f.name?hm(Date.now()):''))}
 async function recToggle(btn){if(MR){MR.stop();return}
  if(!navigator.mediaDevices||!window.MediaRecorder)return alert('Voice recording is not supported in this browser. Use Chrome, Edge or Safari.');
  let st;try{st=await navigator.mediaDevices.getUserMedia({audio:true})}catch(e){return alert('Microphone permission is blocked. Allow the microphone for this page and try again.')}
@@ -450,7 +501,7 @@ async function recToggle(btn){if(MR){MR.stop();return}
  r.onstop=async()=>{clearInterval(tm);st.getTracks().forEach(x=>x.stop());MR=null;btn.textContent='🎙 Voice note';const type=(r.mimeType||mt||'audio/webm').split(';')[0],b=new Blob(ch,{type});if(b.size)await addMedia(b,'aud',type,'Voice note '+hm(Date.now()))};
  r.start(1000);btn.textContent='⏹ Stop 00:00'}
 function nfWire(n){nfA=n&&n.a?n.a.map(a=>({...a})):[];renderAtt();
- $('#nfImg').onclick=()=>$('#nfImgF').click();$('#nfImgF').onchange=async e=>{for(const f of [...e.target.files])await addImg(f);e.target.value=''};
+ $('#nfImg').onclick=()=>$('#nfImgF').click();$('#nfCam').onclick=camAdd;$('#nfCamF').onchange=async e=>{for(const f of [...e.target.files])await addImg(f,0,1);e.target.value=''};$('#nfImgF').onchange=async e=>{for(const f of [...e.target.files])await addImg(f);e.target.value=''};
  $('#nfRec').onclick=e=>{if(REC)REC.stop();recToggle(e.currentTarget)};
  $('#nfAtt').onclick=e=>{const b=e.target.closest('[data-arm]');if(b){nfA.splice(+b.dataset.arm,1);renderAtt()}};
  $('#nfX').addEventListener('paste',e=>{const it=[...((e.clipboardData||{}).items||[])].filter(i=>i.type.indexOf('image/')===0);if(it.length){e.preventDefault();it.forEach(i=>addImg(i.getAsFile()))}});
@@ -851,7 +902,7 @@ function openNote(o){
  <label class="f">TYPE</label><select id="nfT">${NT.map(k=>`<option ${k===t0?'selected':''}>${k}</option>`).join('')}</select>
  <label class="f">NOTE</label>${micField('<textarea id="nfX" rows="4" placeholder="e.g. Revise section 54F conditions again / doubt on ITC blocked credit"></textarea>')}
  <div style="margin-top:6px;font-size:12px;opacity:.8">🎤 Voice language: <select id="nfVL" style="width:auto;padding:3px 6px"><option value="en-IN">English (India)</option><option value="ml-IN">Malayalam</option><option value="hi-IN">Hindi</option><option value="en-US">English (US)</option></select></div>
- <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn ghost sm" id="nfImg">📷 Image</button><button type="button" class="btn ghost sm" id="nfRec">🎙 Voice note</button><button type="button" class="btn ghost sm" id="nfEqB">∑ Equation</button><input type="file" id="nfImgF" accept="image/*" multiple hidden></div>
+ <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn ghost sm" id="nfImg">🖼 Gallery</button><button type="button" class="btn ghost sm" id="nfCam">📷 Camera</button><button type="button" class="btn ghost sm" id="nfRec">🎙 Voice note</button><button type="button" class="btn ghost sm" id="nfEqB">∑ Equation</button><input type="file" id="nfImgF" accept="image/*" multiple hidden><input type="file" id="nfCamF" accept="image/*" capture="environment" hidden></div>
  <div id="nfEq" class="qb" style="display:none"><label class="f" style="margin-top:0">EQUATION (LaTeX) — live preview</label><input id="eqI" autocomplete="off" placeholder="e.g. \\frac{a}{b}"><div id="eqP" style="min-height:34px;padding:6px 2px;overflow-x:auto"></div><div id="eqT" style="display:flex;gap:4px;flex-wrap:wrap"></div><div style="display:flex;gap:6px;margin-top:8px"><button type="button" class="btn sm" id="eqIn">Insert inline</button><button type="button" class="btn sm" id="eqBl">Insert as block</button></div><div class="hint">You can also type directly in the note: $x^2$ for inline, $$ … $$ for a block.</div></div>
  <div id="nfAtt"></div>
  <div id="nfL" style="display:none"><div class="hint" style="margin:10px 0 0">📖 Last Day Revision — add each question with its own page number and summary</div><div id="nfQs"></div><button type="button" class="btn ghost sm" id="nfAddQ" style="margin-top:8px">＋ Add another question</button></div>
