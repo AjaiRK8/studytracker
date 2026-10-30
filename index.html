@@ -759,7 +759,25 @@ function chart14(m){
  return ctl+sv+sm}
 function heat(m){const tg=+S.set.target||4;const end=new Date();end.setDate(end.getDate()+(6-end.getDay()));const cells=[];for(let i=16*7-1;i>=0;i--){const d=new Date(end);d.setDate(d.getDate()-i);cells.push(d)}
  return'<div class="heat">'+cells.map(d=>{const v=(m[dk(d)]||{}).t||0;const fut=d>new Date();const a=v?Math.min(1,.2+v/tg*.8):0;return`<i title="${dk(d)}: ${fh(v)}" style="${fut?'opacity:.25':''}${a?`;background:rgba(216,67,42,${a})`:''}"></i>`}).join('')+'</div>'}
-function subBars(){const t=hoursOf(()=>true)||1;const mx=Math.max(...ORDER.map(s=>hoursOf(x=>x.s===s)),.01);return ORDER.map(s=>{const h=hoursOf(x=>x.s===s);return`<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:13px"><span>${META[s].n}</span><span class="mono">${fh(h)}</span></div><div class="bar"><i style="width:${h/mx*100}%;background:${META[s].c}"></i></div></div>`}).join('')}
+function subBars(){
+ const R=['14','30','all'].includes(S.set.cr)?S.set.cr:'14',V=S.set.sv==='pie'?'pie':'bar';
+ let cut=0;if(R!=='all'){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(R==='14'?13:29));cut=d.getTime()}
+ const hs=ORDER.map(s=>({s,h:hoursOf(x=>x.s===s&&x.st>=cut)})),tot=hs.reduce((a,b)=>a+b.h,0);
+ const chip=(act,k,l,on)=>`<button type="button" class="chip${on?' on':''}" data-act="${act}" data-r="${k}" style="${on?'background:var(--ink,#222);color:var(--bg,#fff);border-color:var(--ink,#222)':''}">${l}</button>`;
+ const ctl=`<div class="chips" style="margin:0 0 8px">${[['14','Last 14 days'],['30','Last 30 days'],['all','From start']].map(([k,l])=>chip('subR',k,l,R===k)).join('')}<span style="flex:1"></span>${chip('subV','bar','▤ Bars',V==='bar')}${chip('subV','pie','◔ Pie',V==='pie')}</div>`;
+ if(V==='pie'){
+  if(tot<=0)return ctl+'<small>No study time logged in this range.</small>';
+  const cx=90,cy=90,r=80,ri=46,pt=(a,rr)=>[cx+rr*Math.sin(a),cy-rr*Math.cos(a)];let ang=0,sv=`<svg viewBox="0 0 180 180" width="180" height="180" role="img" aria-label="Hours by subject" style="flex:none">`;
+  const act=hs.filter(x=>x.h>0);
+  act.forEach(x=>{const f=x.h/tot,c=META[x.s].c,tt=`<title>${esc(META[x.s].n)}: ${fh(x.h)} (${Math.round(f*100)}%)</title>`;
+   if(act.length===1){sv+=`<circle cx="${cx}" cy="${cy}" r="${(r+ri)/2}" fill="none" stroke="${c}" stroke-width="${r-ri}">${tt}</circle>`;return}
+   const a2=ang+f*2*Math.PI,[x1,y1]=pt(ang,r),[x2,y2]=pt(a2,r),[x3,y3]=pt(a2,ri),[x4,y4]=pt(ang,ri),lg=f>.5?1:0;
+   sv+=`<path d="M${x1} ${y1}A${r} ${r} 0 ${lg} 1 ${x2} ${y2}L${x3} ${y3}A${ri} ${ri} 0 ${lg} 0 ${x4} ${y4}Z" fill="${c}" stroke="var(--card,#fff)" stroke-width="1.5">${tt}</path>`;ang=a2});
+  sv+=`<text x="${cx}" y="${cy-2}" text-anchor="middle" font-size="15" font-weight="700" fill="currentColor" font-family="monospace">${fh(tot)}</text><text x="${cx}" y="${cy+14}" text-anchor="middle" font-size="10" fill="currentColor" opacity=".6" font-family="monospace">total</text></svg>`;
+  const lg=hs.map(x=>`<div style="display:flex;gap:8px;align-items:center;font-size:13px;margin:5px 0"><i style="width:11px;height:11px;border-radius:3px;background:${META[x.s].c};flex:none"></i><span style="flex:1">${META[x.s].n}</span><span class="mono">${fh(x.h)} · ${Math.round(x.h/tot*100)}%</span></div>`).join('');
+  return ctl+`<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:center">${sv}<div style="flex:1;min-width:180px">${lg}</div></div>`}
+ const mx=Math.max(...hs.map(x=>x.h),.01);
+ return ctl+hs.map(x=>`<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:13px"><span>${META[x.s].n}</span><span class="mono">${fh(x.h)}</span></div><div class="bar"><i style="width:${x.h/mx*100}%;background:${META[x.s].c}"></i></div></div>`).join('')}
 function recent(n){const r=[...S.sessions].sort((a,b)=>b.st-a.st).slice(0,n);if(!r.length)return'<small>No sessions yet — punch in to start.</small>';return'<table>'+r.map(x=>{const c=L[x.s][x.i];return`<tr><td class="mono">${dk(x.st)}</td><td><b style="color:${META[x.s].c}">${x.s}</b> ${esc(c?c.t:'')}<br><small>${esc(x.a)}${x.n?' · '+esc(x.n):''}</small></td><td class="mono">${fh(hrs(x))}</td></tr>`}).join('')+'</table>'}
 
 function qTodo(a,bare){const k=PK[ACTS.indexOf(a.a)];if(!k)return'';
@@ -970,6 +988,7 @@ document.addEventListener('click',e=>{
  if(t.dataset.nact){const id=t.dataset.nid,n=S.notes.find(x=>x.id===id);if(n){if(t.dataset.nact==='done'){n.d=n.d?0:1;save();render()}else if(t.dataset.nact==='edit')openNote({id});else if(t.dataset.nact==='addq')quickQ(id);else if(t.dataset.nact==='rm'){n.rm=Date.now();save();render()}else if(t.dataset.nact==='restore'){delete n.rm;save();render()}else if(t.dataset.nact==='del'&&confirm('Delete this note permanently? This cannot be undone.')){(S.del=S.del||[]).push(id);S.notes=S.notes.filter(x=>x.id!==id);save();render()}}return}
  if(t.dataset.ntype!==undefined){nT=t.dataset.ntype;render();return}
  const a=t.dataset.act;e.preventDefault();
+ if(a==='subR'||a==='subV'){if(a==='subR')S.set.cr=t.dataset.r;else S.set.sv=t.dataset.r;save();const y=window.scrollY;render();scrollTo(0,y);return}
  if(a==='chartR'){S.set.cr=t.dataset.r;save();const y=window.scrollY;render();scrollTo(0,y);return}
  if(a==='addNote')openNote({s:t.dataset.s,i:+t.dataset.i});
  if(a==='addNoteAny')openNote({s:nS!=='all'?nS:ORDER[0],i:nC>=0?nC:0,t:nT!=='all'?nT:'Note'});
