@@ -112,7 +112,7 @@ dialog::backdrop{background:#0008}
 .att{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.att img{max-width:100%;max-height:160px;border-radius:4px;cursor:zoom-in;background:#fff8}.att audio{width:100%;height:34px}.att a.pdfc,.ai a.pdfc{display:inline-flex;gap:6px;align-items:center;padding:7px 10px;border:1.5px solid #0005;border-radius:6px;font:600 12px var(--fm);text-decoration:none;word-break:break-all}.att a.pdfc{background:#fff8;color:#2a2415}.ai a.pdfc{color:var(--acc);border-color:var(--line)}
 .ai{display:flex;gap:6px;align-items:center;margin-top:6px}.ai img{max-height:70px;max-width:120px;border-radius:4px}.ai audio{flex:1;min-width:0;height:34px}
 .katex{font-size:1.05em}.katex-display{margin:.5em 0;overflow-x:auto;overflow-y:hidden}
-.cmp{width:100%;border-collapse:collapse;font-size:13px}.cmp th,.cmp td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}.cmp th:first-child,.cmp td:first-child{text-align:left;white-space:normal}.cmp td.z{color:var(--mute)}.cmp tr.cl{cursor:pointer}
+.cmp{width:100%;border-collapse:collapse;font-size:13px}.cmp th,.cmp td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}.cmp th:first-child,.cmp td:first-child{text-align:left;white-space:normal}.cmp td.z{color:var(--mute)}.cmp .cmt{position:sticky;right:0;background:var(--card,var(--bg));border-left:1px solid var(--line)}.cmp tr.cl{cursor:pointer}
 </style>
 </head>
 <body>
@@ -1107,13 +1107,15 @@ const cmVal=(g,sh)=>cmM==='h'?g.h:cmM==='r'?(sh?g.h/sh:0):cmSpan(g);
 const cmTxt=(g,sh)=>cmM==='h'?fh(g.h):cmM==='r'?(sh?Math.round(g.h/sh*100)+'%':'–'):cmSpan(g)+'d';
 function cmRow(m,ps){const sh=(m.Study||{}).h||0,mx=Math.max(.0001,...ps.map(p=>m[p]?cmVal(m[p],sh):0));
  return ps.map(p=>{const g=m[p];if(!g)return'<td class="z">–</td>';return`<td style="background:color-mix(in srgb,var(--acc) ${Math.round(cmVal(g,sh)/mx*45)}%,transparent)">${cmTxt(g,sh)}</td>`}).join('')}
-const cmHead=(ps,first,last)=>`<tr><th>${first}</th>${ps.map(p=>`<th title="${esc(p)}">${cmLab(p)}</th>`).join('')}<th>${last}</th></tr>`;
+const cmHead=(ps,first,last)=>`<tr><th>${first}</th>${ps.map(p=>`<th title="${esc(p)}">${cmLab(p)}</th>`).join('')}<th class="cmt">${last}</th></tr>`;
+function cmTot(m,ps){const gs=ps.map(p=>m[p]).filter(Boolean);if(!gs.length)return'<td class="z cmt">–</td>';const h=gs.reduce((a,g)=>a+g.h,0),sh=(m.Study||{}).h||0;
+ const t=cmM==='h'?fh(h):cmM==='r'?(sh?Math.round(h/sh*100)+'%':'–'):cmSpan({st:Math.min(...gs.map(g=>g.st)),en:Math.max(...gs.map(g=>g.en))})+'d';return`<td class="cmt"><b>${t}</b></td>`}
 function cmSub(ps){let rows='',bars='',mxT=.01;const T={};ORDER.forEach(s=>{T[s]=hoursOf(x=>x.s===s);mxT=Math.max(mxT,T[s])});
  ORDER.forEach(s=>{const m=cmAgg(x=>x.s===s),tot=T[s],nc=new Set(S.sessions.filter(x=>x.s===s).map(x=>x.i)).size;
-  rows+=`<tr><td><b style="color:${META[s].c}">${META[s].n}</b></td>${cmRow(m,ps)}<td><b>${tot?fh(tot):'–'}</b></td></tr>`;
+  rows+=`<tr><td><b style="color:${META[s].c}">${META[s].n}</b></td>${cmRow(m,ps)}${cmTot(m,ps)}</tr>`;
   bars+=`<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;gap:8px;font-size:13px"><span>${META[s].n}</span><span class="mono">${fh(tot)}${nc?' · avg '+fh(tot/nc)+' / chapter':''}</span></div><div class="bar" style="display:flex;height:12px">${ps.map((p,k)=>m[p]?`<i style="width:${m[p].h/mxT*100}%;background:${CMC[k%7]}" title="${esc(p)}: ${fh(m[p].h)}"></i>`:'').join('')}</div></div>`});
  const lg=ps.map((p,k)=>`<span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${CMC[k%7]}"></i> ${esc(p)}</span>`).join('');
- return`<div style="overflow-x:auto"><table class="cmp">${cmHead(ps,'Subject','Total time')}${rows}</table></div><h2 style="margin:18px 0 4px">Where the hours went</h2><div class="pips" style="margin:0 0 6px">${lg}</div>${bars}`}
+ return`<div style="overflow-x:auto"><table class="cmp">${cmHead(ps,'Subject','Total')}${rows}</table></div><h2 style="margin:18px 0 4px">Where the hours went</h2><div class="pips" style="margin:0 0 6px">${lg}</div>${bars}`}
 function cmChap(ps){const s=cmS,ls=L[s],A={};ls.forEach(c=>A[c.i]=cmAgg(x=>x.s===s&&x.i===c.i));
  const tot=c=>Object.values(A[c.i]).reduce((a,g)=>a+g.h,0),sts=ls.map(c=>(A[c.i].Study||{}).h||0).filter(Boolean),avg=sts.length>2?sts.reduce((a,b)=>a+b,0)/sts.length:0;
  const flags=c=>{const m=A[c.i],f=[];let pv=null;ps.forEach(p=>{if(!m[p]||p==='Practice'||p==='Last Day Revision')return;if(pv&&m[p].h>m[pv].h*1.05)f.push(cmLab(p)+' took longer than '+cmLab(pv));pv=p});
@@ -1121,7 +1123,7 @@ function cmChap(ps){const s=cmS,ls=L[s],A={};ls.forEach(c=>A[c.i]=cmAgg(x=>x.s==
   if(m.Study&&!ps.some(p=>/^Revision/.test(p)&&m[p]))f.push('No revision logged yet');return f};
  const list=ls.slice();if(cmO)list.sort((a,b)=>tot(b)-tot(a));
  const rows=list.map(c=>{const m=A[c.i],t=tot(c),o=cmOpen.has(s+':'+c.i),fl=flags(c);
-  let r=`<tr class="cl" data-cmx="${c.i}"><td>${o?'▾':'▸'} ${pad(c.i+1)}. ${esc(c.t)}${fl.length?`<br><small style="color:var(--acc)">⚠ ${esc(fl.slice(0,2).join(' · '))}</small>`:''}</td>${cmRow(m,ps)}<td>${t?fh(t):'–'}</td></tr>`;
+  let r=`<tr class="cl" data-cmx="${c.i}"><td>${o?'▾':'▸'} ${pad(c.i+1)}. ${esc(c.t)}${fl.length?`<br><small style="color:var(--acc)">⚠ ${esc(fl.slice(0,2).join(' · '))}</small>`:''}</td>${cmRow(m,ps)}${cmTot(m,ps)}</tr>`;
   if(o)r+=`<tr><td colspan="${ps.length+2}" style="text-align:left;white-space:normal;background:var(--bg)">${t?ps.filter(p=>m[p]).map(p=>{const g=m[p];return`<div>${esc(p)} · ${g.n} session${g.n>1?'s':''} · <b>${fh(g.h)}</b> · ${dk(g.st)}${cmSpan(g)>1?' → '+dk(g.en)+' ('+cmSpan(g)+' days)':''}</div>`}).join(''):'<small>No sessions logged yet.</small>'}</td></tr>`;return r}).join('');
  return`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><select id="cmO" style="width:auto"><option value="0">Syllabus order</option><option value="1" ${cmO?'selected':''}>Most time first</option></select><button class="btn ghost sm" data-cmcsv="1">⬇ Export CSV</button></div><div style="overflow-x:auto"><table class="cmp">${cmHead(ps,'Chapter (tap for details)','Total')}${rows}</table></div>`}
 function cmPass(ps){const f=x=>cmS==='ALL'||x.s===cmS;
