@@ -760,11 +760,11 @@ function chart14(m){
 function heat(m){const tg=+S.set.target||4;const end=new Date();end.setDate(end.getDate()+(6-end.getDay()));const cells=[];for(let i=16*7-1;i>=0;i--){const d=new Date(end);d.setDate(d.getDate()-i);cells.push(d)}
  return'<div class="heat">'+cells.map(d=>{const v=(m[dk(d)]||{}).t||0;const fut=d>new Date();const a=v?Math.min(1,.2+v/tg*.8):0;return`<i title="${dk(d)}: ${fh(v)}" style="${fut?'opacity:.25':''}${a?`;background:rgba(216,67,42,${a})`:''}"></i>`}).join('')+'</div>'}
 function subBars(){
- const R=['14','30','all'].includes(S.set.cr)?S.set.cr:'14',V=S.set.sv==='pie'?'pie':'bar';
+ const R=['14','30','all'].includes(S.set.cr)?S.set.cr:'14',V='pie';
  let cut=0;if(R!=='all'){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(R==='14'?13:29));cut=d.getTime()}
  const hs=ORDER.map(s=>({s,h:hoursOf(x=>x.s===s&&x.st>=cut)})),tot=hs.reduce((a,b)=>a+b.h,0);
  const chip=(act,k,l,on)=>`<button type="button" class="chip${on?' on':''}" data-act="${act}" data-r="${k}" style="${on?'background:var(--ink,#222);color:var(--bg,#fff);border-color:var(--ink,#222)':''}">${l}</button>`;
- const ctl=`<div class="chips" style="margin:0 0 8px">${[['14','Last 14 days'],['30','Last 30 days'],['all','From start']].map(([k,l])=>chip('subR',k,l,R===k)).join('')}<span style="flex:1"></span>${chip('subV','bar','▤ Bars',V==='bar')}${chip('subV','pie','◔ Pie',V==='pie')}</div>`;
+ const ctl=`<div class="chips" style="margin:0 0 8px">${[['14','Last 14 days'],['30','Last 30 days'],['all','From start']].map(([k,l])=>chip('subR',k,l,R===k)).join('')}</div>`;
  if(V==='pie'){
   if(tot<=0)return ctl+'<small>No study time logged in this range.</small>';
   const cx=90,cy=90,r=80,ri=46,pt=(a,rr)=>[cx+rr*Math.sin(a),cy-rr*Math.cos(a)];let ang=0,sv=`<svg viewBox="0 0 180 180" width="180" height="180" role="img" aria-label="Hours by subject" style="flex:none">`;
