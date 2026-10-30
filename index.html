@@ -679,7 +679,7 @@ const SELK=()=>'caPlanner.sel.'+USER;
 function lastChap(s){if(!L[s])return null;let i=null,t=-1;S.sessions.forEach(x=>{if(x.s===s&&L[s][x.i]&&x.st>t){t=x.st;i=x.i}});if(S.active&&S.active.s===s&&L[s][S.active.i]&&S.active.st>t)i=S.active.i;return i}
 function selSave(){try{localStorage.setItem(SELK(),JSON.stringify({pS,pC,pA,cS}))}catch(e){}}
 function selLoad(){try{const o=JSON.parse(localStorage.getItem(SELK())||'null');if(!o)return false;if(L[o.cS])cS=o.cS;return false}catch(e){return false}}
-function render(){if(!USER)return;applyCust();buildActs();if(selUser!==USER){selUser=USER;if(selLoad())pTouched=true}nav();ubar();warn();const d=daysLeft();$('#dl').textContent=d>0?d:0;$('#main').innerHTML=({dash:vDash,cmp:vCmp,punch:vPunch,chap:vChap,notes:vNotes,log:vLog,set:vSet})[tab]();hydrate();}
+function render(){if(!USER)return;applyCust();buildActs();if(selUser!==USER){selUser=USER;if(selLoad())pTouched=true}nav();ubar();warn();const d=daysLeft();$('#dl').textContent=d>0?d:0;$('#main').innerHTML=({dash:vDash,cmp:vCmp,punch:()=>(S.active?'':vRemember())+vPunch(),chap:vChap,notes:vNotes,log:vLog,set:vSet})[tab]();hydrate();}
 
 function coachData(m){
  const day=n=>{const d=new Date();d.setDate(d.getDate()-n);return(m[dk(d)]||{}).t||0},tg=+S.set.target||0,dl=daysLeft(),T=[];
@@ -725,7 +725,7 @@ function vDash(){
  const need=pend?(pend/(dl/7)).toFixed(1):'0';
  const kp=(v,l)=>`<div class="card kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`;
  let h=`<div class="grid kpis">${kp(fh(td)+' <small>/ '+tg+'h</small>','today vs daily target')}${kp(fh(wk),'last 7 days')}${kp(fh(tot),'total logged')}${kp(streak(m)+' d','current streak')}${kp(Math.round(done/all*100)+'%','syllabus (study + revisions + practice)')}${kp(need,'study-chapters/week needed ('+pend+' pending)')}${kp(S.notes.filter(n=>nAct(n)&&n.t==='Pending').length,'open pending items')}</div>`;
- h+=vCoach(m);
+ h+=vCoach(m);h+=vRemember();
  if(S.active){const c=L[S.active.s][S.active.i];h+=`<div class="card live" style="margin-top:12px"><span class="dot"></span><b>Punched in:</b> ${esc(META[S.active.s].n)} — ${esc(c.t)} · <span class="mono tick"></span> <button class="btn acc sm" data-act="goPunch">Go to punch out</button></div>`}
  h+=`<div class="grid two" style="margin-top:12px"><div class="card"><h2>Last 14 days</h2>${chart14(m)}</div><div class="card"><h2>Consistency (16 weeks)</h2>${heat(m)}<div class="hint">Darker = closer to your daily target.</div></div></div>`;
  h+=`<h2 style="font:700 20px var(--fh);margin:20px 0 8px">Subjects</h2><div class="grid two">`;
@@ -1142,6 +1142,21 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-cmv],[data
  if(t.dataset.cmv)cmV=t.dataset.cmv;else if(t.dataset.cms)cmS=t.dataset.cms;else if(t.dataset.cmx!==undefined){const k=cmS+':'+t.dataset.cmx;cmOpen.has(k)?cmOpen.delete(k):cmOpen.add(k)}else{cmCsv();return}
  render();scrollTo(0,y)});
 document.addEventListener('change',e=>{if(e.target.id==='cmM'){cmM=e.target.value;render()}else if(e.target.id==='cmO'){cmO=+e.target.value;render()}});
+/* ---------- DAILY "REMEMBER TODAY" CARD (from sticky notes) ---------- */
+let rmOff=0,rmDay='';
+const rmH=t=>{let h=2166136261;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0};
+function rmPool(){const a=[];S.notes.filter(nAct).forEach(n=>{if(!L[n.s]||!L[n.s][n.i])return;const hasA=!!(n.a&&n.a.length);
+ if(n.t==='LDR'){let c=0;ldrList(n).forEach((o,x)=>{if(o.q||o.p||o.s){c++;a.push({k:n.id+':'+x,n,t:ldrHead({q:o.q,p:o.p})||'LDR question',b:o.s||''})}});if(!c&&hasA)a.push({k:n.id,n,t:'LDR note',b:(n.x||'').trim()})}
+ else if((n.x||'').trim()||hasA)a.push({k:n.id,n,t:'',b:(n.x||'').trim()})});return a}
+function vRemember(){const day=dk(Date.now());if(day!==rmDay){rmDay=day;rmOff=0}const p=rmPool();if(!p.length)return'';
+ p.sort((u,v)=>rmH(u.k+day)-rmH(v.k+day));const z=p[rmOff%p.length],n=z.n,c=L[n.s][n.i],bt='color:#2a2415;border-color:#0004',att=(n.a&&n.a.length)?`<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">${n.a.map(f=>`<button class="btn ghost sm" style="${bt}" data-rmid="${esc(f.id)}" data-rmk="${f.k}">${f.k==='img'?'🖼 Photo':f.k==='pdf'?'📄 '+esc(f.nm):'🎙 Voice note'}</button>`).join('')}</div><div id="rmView"></div>`:'';
+ return`<div class="card" style="margin-top:12px;background:${NC[n.t]||NC.Note};color:#2a2415;border:none"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap"><b>💭 Remember today</b><span style="display:flex;gap:6px"><button class="btn ghost sm" data-rm="next" style="${bt}">↻ Another</button><button class="btn ghost sm" data-nview="${n.s}:${n.i}" style="${bt}">Open</button></span></div><div style="margin-top:8px;font-size:15px;white-space:pre-wrap;word-break:break-word">${NI[n.t]||''} ${z.t?'<b>'+esc(z.t)+'</b>'+(z.b?'<br>':''):''}${esc(z.b.length>420?z.b.slice(0,420)+'…':z.b)}</div>${att}<div style="margin-top:6px;font-size:12px;opacity:.75">${esc(META[n.s].n)} · ${esc(c.t)} · ${p.length>1?(rmOff%p.length+1)+' of '+p.length+' · ':''}changes every day</div></div>`}
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-rmid]');if(!b)return;const id=b.dataset.rmid,k=b.dataset.rmk;let w=null;if(k==='pdf')w=window.open('','_blank');
+ let u=MU[id];if(!u){const bl=await mGet(id);if(bl)u=MU[id]=URL.createObjectURL(bl)}
+ if(!u){if(w)w.close();alert('This file is not on this device yet \u2014 it will appear after the next sync.');return}
+ if(k==='pdf'){if(w)w.location.href=u;else window.open(u,'_blank')}
+ else{const v=$('#rmView');if(v)v.innerHTML=k==='img'?`<img src="${u}" data-zoom="1" alt="" style="max-width:100%;border-radius:6px;margin-top:8px" title="Tap to open full size">`:`<audio controls autoplay src="${u}" style="width:100%;margin-top:8px"></audio>`}});
+document.addEventListener('click',e=>{if(e.target.closest('[data-rm]')){const y=window.scrollY;rmOff++;render();scrollTo(0,y)}});
 {const kp=localStorage.getItem(KP);if(kp&&users()[kp])autoLogin(kp);else showAuth()}
 </script>
 </body>
