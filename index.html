@@ -675,6 +675,10 @@ function hoursOf(f){return S.sessions.filter(f).reduce((a,s)=>a+hrs(s),0)}
 function byDay(){const m={};S.sessions.forEach(s=>{const k=dk(s.st);(m[k]=m[k]||{t:0,by:{}});const h=hrs(s);m[k].t+=h;m[k].by[s.s]=(m[k].by[s.s]||0)+h});return m}
 function streak(m){let n=0,d=new Date();if(!m[dk(d)])d.setDate(d.getDate()-1);while(m[dk(d)]){n++;d.setDate(d.getDate()-1)}return n}
 const daysLeft=()=>Math.ceil((new Date(S.set.exam+'T09:00')-new Date())/864e5);
+/* weighted workload: a pending Study = 1 unit; each pending revision / LDR / practice pass counts a fraction of a study chapter (editable in Settings) */
+const pwDef=k=>k==='r1'?.5:k==='r2'?.3:k==='l'?.15:k==='p'?.4:.2;
+const pw=k=>{const v=(S.set.pw||{})[k];return v===undefined||v===''||v===null?pwDef(k):Math.max(0,+v||0)};
+function workload(){let st=0,rv=0;ORDER.forEach(s=>L[s].forEach(c=>{const p=prog(s,c.i);PK.forEach(k=>{if(p[k])return;if(k==='s')st++;else rv+=pw(k)})}));return{st,rv,units:st+rv}}
 
 /* ---------- VIEWS ---------- */
 const cOpen=new Set(),cLog=new Set();let selUser='',pTouched=false,pInit='',tab='punch',pS='DT',pC=0,pA='Study',pN='',cS='DT',cQ='',cF='all';
@@ -693,9 +697,9 @@ function coachData(m){
  const avg=w1/7,td=day(0),hr=new Date().getHours(),st=streak(m),tip=(lv,t,x,act)=>T.push({lv,t,x,a:act||null});
  const stat=ORDER.map(s=>{const ls=L[s],n=ls.length,c=k=>ls.filter(x=>prog(s,x.i)[k]).length;const last=Math.max(0,...S.sessions.filter(z=>z.s===s).map(z=>z.st));
   return{s,n,st:c('s'),r1:c('r1'),p:c('p'),h:hoursOf(z=>z.s===s),gap:last?Math.floor((Date.now()-last)/864e5):999}});
- const left=stat.filter(x=>x.st<x.n),pend=stat.reduce((a,x)=>a+x.n-x.st,0),need=pend&&dl>0?pend/(dl/7):0;
+ const left=stat.filter(x=>x.st<x.n),pend=stat.reduce((a,x)=>a+x.n-x.st,0),wl=workload(),need=wl.units>0&&dl>0?wl.units/(dl/7):0;
  /* score: consistency 30 + daily-target 40 + syllabus pace 30 */
- const sc=Math.round(act/14*30+(tg?Math.min(1,avg/tg):.6)*40+(pend?(need<=3?30:need<=5?22:need<=8?12:5):30));
+ const sc=Math.round(act/14*30+(tg?Math.min(1,avg/tg):.6)*40+(wl.units>0?(need<=3?30:need<=5?22:need<=8?12:5):30));
  if(!S.sessions.length){tip('i','👋 Start your first session','Punch in on a chapter. Once you have a few days of data, personalised advice shows up here.',{t:'punch',l:'Go to Punch In →'});return{sc:0,T,head:'Welcome! Let’s get your first session logged.'}}
  if(td===0&&hr>=18)tip('r','🔴 Nothing logged today','It is evening and you have 0h logged. Even a 45-minute session keeps your streak'+(st?' of '+st+' days':'')+' alive.',{t:'punch',l:'Punch in now →'});
  else if(td===0&&hr>=11)tip('w','⏰ Today has not started','No study logged yet. Begin with your weakest subject while your mind is fresh.',{t:'punch',l:'Punch in →'});
@@ -712,7 +716,7 @@ function coachData(m){
  if(lag)tip('w','🔁 Revise '+META[lag.s].n,lag.st+' chapters studied but only '+lag.r1+' have Revision 1. Revise within 1–2 weeks to hold it in memory.',{sub:lag.s,l:'Start revising →'});
  const np=stat.filter(x=>x.st>=3&&x.p<x.st*.4).sort((a,b)=>(b.st-b.p)-(a.st-a.p))[0];
  if(np)tip('i','✍ Practice more in '+META[np.s].n,np.p+' of '+np.st+' studied chapters have practice done. Solve past papers and RTPs, as the exam tests application, not just reading.',{sub:np.s,l:'Open chapters →'});
- if(left.length&&dl>0){const cls=need>8?'r':need>5?'w':need>0?'i':'g';tip(cls,(need>8?'🚨 ':need>5?'⚠ ':'🎯 ')+'Pace: '+need.toFixed(1)+' chapters/week needed',pend+' chapters left to study with '+dl+' days to exam.'+(need>8?' Prioritise high-weightage chapters and cut low-value reading.':need>5?' Increase daily hours or add a weekend block.':' You are on a comfortable track.'))}
+ if(wl.units>0&&dl>0){const cls=need>8?'r':need>5?'w':need>0?'i':'g';tip(cls,(need>8?'🚨 ':need>5?'⚠ ':'🎯 ')+'Pace: '+need.toFixed(1)+' study-chapter equivalents/week needed',pend+' chapters left to study plus pending revision, last-day revision and practice (≈ '+wl.rv.toFixed(0)+' more chapter-equivalents) = '+wl.units.toFixed(0)+' units with '+dl+' days to exam.'+(need>8?' Prioritise high-weightage chapters and cut low-value reading.':need>5?' Increase daily hours or add a weekend block.':' You are on a comfortable track.'))}
  const ho=stat.filter(x=>x.n-x.st>=5).sort((a,b)=>a.h/(a.n-a.st||1)-b.h/(b.n-b.st||1))[0];
  const dbt=S.notes.filter(n=>nAct(n)&&(n.t==='Doubt'||n.t==='Pending')).length;
  if(dbt>=5)tip('w','❓ '+dbt+' open doubts / pending items','Clear them in one dedicated sitting, as unresolved doubts compound.',{t:'notes',l:'Open sticky notes →'});
@@ -729,9 +733,9 @@ function vDash(){
  let all=0,done=0,pend=0;ORDER.forEach(s=>L[s].forEach(c=>{const p=prog(s,c.i);all+=PK.length;PK.forEach(k=>{if(p[k])done++});if(!p.s)pend++}));
  const W0=(()=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-6);return d.getTime()})();
  const dl=Math.max(1,daysLeft()),tg=+S.set.target||0;
- const need=pend?(pend/(dl/7)).toFixed(1):'0';
+ const wl=workload(),need=wl.units>0?(wl.units/(dl/7)).toFixed(1):'0';
  const kp=(v,l)=>`<div class="card kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`;
- let h=`<div class="grid kpis">${kp(fh(td)+' <small>/ '+tg+'h</small>','today vs daily target')}${kp(fh(wk),'last 7 days')}${kp(fh(tot),'total logged')}${kp(streak(m)+' d','current streak')}${kp(Math.round(done/all*100)+'%','syllabus (study + revisions + practice)')}${kp(need,'study-chapters/week needed ('+pend+' pending)')}${kp(S.notes.filter(n=>nAct(n)&&n.t==='Pending').length,'open pending items')}</div>`;
+ let h=`<div class="grid kpis">${kp(fh(td)+' <small>/ '+tg+'h</small>','today vs daily target')}${kp(fh(wk),'last 7 days')}${kp(fh(tot),'total logged')}${kp(streak(m)+' d','current streak')}${kp(Math.round(done/all*100)+'%','syllabus (study + revisions + practice)')}${kp(need,'chapter-equivalents/week needed ('+pend+' to study + revisions/LDR/practice ≈ '+wl.rv.toFixed(0)+')')}${kp(S.notes.filter(n=>nAct(n)&&n.t==='Pending').length,'open pending items')}</div>`;
  h+=`<details data-col="coach" ${(S.set.col||{}).coach?'':'open'}><summary>Coach</summary>${vCoach(m)}</details>`;h+=vRemember();
  if(S.active){const c=L[S.active.s][S.active.i];h+=`<div class="card live" style="margin-top:12px"><span class="dot"></span><b>Punched in:</b> ${esc(META[S.active.s].n)} — ${esc(c.t)} · <span class="mono tick"></span> <button class="btn acc sm" data-act="goPunch">Go to punch out</button></div>`}
  h+=`<div class="grid two" style="margin-top:12px"><div class="card"><h2>Daily total hours</h2>${chart14(m)}</div><div class="card"><h2>Consistency (16 weeks)</h2>${heat(m)}<div class="hint">Darker = closer to your daily target.</div></div></div>`;
@@ -880,7 +884,7 @@ function myMat(){const s=mmS,ls=L[s],mf=(S.set.mf||{})[s]||'';
 function mmParse(){return($('#mmP').value||'').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const a=l.split('|').map(x=>x.trim());const o={t:a[0],nb:'',pg:null};if(a[1])o.up=+a[1]||a[1];if(a[2])o.u=a[2];return o})}
 function vSet(){
  const f=ORDER.filter(s=>s!=='IBS').map(s=>`<label class="f">${META[s].n} — PDF file name</label><input data-file="${s}" value="${esc(S.set.files[s])}">`).join('');
- return`<div class="grid two"><div class="card"><h2>Goals</h2><label class="f">EXAM START DATE</label><input type="date" id="sE" value="${S.set.exam}"><small>Set to the date of your first paper once ICAI announces the schedule.</small><label class="f">DAILY TARGET (hours)</label><input type="number" id="sT" step="0.5" min="0" value="${S.set.target}"><label class="f">NUMBER OF REVISIONS</label><input type="number" id="sR" min="1" max="10" step="1" value="${S.set.revs||2}"><small>Adds Revision 3, 4… to the activity list, chapter tracker and LDR question tracking. Existing data is kept if you reduce it. “Last Day Revision” is always included.</small><label class="f">WEEKLY HOURS TARGET PER SUBJECT (0 = none)</label><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:6px">${ORDER.map(s=>`<label class="mono" style="font-size:11px">${META[s].p}<input type="number" min="0" step="0.5" data-wt="${s}" value="${(S.set.wt||{})[s]||0}"></label>`).join('')}</div></div>
+ return`<div class="grid two"><div class="card"><h2>Goals</h2><label class="f">EXAM START DATE</label><input type="date" id="sE" value="${S.set.exam}"><small>Set to the date of your first paper once ICAI announces the schedule.</small><label class="f">DAILY TARGET (hours)</label><input type="number" id="sT" step="0.5" min="0" value="${S.set.target}"><label class="f">NUMBER OF REVISIONS</label><input type="number" id="sR" min="1" max="10" step="1" value="${S.set.revs||2}"><small>Adds Revision 3, 4… to the activity list, chapter tracker and LDR question tracking. Existing data is kept if you reduce it. “Last Day Revision” is always included.</small><label class="f">WEEKLY HOURS TARGET PER SUBJECT (0 = none)</label><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:6px">${ORDER.map(s=>`<label class="mono" style="font-size:11px">${META[s].p}<input type="number" min="0" step="0.5" data-wt="${s}" value="${(S.set.wt||{})[s]||0}"></label>`).join('')}</div><label class="f">PACE WEIGHTS — effort of one pending pass as a fraction of studying a chapter once</label><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:6px">${PK.slice(1).map(k=>`<label class="mono" style="font-size:11px">${k==='p'?'Practice':k==='l'?'Last Day':'Rev '+k.slice(1)}<input type="number" min="0" max="2" step="0.05" data-pw="${k}" value="${pw(k)}"></label>`).join('')}</div><small>Used for the “chapter-equivalents/week needed” figure on the Dashboard and the Study coach pace tip. Study = 1.0.</small></div>
  ${modOK()?`<div class="card"><h2>Module PDF links</h2><small>Paths are relative to this HTML file (default: Study material folder). Change if yours differ.</small><label class="f">FOLDER PREFIX (optional, e.g. file:///D:/CA/ or ../pdf/)</label><input id="sB" value="${esc(S.set.base)}">${f}</div>`:''}
  <div class="card"><h2>Account · ${esc(USER)}</h2><small>Change your password, or remove this account from this browser.</small><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">${AUTH&&AUTH.google?'<small>Signed in with Google — no password to change.</small>':'<button class="btn" data-act="chpw">Change password</button>'}<button class="btn ghost" data-act="delacc">Delete account</button></div></div>
  ${myMat()}<div class="card"><h2>Google Drive sync</h2>${AUTH&&AUTH.google?`<small>Signed in as ${esc(USER)}. Your data is saved to a private app folder in your Google Drive (only this planner can see it). Open the same planner link on your phone, tap “Sign in with Google”, and the same data appears.</small><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="gsync">Sync now</button>${GNEED?'<button class="btn acc" data-act="gre">Reconnect Google</button>':''}</div>`:'<small>Sign out and choose “Sign in with Google” to sync across PC and mobile.</small>'}${GCID_DEFAULT?'':`<label class="f">GOOGLE CLIENT ID</label><input id="sG" value="${esc(gcid())}" placeholder="xxxx.apps.googleusercontent.com">`}</div>
@@ -1064,6 +1068,7 @@ document.addEventListener('change',e=>{const t=e.target;if(t.id==='pS'||t.id==='
  else if(t.id==='qAllT'){S.set.qAll=t.checked?1:0;save();const y=window.scrollY;render();tickAll();scrollTo(0,y)}
  else if(t.id==='mS')fillMC();
  else if(t.dataset.pl!==undefined){const it=planGet().it[+t.dataset.pl];if(it){it.x=t.checked?1:0;save();render()}}
+ else if(t.dataset.pw!==undefined){S.set.pw=S.set.pw||{};S.set.pw[t.dataset.pw]=t.value===''?'':Math.max(0,+t.value||0);save();render()}
  else if(t.dataset.wt!==undefined){S.set.wt=S.set.wt||{};S.set.wt[t.dataset.wt]=+t.value||0;save()}
  else if(t.id==='lfS'||t.id==='lfF'||t.id==='lfT'){lF[t.id==='lfS'?'s':t.id==='lfF'?'f':'t']=t.value;lF.all=0;render();fillMC()}
  else if(t.dataset.pk){const k=pk(cS,+t.dataset.i);S.progress[k]=S.progress[k]||{};S.progress[k][t.dataset.pk]=t.checked?1:0;save();const y=window.scrollY;render();scrollTo(0,y)}
