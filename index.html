@@ -41,7 +41,7 @@ nav button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .mute{color:var(--mute)}
 small{color:var(--mute)}
 .bar{height:8px;background:var(--line);border-radius:5px;overflow:hidden}.bar i{display:block;height:100%}
-.subcard{border-left:6px solid var(--c);}
+.subcard{border-left:6px solid var(--c);cursor:pointer;transition:transform .12s,box-shadow .12s}.subcard:hover{transform:translateY(-2px);box-shadow:0 4px 14px #0002}.subcard .gol{margin-top:10px;font:600 12px var(--fm,monospace);color:var(--c)}
 .subcard .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
 .subcard h3{margin:0;font:700 16px var(--fh)}
 .pips{display:flex;gap:10px;font:11px var(--fm);color:var(--mute);margin-top:8px;flex-wrap:wrap}
@@ -387,7 +387,7 @@ const pack=()=>({app:'ca-final-planner',v:2,user:USER,auth:AUTH,savedAt:S.savedA
 function unpack(j){if(j&&j.data&&j.auth)return j;if(j&&Array.isArray(j.sessions))return{data:j};throw 0}
 function dlBackup(){const b=new Blob([JSON.stringify(pack(),null,1)],{type:'application/json'});const u=document.createElement('a');u.href=URL.createObjectURL(b);u.download='ca-final-planner-'+USER+'-'+dk(Date.now())+'.json';u.click()}
 /* --- auto-save: localStorage (instant) + linked JSON file (silent, Chrome/Edge) --- */
-function save(){if(!USER)return;S.savedAt=Date.now();try{localStorage.setItem(ukey(USER),JSON.stringify(S))}catch(e){storeOK=false;warn()}flush();if(DH){clearTimeout(mT2);mT2=setTimeout(mFolder,1500)}if(AUTH&&AUTH.google){clearTimeout(gT);gT=setTimeout(()=>gSync(),2500)}}
+function save(){if(!USER)return;S.savedAt=Date.now();try{localStorage.setItem(ukey(USER),JSON.stringify(S))}catch(e){storeOK=false;warn()}flush();if(DH){clearTimeout(mT2);mT2=setTimeout(mFolder,1500)}if(AUTH&&AUTH.google){clearTimeout(gT);gT=setTimeout(()=>gSync(),700)}}
 let busy=false,dirty=false,lastW=0;
 /* shared file (SMB/NAS): before every write, merge in anything another device wrote meanwhile */
 async function pullRemote(){if(!FH)return false;try{const e=unpack(JSON.parse(await(await FH.getFile()).text()));
@@ -582,7 +582,7 @@ function logout(){if(!USER)return;localStorage.removeItem(KP);clearTimeout(gT);c
 function warn(){document.getElementById('warn').innerHTML=storeOK?'':'<div class="warn">Browser storage is blocked, so progress is only kept in the linked file / backups. Use “Link auto-save file” or export regularly.</div>'}
 $('#amIn').onclick=()=>setMode('in');$('#amNew').onclick=()=>setMode('new');$('#aForm').addEventListener('submit',e=>{e.preventDefault();doAuth()});
 /* save on every possible exit / interval so a sudden shutdown loses nothing */
-addEventListener('visibilitychange',()=>{if(document.hidden)save()});addEventListener('pagehide',save);addEventListener('beforeunload',save);setInterval(async()=>{if(USER&&FH&&!busy&&await pullRemote()){uiRefresh();flush()}},15000);
+addEventListener('visibilitychange',()=>{if(document.hidden)save()});addEventListener('pagehide',save);addEventListener('beforeunload',save);setInterval(async()=>{if(USER&&FH&&!busy&&await pullRemote()){uiRefresh();flush()}},3000);
 
 /* ---------- HELPERS ---------- */
 const hrs=s=>(s.en-s.st)/36e5;
@@ -628,11 +628,11 @@ function vDash(){
  h+=`<div class="grid two" style="margin-top:12px"><div class="card"><h2>Last 14 days</h2>${chart14(m)}</div><div class="card"><h2>Consistency (16 weeks)</h2>${heat(m)}<div class="hint">Darker = closer to your daily target.</div></div></div>`;
  h+=`<h2 style="font:700 20px var(--fh);margin:20px 0 8px">Subjects</h2><div class="grid two">`;
  ORDER.forEach(s=>{const M=META[s],ls=L[s],n=ls.length;const cnt=k=>ls.filter(c=>prog(s,c.i)[k]).length;const hh=hoursOf(x=>x.s===s);const nx=ls.find(c=>!prog(s,c.i).s);
-  h+=`<div class="card subcard" style="--c:${M.c}"><div class="top"><h3>${M.n}</h3><small class="mono">${M.p}</small></div>
+  h+=`<div class="card subcard" style="--c:${M.c}" data-dsub="${s}" title="Open chapters &amp; links of ${esc(M.n)}"><div class="top"><h3>${M.n}</h3><small class="mono">${M.p}</small></div>
   <div class="mono" style="margin:6px 0">${fh(hh)} logged · ${cnt('s')}/${n} chapters studied</div>
   <div class="bar"><i style="width:${cnt('s')/n*100}%;background:${M.c}"></i></div>
   <div class="pips">${PK.slice(1).map(k=>`<span>${k==='p'?'Practice':k==='l'?'Last Day':'Rev-'+k.slice(1)} ${cnt(k)}/${n}</span>`).join('')}</div>
-  <div style="margin-top:8px;font-size:13px">${nx?`<b>Next:</b> ${esc(nx.t)} <span class="lkin">${links(s,nx).split('</a>').filter(Boolean).map(x=>x+'</a>').join(' · ')}</span>`:'<b>All chapters studied 🎉</b>'}</div></div>`});
+  <div style="margin-top:8px;font-size:13px">${nx?`<b>Next:</b> ${esc(nx.t)} <span class="lkin">${links(s,nx).split('</a>').filter(Boolean).map(x=>x+'</a>').join(' · ')}</span>`:'<b>All chapters studied 🎉</b>'}</div><div class="gol">View all chapters &amp; links →</div></div>`});
  h+=`</div><div class="grid two" style="margin-top:12px"><div class="card"><h2>Hours by subject</h2>${subBars()}</div><div class="card"><h2>Recent sessions</h2>${recent(8)}</div><div class="card" style="grid-column:1/-1"><h2>Open pending, doubts &amp; important</h2>${pendList()}</div></div>`;
  return h}
 
@@ -830,9 +830,10 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 function fillMC(){const s=$('#mS');if(!s)return;$('#mC').innerHTML=L[s.value].map(c=>`<option value="${c.i}">${pad(c.i+1)}. ${esc(c.t)}</option>`).join('')}
 
 document.addEventListener('click',e=>{
- const t=e.target.closest('[data-tab],[data-act],[data-sub],[data-go],[data-del],[data-nadd],[data-nview],[data-npick],[data-nact],[data-ntype],[data-qrev],[data-cexp],[data-clog]');if(!t)return;
+ const t=e.target.closest('[data-tab],[data-act],[data-sub],[data-dsub],[data-go],[data-del],[data-nadd],[data-nview],[data-npick],[data-nact],[data-ntype],[data-qrev],[data-cexp],[data-clog]');if(!t)return;
  if(t.dataset.cexp!==undefined||t.dataset.clog!==undefined){e.preventDefault();const k=cS+':'+(t.dataset.cexp!==undefined?t.dataset.cexp:t.dataset.clog),St=t.dataset.cexp!==undefined?cOpen:cLog;St.has(k)?St.delete(k):St.add(k);const y=window.scrollY;render();scrollTo(0,y);return}
  if(t.dataset.qrev){e.preventDefault();const[id,x,k]=t.dataset.qrev.split('|'),n=S.notes.find(z=>z.id===id);if(n){if(!Array.isArray(n.q)){n.q=ldrList(n);delete n.qn;delete n.qp;delete n.qs}const o=n.q[+x];if(o){o.rv=o.rv||{};o.rv[k]=o.rv[k]?0:1;save();const y=window.scrollY;render();scrollTo(0,y)}}return}
+ if(t.dataset.dsub){if(e.target.closest('a'))return;cS=t.dataset.dsub;cQ='';cF='all';selSave();tab='chap';render();scrollTo(0,0);return}
  if(t.dataset.tab){tab=t.dataset.tab;render();if(tab==='log')fillMC();tickAll();return}
  if(t.dataset.sub){cS=t.dataset.sub;selSave();render();return}
  if(t.dataset.go!==undefined){e.preventDefault();pS=cS;pC=+t.dataset.go;selSave();tab='punch';render();return}
@@ -933,18 +934,22 @@ const gSig=x=>[...(x.sessions||[]).map(v=>'s'+v.id),...(x.notes||[]).map(v=>'n'+
 async function gSync(){if(!AUTH||!AUTH.google||!USER)return;if(!navigator.onLine){syncMsg('📴 offline — saved on this device, will sync automatically when online');ubar();return}if(GBUSY){GDIRTY=true;return}GBUSY=true;
  try{do{GDIRTY=false;
   if(!GTOK){try{const o=JSON.parse(sessionStorage.getItem('caPlanner.gtok')||'null');if(o&&o.u===USER&&o.e>Date.now()){GTOK=o.t;GEXP=o.e}}catch(x){}}
-  if(!GTOK||Date.now()>=GEXP){try{await gToken(false,USER)}catch(e){GNEED=true;gArm();syncMsg('☁ tap “Reconnect Google” to sync');ubar();GBUSY=false;return}}
+  if(!GTOK||Date.now()>=GEXP){try{await gToken(false,USER)}catch(e){GNEED=true;gArm();syncMsg('☁ reconnecting… (or tap anywhere)');ubar();GBUSY=false;return}}
   if(!GID)GID=await dFind();let rs=-2,ch=false;
   if(GID){const e=await dRead(GID);if(e&&e.data){rs=e.data.savedAt||0;
    if(rs!==GLW){const b=JSON.stringify(S),rd=norm(e.data);S=mergeS([S,rd]);fixNames();ch=b!==JSON.stringify(S);if(gSig(S)!==gSig(rd)){S.savedAt=Date.now();ch=true}}}}
   if(!GID||S.savedAt!==rs)GID=await dWrite(GID,JSON.stringify({app:'ca-final-planner',v:2,user:USER,savedAt:S.savedAt||0,data:S}));
-  GLW=S.savedAt||0;GNEED=false;try{await mDrive()}catch(e){}
+  GLW=S.savedAt||0;GNEED=false;try{await mDrive()}catch(e){}try{GVER=(await(await gf('https://www.googleapis.com/drive/v3/files/'+GID+'?spaces=appDataFolder&fields=version')).json()).version}catch(x){}
   if(ch){try{localStorage.setItem(ukey(USER),JSON.stringify(S))}catch(x){}uiRefresh()}
   syncMsg('☁ synced '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));ubar();
  }while(GDIRTY)}catch(e){if(!navigator.onLine||e instanceof TypeError){syncMsg('📴 offline — saved on this device, will sync automatically when online')}else{syncMsg('⚠ Google Drive: '+(e.message||e));if(/expired/.test(e.message||''))GNEED=true}ubar()}
  GBUSY=false}
 let gArmed=false;
-function gArm(){if(gArmed)return;gArmed=true;const h=e=>{if(e.target.closest&&e.target.closest('[data-act="gre"]'))return;document.removeEventListener('click',h,true);gArmed=false;if(!GNEED||!USER)return;gToken(false,USER).then(()=>{GNEED=false;gSync()}).catch(()=>{})};document.addEventListener('click',h,true)}
+let gTry=0;
+async function gAuto(){if(!USER||!AUTH||!AUTH.google||gTry&&Date.now()-gTry<4000)return;gTry=Date.now();try{await gToken(false,USER);GNEED=false;gSync()}catch(e){GNEED=true;gArm()}}
+function gArm(){if(gArmed)return;gArmed=true;const E=['pointerdown','keydown','touchend','click'];const h=e=>{if(e.target&&e.target.closest&&e.target.closest('[data-act="gre"]'))return;E.forEach(k=>document.removeEventListener(k,h,true));gArmed=false;if(!GNEED||!USER)return;gTry=Date.now();gToken(false,USER).then(()=>{GNEED=false;gSync()}).catch(()=>{setTimeout(()=>{if(GNEED)gArm()},15000)})};E.forEach(k=>document.addEventListener(k,h,true))}
+/* silent auto-reconnect: renew the Google token shortly before it expires, and retry in the background while it is lost */
+setInterval(()=>{if(!USER||!AUTH||!AUTH.google||document.hidden||!navigator.onLine||GBUSY)return;const soon=GTOK&&GEXP&&GEXP-Date.now()<300000;if(GNEED?Date.now()-gTry>60000:soon&&Date.now()-gTry>90000)gAuto()},20000);
 async function gReconnect(){try{await gToken(true,USER)}catch(e){return alert(e.message)}GNEED=false;gSync()}
 async function gLogin(){
  if(location.protocol==='file:')return am('Google sign-in only works when the planner is opened from a web address (e.g. GitHub Pages), not from a file on your computer.');
@@ -972,7 +977,10 @@ window.addEventListener('online',()=>{if(!(AUTH&&AUTH.google&&USER))return;
  if(!gisReady()){const sc=document.createElement('script');sc.src='https://accounts.google.com/gsi/client';sc.onload=()=>gSync();document.head.appendChild(sc)}else gSync()});
 /* installable offline copy (needs sw.js next to index.html, served over https) */
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('sw.js').catch(()=>{});
-setInterval(()=>{if(AUTH&&AUTH.google&&USER&&!GNEED&&!document.hidden&&GTOK&&Date.now()<GEXP)gSync()},30000);
+let GVER=null,gPn=0;addEventListener('focus',()=>{if(AUTH&&AUTH.google&&USER&&!GNEED)gSync()});
+setInterval(async()=>{if(!(AUTH&&AUTH.google&&USER&&!GNEED&&!document.hidden&&GTOK&&Date.now()<GEXP&&navigator.onLine)||GBUSY)return;
+ if(!GID||++gPn%15===0){gSync();return}
+ try{const v=(await(await gf('https://www.googleapis.com/drive/v3/files/'+GID+'?spaces=appDataFolder&fields=version')).json()).version;if(v&&v!==GVER)gSync()}catch(e){}},4000);
 {const kp=localStorage.getItem(KP);if(kp&&users()[kp])autoLogin(kp);else showAuth()}
 </script>
 </body>
