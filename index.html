@@ -12,6 +12,8 @@
 <meta name="author" content="Ajai R Krishnan"><meta name="copyright" content="© 2026 Ajai R Krishnan. All rights reserved.">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CA Final May 2027 · Study Punch Card</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f3eee2;--card:#fbf8f0;--ink:#1e1c18;--mute:#6f6a5e;--line:#d9d1bd;--acc:#d8432a;--acc2:#1e1c18;--ok:#2e7d5b;
@@ -96,6 +98,9 @@ dialog::backdrop{background:#0008}
 .rm{display:flex;gap:8px;align-items:center;font-size:13px;margin-top:8px}.rm input{width:auto}
 .amsg{font:12px var(--fm);color:var(--acc);margin-top:10px;min-height:16px}
 .copy{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);font:11px var(--fm);color:var(--mute);text-align:center}
+.att{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.att img{max-width:100%;max-height:160px;border-radius:4px;cursor:zoom-in;background:#fff8}.att audio{width:100%;height:34px}
+.ai{display:flex;gap:6px;align-items:center;margin-top:6px}.ai img{max-height:70px;max-width:120px;border-radius:4px}.ai audio{flex:1;min-width:0;height:34px}
+.katex{font-size:1.05em}.katex-display{margin:.5em 0;overflow-x:auto;overflow-y:hidden}
 </style>
 </head>
 <body>
@@ -119,7 +124,7 @@ dialog::backdrop{background:#0008}
  <div class="hint" style="text-align:center;margin-top:10px">— or use a username &amp; password —</div></div>
  <form id="aForm"><label class="f">USERNAME</label><input id="aU" name="username" autocomplete="username" autocapitalize="none">
  <label class="f">PASSWORD</label><input id="aP" name="password" type="password" autocomplete="current-password">
- <div id="aFw"><label class="f">BACKUP .JSON FILE — only needed the first time on a new browser / PC</label><input type="file" id="aF" accept=".json"></div>
+ <div id="aFw"><label class="f">BACKUP .JSON / .ZIP FILE — only needed the first time on a new browser / PC</label><input type="file" id="aF" accept=".json,.zip"></div>
  <label class="rm"><input type="checkbox" id="aRu" checked> Remember my username</label>
  <label class="rm"><input type="checkbox" id="aKs"> Keep me signed in on this device <small>(only on your own PC/phone)</small></label>
  <div style="margin-top:14px"><button type="submit" class="btn acc big" id="aGo">Sign in</button></div><div class="amsg" id="aM"></div></form>
@@ -382,12 +387,12 @@ const pack=()=>({app:'ca-final-planner',v:2,user:USER,auth:AUTH,savedAt:S.savedA
 function unpack(j){if(j&&j.data&&j.auth)return j;if(j&&Array.isArray(j.sessions))return{data:j};throw 0}
 function dlBackup(){const b=new Blob([JSON.stringify(pack(),null,1)],{type:'application/json'});const u=document.createElement('a');u.href=URL.createObjectURL(b);u.download='ca-final-planner-'+USER+'-'+dk(Date.now())+'.json';u.click()}
 /* --- auto-save: localStorage (instant) + linked JSON file (silent, Chrome/Edge) --- */
-function save(){if(!USER)return;S.savedAt=Date.now();try{localStorage.setItem(ukey(USER),JSON.stringify(S))}catch(e){storeOK=false;warn()}flush();if(AUTH&&AUTH.google){clearTimeout(gT);gT=setTimeout(()=>gSync(),2500)}}
+function save(){if(!USER)return;S.savedAt=Date.now();try{localStorage.setItem(ukey(USER),JSON.stringify(S))}catch(e){storeOK=false;warn()}flush();if(DH){clearTimeout(mT2);mT2=setTimeout(mFolder,1500)}if(AUTH&&AUTH.google){clearTimeout(gT);gT=setTimeout(()=>gSync(),2500)}}
 let busy=false,dirty=false,lastW=0;
 /* shared file (SMB/NAS): before every write, merge in anything another device wrote meanwhile */
 async function pullRemote(){if(!FH)return false;try{const e=unpack(JSON.parse(await(await FH.getFile()).text()));
  if(e.auth&&e.auth.hash===AUTH.hash&&e.data&&(e.data.savedAt||0)>lastW){const before=JSON.stringify(S);S=mergeS([S,norm(e.data)]);fixNames();lastW=e.data.savedAt||0;return before!==JSON.stringify(S)}}catch(err){}return false}
-function uiRefresh(){try{localStorage.setItem(ukey(USER),JSON.stringify(S))}catch(e){}syncMsg('🔄 merged changes from another device');if(!$('#dlg').open&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||''))render()}
+function uiRefresh(){mFolder();try{localStorage.setItem(ukey(USER),JSON.stringify(S))}catch(e){}syncMsg('🔄 merged changes from another device');if(!$('#dlg').open&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||''))render()}
 async function flush(){if(!FH)return;if(busy){dirty=true;return}busy=true;try{do{dirty=false;const ch=await pullRemote();const txt=JSON.stringify(pack(),null,1);const w=await FH.createWritable();await w.write(txt);await w.close();lastW=S.savedAt||0;if(ch)uiRefresh();
   if(DH){try{const bd=await DH.getDirectoryHandle('backups',{create:true}),bh=await bd.getFileHandle('ca-final-planner-'+USER+'-backup-'+dk(Date.now())+'.json',{create:true}),w2=await bh.createWritable();await w2.write(txt);await w2.close()}catch(e){}}
   syncMsg('💾 saved to file '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'}))}while(dirty)}catch(e){syncMsg('⚠ file write failed — use “Change save file”')}busy=false}
@@ -395,7 +400,7 @@ function syncMsg(t){syncTxt=t;const e=$('#sync');if(e)e.textContent=t}
 function ubar(){$('#ubar').innerHTML=USER?`<span class="mono">👤 ${esc(USER)}</span><span class="mono mute" id="sync">${esc(syncTxt||(AUTH&&AUTH.google?'☁ Google Drive':FH?'💾 file linked':'💾 saved in browser only'))}</span>${AUTH&&AUTH.google&&GNEED?'<button class="btn acc sm" data-act="gre">Reconnect Google</button>':''}${PD&&!FH?'<button class="btn acc sm" data-act="reconnect">Reconnect save file</button>':''}<button class="btn ghost sm" data-act="link">${FH?'Change save file':'Link auto-save file'}</button><button class="btn ghost sm" data-act="logout">Sign out</button>`:''}
 const FT=[{description:'JSON',accept:{'application/json':['.json']}}];
 function linkDlg(){const d=$('#dlg'),ok=!!window.showSaveFilePicker;
- d.innerHTML=`<h2 style="font:700 20px var(--fh);margin:0 0 6px">Auto-save file</h2>`+(ok?`<p style="font-size:13px">Select the folder where this HTML file lives (once). The planner then creates <b>ca-final-planner-${esc(USER)}.json</b> in it by itself and silently saves every punch-in, punch-out and change there, plus a daily backup copy in a <b>backups</b> sub-folder (last 30 days kept). On later sign-ins it reopens that file automatically — no file dialogs.</p><div style="display:grid;gap:8px"><button class="btn acc" id="lD">Select planner folder…</button><button class="btn ghost" id="lN">Or: create a specific file…</button><button class="btn ghost" id="lE">Or: use an existing file…</button><button class="btn ghost" id="lX">Not now</button></div>`:`<p style="font-size:13px">This browser can’t write files silently (use Chrome or Edge for that). Your data is still saved in the browser on every event, and a backup .json is downloaded on every punch-out and sign-out.</p><button class="btn ghost" id="lX">OK</button>`);
+ d.innerHTML=`<h2 style="font:700 20px var(--fh);margin:0 0 6px">Auto-save file</h2>`+(ok?`<p style="font-size:13px">Select the folder where this HTML file lives (once). The planner then creates <b>ca-final-planner-${esc(USER)}.json</b> in it by itself and silently saves every punch-in, punch-out and change there, plus a daily backup copy in a <b>backups</b> sub-folder (last 30 days kept). Images and voice notes attached to sticky notes are saved in a <b>media</b> sub-folder next to it. On later sign-ins it reopens that file automatically — no file dialogs.</p><div style="display:grid;gap:8px"><button class="btn acc" id="lD">Select planner folder…</button><button class="btn ghost" id="lN">Or: create a specific file…</button><button class="btn ghost" id="lE">Or: use an existing file…</button><button class="btn ghost" id="lX">Not now</button></div>`:`<p style="font-size:13px">This browser can’t write files silently (use Chrome or Edge for that). Your data is still saved in the browser on every event, and a backup .json is downloaded on every punch-out and sign-out.</p><button class="btn ghost" id="lX">OK</button>`);
  d.showModal();$('#lX').onclick=()=>{localStorage.setItem('caPlanner.skipLink.'+USER,'1');d.close()};if(!ok)return;
  const go=async(pick,ex)=>{try{const h=await pick();if(ex){const env=unpack(JSON.parse(await(await h.getFile()).text()));if(!env.auth||env.auth.hash!==AUTH.hash)return alert('That file belongs to a different account.');if((env.data.savedAt||0)>(S.savedAt||0))S=norm(env.data)}FH=h;DH=null;try{await hPut('fh:'+USER,h);await hPut('dir',null)}catch(e){}d.close();save();render()}catch(e){if(e&&e.name!=='AbortError')alert('Could not use that file.')}};
  $('#lN').onclick=()=>go(()=>showSaveFilePicker({suggestedName:'ca-final-planner-'+USER+'.json',types:FT}));
@@ -407,6 +412,83 @@ const dirFile=u=>'ca-final-planner-'+u+'.json';
 const idb=()=>new Promise((res,rej)=>{const r=indexedDB.open('caPlannerH',1);r.onupgradeneeded=()=>r.result.createObjectStore('h');r.onsuccess=()=>res(r.result);r.onerror=rej});
 async function hPut(k,v){const d=await idb();return new Promise(r=>{const t=d.transaction('h','readwrite');t.objectStore('h').put(v,k);t.oncomplete=r;t.onerror=r})}
 async function hGet(k){try{const d=await idb();return await new Promise(r=>{const q=d.transaction('h').objectStore('h').get(k);q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)})}catch(e){return null}}
+/* ===== STICKY-NOTE ATTACHMENTS: images, voice notes (stored as files in IndexedDB), equations (KaTeX) ===== */
+let mT2=0,mBusy=false,nfA=[],MR=null;const MU={};
+const EXT={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif','audio/webm':'webm','audio/mp4':'m4a','audio/x-m4a':'m4a','audio/ogg':'ogg','audio/mpeg':'mp3','audio/wav':'wav'};
+const extOf=mt=>EXT[mt]||'bin',mimeOf=x=>({jpg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',webm:'audio/webm',m4a:'audio/mp4',ogg:'audio/ogg',mp3:'audio/mpeg',wav:'audio/wav'})[String(x).toLowerCase()]||'application/octet-stream';
+const mdb=()=>new Promise((res,rej)=>{const r=indexedDB.open('caPlannerM',1);r.onupgradeneeded=()=>r.result.createObjectStore('m');r.onsuccess=()=>res(r.result);r.onerror=rej});
+async function mPut(id,b){const d=await mdb();return new Promise((r,j)=>{const t=d.transaction('m','readwrite');t.objectStore('m').put(b,id);t.oncomplete=r;t.onerror=()=>j(t.error)})}
+async function mGet(id){try{const d=await mdb();return await new Promise(r=>{const q=d.transaction('m').objectStore('m').get(id);q.onsuccess=()=>r(q.result||null);q.onerror=()=>r(null)})}catch(e){return null}}
+const mAll=()=>{const m=new Map();(S.notes||[]).forEach(n=>(n.a||[]).forEach(a=>m.set(a.id,a)));return[...m.values()]};
+async function hydrate(root){root=root||document;for(const e of root.querySelectorAll('[data-mid]')){if(e.dataset.hd)continue;const id=e.dataset.mid;let u=MU[id];if(!u){const b=await mGet(id);if(b)u=MU[id]=URL.createObjectURL(b)}if(u){e.src=u;e.dataset.hd=1}}}
+const attHtml=n=>(n.a&&n.a.length)?'<div class="att">'+n.a.map(a=>a.k==='img'?'<img data-mid="'+esc(a.id)+'" data-zoom="1" alt="'+esc(a.nm)+'" title="Tap to open full size">':'<audio controls preload="none" data-mid="'+esc(a.id)+'"></audio>').join('')+'</div>':'';
+document.addEventListener('click',e=>{const i=e.target.closest&&e.target.closest('img[data-zoom]');if(i&&i.src)window.open(i.src,'_blank')});
+window.addEventListener('load',()=>{if(USER)render()});
+/* equations: $...$ inline, $$...$$ block (LaTeX). Needs internet once for the KaTeX library; otherwise the raw text is shown. */
+function mx(t){t=String(t==null?'':t);const K=window.katex;if(!K||t.indexOf('$')<0)return esc(t);
+ const re=/\$\$([\s\S]+?)\$\$|\$([^\s$](?:[^$\n]*?[^\s$])?)\$(?!\d)/g;let o='',l=0,m;
+ while((m=re.exec(t))){o+=esc(t.slice(l,m.index));const d=m[1]!==undefined;try{o+=K.renderToString(d?m[1]:m[2],{displayMode:d,throwOnError:false})}catch(x){o+=esc(m[0])}l=m.index+m[0].length}
+ return o+esc(t.slice(l))}
+function insTxt(ta,s){const a=ta.selectionStart==null?ta.value.length:ta.selectionStart,b=ta.selectionEnd==null?a:ta.selectionEnd;ta.value=ta.value.slice(0,a)+s+ta.value.slice(b);ta.focus();ta.selectionStart=ta.selectionEnd=a+s.length}
+function renderAtt(){const b=$('#nfAtt');if(!b)return;b.innerHTML=nfA.map((a,i)=>'<div class="ai">'+(a.k==='img'?'<img data-mid="'+esc(a.id)+'" alt="">':'<audio controls preload="none" data-mid="'+esc(a.id)+'"></audio>')+'<span class="mono" style="font-size:11px;color:var(--mute)">'+esc(a.nm)+' · '+Math.max(1,Math.round((a.sz||0)/1024))+' KB</span><button type="button" class="btn ghost sm" data-arm="'+i+'" title="Remove">✕</button></div>').join('');hydrate(b)}
+async function addMedia(b,k,mt,nm){const id=uid();await mPut(id,b);nfA.push({id,k,mt,x:extOf(mt),nm:nm||k,sz:b.size});renderAtt()}
+async function addImg(f){if(!f)return;let b=f,mt=f.type||'image/jpeg';
+ try{const bm=await createImageBitmap(f),sc=Math.min(1,1600/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*sc);c.height=Math.round(bm.height*sc);const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(bm,0,0,c.width,c.height);const o=await new Promise(r=>c.toBlob(r,'image/jpeg',.85));if(o){b=o;mt='image/jpeg'}}catch(e){}
+ await addMedia(b,'img',mt,f.name||'Image '+hm(Date.now()))}
+async function recToggle(btn){if(MR){MR.stop();return}
+ if(!navigator.mediaDevices||!window.MediaRecorder)return alert('Voice recording is not supported in this browser. Use Chrome, Edge or Safari.');
+ let st;try{st=await navigator.mediaDevices.getUserMedia({audio:true})}catch(e){return alert('Microphone permission is blocked. Allow the microphone for this page and try again.')}
+ const mt=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg'].find(x=>MediaRecorder.isTypeSupported(x))||'',r=new MediaRecorder(st,mt?{mimeType:mt}:{}),ch=[],t0=Date.now();MR=r;
+ r.ondataavailable=e=>{if(e.data&&e.data.size)ch.push(e.data)};
+ const tm=setInterval(()=>{btn.textContent='⏹ Stop '+clk(Date.now()-t0).slice(3)},500);
+ r.onstop=async()=>{clearInterval(tm);st.getTracks().forEach(x=>x.stop());MR=null;btn.textContent='🎙 Voice note';const type=(r.mimeType||mt||'audio/webm').split(';')[0],b=new Blob(ch,{type});if(b.size)await addMedia(b,'aud',type,'Voice note '+hm(Date.now()))};
+ r.start(1000);btn.textContent='⏹ Stop 00:00'}
+function nfWire(n){nfA=n&&n.a?n.a.map(a=>({...a})):[];renderAtt();
+ $('#nfImg').onclick=()=>$('#nfImgF').click();$('#nfImgF').onchange=async e=>{for(const f of [...e.target.files])await addImg(f);e.target.value=''};
+ $('#nfRec').onclick=e=>{if(REC)REC.stop();recToggle(e.currentTarget)};
+ $('#nfAtt').onclick=e=>{const b=e.target.closest('[data-arm]');if(b){nfA.splice(+b.dataset.arm,1);renderAtt()}};
+ $('#nfX').addEventListener('paste',e=>{const it=[...((e.clipboardData||{}).items||[])].filter(i=>i.type.indexOf('image/')===0);if(it.length){e.preventDefault();it.forEach(i=>addImg(i.getAsFile()))}});
+ $('#nfEqB').onclick=()=>{const q=$('#nfEq');q.style.display=q.style.display==='none'?'block':'none';if(q.style.display==='block')$('#eqI').focus()};
+ const T=[['a/b','\\frac{a}{b}'],['√','\\sqrt{x}'],['x²','x^{2}'],['xᵢ','x_{i}'],['Σ','\\sum_{i=1}^{n}'],['(1+r)ⁿ','(1+r)^{n}'],['×','\\times'],['÷','\\div'],['≥','\\geq'],['≤','\\leq'],['≠','\\neq'],['%','\\%'],['→','\\rightarrow'],['π','\\pi'],['Δ','\\Delta'],['α','\\alpha'],['β','\\beta'],['σ','\\sigma']];
+ $('#eqT').innerHTML=T.map(([l,v])=>'<button type="button" class="btn ghost sm" data-eqt="'+esc(v)+'">'+esc(l)+'</button>').join('');
+ const pv=()=>{const v=$('#eqI').value.trim();$('#eqP').innerHTML=v?(window.katex?mx('$$'+v+'$$'):esc(v)+' <small>(preview needs internet once)</small>'):''};
+ $('#eqT').onclick=e=>{const b=e.target.closest('[data-eqt]');if(b){insTxt($('#eqI'),b.dataset.eqt);pv()}};$('#eqI').oninput=pv;
+ $('#eqIn').onclick=()=>{const v=$('#eqI').value.trim();if(v){insTxt($('#nfX'),'$'+v+'$');$('#eqI').value='';pv()}};
+ $('#eqBl').onclick=()=>{const v=$('#eqI').value.trim();if(v){insTxt($('#nfX'),'\n$$'+v+'$$\n');$('#eqI').value='';pv()}}}
+/* --- media backup: copy to the linked folder's media/ sub-folder, Google Drive app folder, or a .zip --- */
+async function mFolder(){if(!DH||mBusy)return;mBusy=true;try{const md=await DH.getDirectoryHandle('media',{create:true});let ch=false;
+ for(const a of mAll()){const fn=a.id+'.'+a.x;let fh=null;try{fh=await md.getFileHandle(fn)}catch(e){}const b=await mGet(a.id);
+  if(b&&!fh){const h=await md.getFileHandle(fn,{create:true}),w=await h.createWritable();await w.write(b);await w.close()}
+  else if(!b&&fh){const f=await fh.getFile();await mPut(a.id,new Blob([f],{type:a.mt}));ch=true}}
+ if(ch)hydrate()}catch(e){}mBusy=false}
+async function mDrive(){const need=mAll();if(!need.length)return;
+ const r=await gf('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&pageSize=1000&fields=files(id,name)'),rem=new Map(((await r.json()).files||[]).map(f=>[f.name,f.id]));let ch=false;
+ for(const a of need){const fn='m-'+a.id+'.'+a.x,b=await mGet(a.id),rid=rem.get(fn);
+  if(b&&!rid){const bd='cb'+Date.now()+Math.random().toString(36).slice(2);await gf('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+bd},body:new Blob(['--'+bd+'\r\nContent-Type: application/json\r\n\r\n'+JSON.stringify({name:fn,parents:['appDataFolder']})+'\r\n--'+bd+'\r\nContent-Type: '+a.mt+'\r\n\r\n',b,'\r\n--'+bd+'--'])})}
+  else if(!b&&rid){const x=await gf('https://www.googleapis.com/drive/v3/files/'+rid+'?alt=media');await mPut(a.id,new Blob([await x.blob()],{type:a.mt}));ch=true}}
+ if(ch)hydrate()}
+const crcT=(()=>{const t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+const crc32=u=>{let c=-1;for(let i=0;i<u.length;i++)c=crcT[(c^u[i])&255]^(c>>>8);return(c^-1)>>>0};
+function zipMake(files){const parts=[],cen=[],enc=new TextEncoder();let off=0,cs=0;
+ for(const f of files){const nb=enc.encode(f.n),crc=crc32(f.d),sz=f.d.length;
+  const h=new DataView(new ArrayBuffer(30));h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(12,0x21,true);h.setUint32(14,crc,true);h.setUint32(18,sz,true);h.setUint32(22,sz,true);h.setUint16(26,nb.length,true);
+  parts.push(h.buffer,nb,f.d);
+  const c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(14,0x21,true);c.setUint32(16,crc,true);c.setUint32(20,sz,true);c.setUint32(24,sz,true);c.setUint16(28,nb.length,true);c.setUint32(42,off,true);
+  cen.push(c.buffer,nb);cs+=46+nb.length;off+=30+nb.length+sz}
+ const e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cs,true);e.setUint32(16,off,true);
+ return new Blob([...parts,...cen,e.buffer],{type:'application/zip'})}
+async function zipRead(buf){const dv=new DataView(buf),u=new Uint8Array(buf),dec=new TextDecoder();let p=buf.byteLength-22;while(p>=0&&dv.getUint32(p,true)!==0x06054b50)p--;if(p<0)throw new Error('not a zip');
+ const n=dv.getUint16(p+10,true);let q=dv.getUint32(p+16,true);const out=[];
+ for(let i=0;i<n;i++){const m=dv.getUint16(q+10,true),cs=dv.getUint32(q+20,true),nl=dv.getUint16(q+28,true),el=dv.getUint16(q+30,true),cl=dv.getUint16(q+32,true),lo=dv.getUint32(q+42,true),name=dec.decode(u.subarray(q+46,q+46+nl));
+  const s=lo+30+dv.getUint16(lo+26,true)+dv.getUint16(lo+28,true);let d=u.slice(s,s+cs);
+  if(m===8)d=new Uint8Array(await new Response(new Blob([d]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+  out.push({n:name,d});q+=46+nl+el+cl}return out}
+async function dlZip(){const U0=USER,list=mAll(),fs=[{n:dirFile(U0),d:new TextEncoder().encode(JSON.stringify(pack(),null,1))}];
+ for(const a of list){const b=await mGet(a.id);if(b)fs.push({n:'media/'+a.id+'.'+a.x,d:new Uint8Array(await b.arrayBuffer())})}
+ const u=document.createElement('a');u.href=URL.createObjectURL(zipMake(fs));u.download='ca-final-planner-'+U0+'-'+dk(Date.now())+'.zip';u.click()}
+async function readBackup(f){if(/\.zip$/i.test(f.name)){const es=await zipRead(await f.arrayBuffer());let j=null;
+  for(const e of es){if(/^media\//.test(e.n)){const m=e.n.match(/^media\/([^\/.]+)\.(\w+)$/);if(m)await mPut(m[1],new Blob([e.d],{type:mimeOf(m[2])}))}else if(/\.json$/i.test(e.n))j=new TextDecoder().decode(e.d)}
+  if(j==null)throw new Error('no json in zip');return j}return f.text()}
 /* --- CSV export / import for every dataset (sessions, sticky notes, chapter progress) --- */
 const csvQ=v=>{let t=String(v??'');if(/^[=+\-@]/.test(t))t="'"+t;return'"'+t.replace(/"/g,'""')+'"'};
 function csvOut(name,rows){const b=new Blob(['\ufeff'+rows.map(r=>r.map(csvQ).join(',')).join('\r\n')],{type:'text/csv'});const u=document.createElement('a');u.href=URL.createObjectURL(b);u.download=name+'-'+USER+'-'+dk(Date.now())+'.csv';u.click()}
@@ -444,7 +526,7 @@ function importCsv(text){const rows=csvParse(text);if(rows.length<2)throw new Er
 const dataBar=k=>`<span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="${k==='sessions'?'exportLog':k==='notes'?'exportNotes':'exportProg'}">Export CSV</button><label class="btn ghost sm" style="cursor:pointer">Import CSV<input type="file" id="impCsv" accept=".csv,text/csv" multiple hidden></label></span>`;
 /* --- account management --- */
 const sleep=ms=>new Promise(r=>setTimeout(r,ms)),BP=()=>'ca-final-planner-'+USER+'-backup-';
-async function prune(){if(!DH)return;try{const bd=await DH.getDirectoryHandle('backups'),a=[];for await(const [n] of bd.entries())if(n.startsWith(BP()))a.push(n);a.sort();for(const n of a.slice(0,-30))await bd.removeEntry(n)}catch(e){}}
+async function prune(){if(!DH)return;mFolder();try{const bd=await DH.getDirectoryHandle('backups'),a=[];for await(const [n] of bd.entries())if(n.startsWith(BP()))a.push(n);a.sort();for(const n of a.slice(0,-30))await bd.removeEntry(n)}catch(e){}}
 function chPwDlg(){const d=$('#dlg');
  d.innerHTML=`<h2 style="font:700 20px var(--fh);margin:0 0 6px">Change password</h2><label class="f">CURRENT PASSWORD</label><input type="password" id="cpO" autocomplete="current-password"><label class="f">NEW PASSWORD</label><input type="password" id="cpN" autocomplete="new-password"><label class="f">CONFIRM NEW PASSWORD</label><input type="password" id="cpC" autocomplete="new-password"><div class="amsg" id="cpM"></div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn acc" id="cpOK">Change password</button><button class="btn ghost" id="cpNo">Cancel</button></div>`;
  d.showModal();$('#cpNo').onclick=()=>d.close();
@@ -485,9 +567,9 @@ async function doAuth(){
  try{const U=users();let auth=U[u],env=null,legacy=null;if(auth&&auth.google)return am('That account uses Google sign-in — tap “Sign in with Google”.');
   if(create){if(auth)return am('That username already exists here — use Sign in.');if(p.length<4)return am('Use at least 4 characters for the password.');auth=await mkAuth(p);if(!Object.keys(U).length){try{legacy=JSON.parse(localStorage.getItem(K))}catch(e){}}}
   else if(auth){if(!await chk(p,auth))return am('Wrong username or password.');
-   if(f){env=unpack(JSON.parse(await f.text()));if(!env.auth||env.user!==u)return am('That backup belongs to a different account.');if(env.auth.hash!==auth.hash){if(!await chk(p,env.auth))return am('That backup belongs to a different account, or has a different password.');auth=env.auth}}}
+   if(f){env=unpack(JSON.parse(await readBackup(f)));if(!env.auth||env.user!==u)return am('That backup belongs to a different account.');if(env.auth.hash!==auth.hash){if(!await chk(p,env.auth))return am('That backup belongs to a different account, or has a different password.');auth=env.auth}}}
   else{if(!f)return am('No account “'+u+'” on this browser yet. Choose your backup .json file below, or create an account.');
-   env=unpack(JSON.parse(await f.text()));if(!env.auth||env.user!==u||!await chk(p,env.auth))return am('Wrong username/password for that backup file.');auth=env.auth}
+   env=unpack(JSON.parse(await readBackup(f)));if(!env.auth||env.user!==u||!await chk(p,env.auth))return am('Wrong username/password for that backup file.');auth=env.auth}
   USER=u;AUTH=auth;U[u]=auth;localStorage.setItem(UK,JSON.stringify(U));if($('#aRu').checked)localStorage.setItem(LK,u);else localStorage.removeItem(LK);if($('#aKs').checked)localStorage.setItem(KP,u);else localStorage.removeItem(KP);
   const c=[];const lo=loadLocal(u);if(lo)c.push(lo);if(legacy&&legacy.sessions)c.push(norm(legacy));if(env&&env.data)c.push(norm(env.data));
   await attach(u,c,true);
@@ -496,7 +578,7 @@ async function doAuth(){
   syncMsg(FH?'💾 file linked':'');save();render();tickAll();prune();
   if(!FH&&!localStorage.getItem('caPlanner.skipLink.'+u))linkDlg();
  }catch(e){USER=null;AUTH=null;am('Could not read that file, or something went wrong.')}}
-function logout(){if(!USER)return;localStorage.removeItem(KP);clearTimeout(gT);const g=AUTH&&AUTH.google;save();clearTimeout(gT);if(!FH&&!g)dlBackup();const w=g?Promise.race([gSync(),new Promise(r=>setTimeout(r,3000))]):busy?new Promise(r=>setTimeout(r,600)):Promise.resolve();w.then(showAuth)}
+function logout(){if(!USER)return;localStorage.removeItem(KP);clearTimeout(gT);const g=AUTH&&AUTH.google;save();clearTimeout(gT);if(!FH&&!g)(mAll().length?dlZip():dlBackup());const w=g?Promise.race([gSync(),new Promise(r=>setTimeout(r,3000))]):busy?new Promise(r=>setTimeout(r,600)):Promise.resolve();w.then(showAuth)}
 function warn(){document.getElementById('warn').innerHTML=storeOK?'':'<div class="warn">Browser storage is blocked, so progress is only kept in the linked file / backups. Use “Link auto-save file” or export regularly.</div>'}
 $('#amIn').onclick=()=>setMode('in');$('#amNew').onclick=()=>setMode('new');$('#aForm').addEventListener('submit',e=>{e.preventDefault();doAuth()});
 /* save on every possible exit / interval so a sudden shutdown loses nothing */
@@ -532,7 +614,7 @@ function nav(){$('#nav').innerHTML=TABS.map(([k,n])=>`<button class="${tab===k?'
 const SELK=()=>'caPlanner.sel.'+USER;
 function selSave(){try{localStorage.setItem(SELK(),JSON.stringify({pS,pC,pA,cS}))}catch(e){}}
 function selLoad(){try{const o=JSON.parse(localStorage.getItem(SELK())||'null');if(!o)return false;if(L[o.pS]&&L[o.pS][o.pC]){pS=o.pS;pC=o.pC;if(ACTS.includes(o.pA))pA=o.pA}if(L[o.cS])cS=o.cS;return true}catch(e){return false}}
-function render(){if(!USER)return;applyCust();buildActs();if(selUser!==USER){selUser=USER;if(selLoad())pTouched=true}nav();ubar();warn();const d=daysLeft();$('#dl').textContent=d>0?d:0;$('#main').innerHTML=({dash:vDash,punch:vPunch,chap:vChap,notes:vNotes,log:vLog,set:vSet})[tab]();}
+function render(){if(!USER)return;applyCust();buildActs();if(selUser!==USER){selUser=USER;if(selLoad())pTouched=true}nav();ubar();warn();const d=daysLeft();$('#dl').textContent=d>0?d:0;$('#main').innerHTML=({dash:vDash,punch:vPunch,chap:vChap,notes:vNotes,log:vLog,set:vSet})[tab]();hydrate();}
 
 function vDash(){
  const m=byDay(),tod=dk(Date.now()),tot=hoursOf(()=>true),td=(m[tod]||{}).t||0;
@@ -654,7 +736,7 @@ function vSet(){
  ${modOK()?`<div class="card"><h2>Module PDF links</h2><small>Paths are relative to this HTML file (default: Study material folder). Change if yours differ.</small><label class="f">FOLDER PREFIX (optional, e.g. file:///D:/CA/ or ../pdf/)</label><input id="sB" value="${esc(S.set.base)}">${f}</div>`:''}
  <div class="card"><h2>Account · ${esc(USER)}</h2><small>Change your password, or remove this account from this browser.</small><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">${AUTH&&AUTH.google?'<small>Signed in with Google — no password to change.</small>':'<button class="btn" data-act="chpw">Change password</button>'}<button class="btn ghost" data-act="delacc">Delete account</button></div></div>
  ${myMat()}<div class="card"><h2>Google Drive sync</h2>${AUTH&&AUTH.google?`<small>Signed in as ${esc(USER)}. Your data is saved to a private app folder in your Google Drive (only this planner can see it). Open the same planner link on your phone, tap “Sign in with Google”, and the same data appears.</small><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="gsync">Sync now</button>${GNEED?'<button class="btn acc" data-act="gre">Reconnect Google</button>':''}</div>`:'<small>Sign out and choose “Sign in with Google” to sync across PC and mobile.</small>'}${GCID_DEFAULT?'':`<label class="f">GOOGLE CLIENT ID</label><input id="sG" value="${esc(gcid())}" placeholder="xxxx.apps.googleusercontent.com">`}</div>
- <div class="card"><h2>Backup</h2><small>Data is auto-saved on every event in this browser and in your linked file. You can also export manually.</small><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="export">Export backup</button><label class="btn ghost" style="cursor:pointer">Import<input type="file" id="imp" accept=".json" hidden></label><button class="btn ghost" data-act="exportAll">Export all CSVs</button><label class="btn ghost" style="cursor:pointer">Import CSV<input type="file" id="impCsv" accept=".csv,text/csv" multiple hidden></label><button class="btn ghost" data-act="reset">Reset everything</button></div></div></div>`}
+ <div class="card"><h2>Backup</h2><small>Data is auto-saved on every event in this browser and in your linked file. Sticky-note images and voice notes are kept in the linked folder’s <b>media</b> sub-folder and in Google Drive; “Export backup + media” bundles the JSON and all media in one .zip (import it back with Import or on the sign-in screen).</small><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="export">Export backup</button><button class="btn" data-act="exportZip">Export backup + media (.zip)</button><label class="btn ghost" style="cursor:pointer">Import<input type="file" id="imp" accept=".json,.zip" hidden></label><button class="btn ghost" data-act="exportAll">Export all CSVs</button><label class="btn ghost" style="cursor:pointer">Import CSV<input type="file" id="impCsv" accept=".csv,text/csv" multiple hidden></label><button class="btn ghost" data-act="reset">Reset everything</button></div></div></div>`}
 
 /* ---------- STICKY NOTES ---------- */
 const NT=['Note','Pending','Doubt','Important','LDR'],NC={Note:'#fff1a8',Pending:'#ffc999',Doubt:'#bfe0ff',Important:'#ffb3b3',LDR:'#c9efc4'},NI={Note:'📝',Pending:'📌',Doubt:'❓',Important:'⭐',LDR:'📖'};
@@ -704,7 +786,7 @@ function nSug(){const w=nWords(nCq);if(nC>=0||!w.length)return'';const r=[];(nS=
 function nbadge(s,i){const a=S.notes.filter(n=>n.s===s&&n.i===i&&!n.d);if(!a.length)return'';return NT.filter(k=>a.some(n=>n.t===k)).map(k=>`<a href="#" class="nb" style="background:${NC[k]}" data-nview="${s}:${i}" title="${k}">${NI[k]} ${a.filter(n=>n.t===k).length}</a>`).join('')}
 function chNotes(s,i){const a=S.notes.filter(n=>n.s===s&&n.i===i).sort((x,y)=>(x.d-y.d)||(y.c-x.c));
  const bt='background:#0000001a;border:0;border-radius:4px;padding:3px 8px;cursor:pointer;color:#2a2415;font:600 11px var(--fm)';
- return`<div id="chN" style="margin-top:12px"><small>Sticky notes for this chapter (${a.length})</small>`+(a.length?a.map(n=>`<div style="background:${NC[n.t]};color:#2a2415;border-radius:4px;padding:8px 10px;margin-top:6px;font-size:13px;${n.d?'opacity:.6':''}"><div style="font:600 11px var(--fm);margin-bottom:3px">${NI[n.t]} ${n.t}${n.d?' · done':''} · ${dk(n.c)}</div><div style="white-space:pre-wrap;word-break:break-word;${n.d?'text-decoration:line-through':''}">${esc(n.x)}</div>${n.t==='LDR'&&ldrList(n).length?`<div style="border-top:1px dashed #0004;margin-top:5px;padding-top:5px">${ldrHtml(n)}</div>`:''}<div style="display:flex;gap:6px;margin-top:6px"><button type="button" data-nact="edit" data-nid="${n.id}" style="${bt}">✎ Edit${n.t==='LDR'?' / add LDR questions':''}</button><button type="button" data-nact="done" data-nid="${n.id}" style="${bt}">${n.d?'↺ Reopen':'✓ Done'}</button></div></div>`).join(''):'<div style="opacity:.7;font-size:13px;margin-top:4px">No sticky notes for this chapter yet.</div>')+'</div>'}
+ return`<div id="chN" style="margin-top:12px"><small>Sticky notes for this chapter (${a.length})</small>`+(a.length?a.map(n=>`<div style="background:${NC[n.t]};color:#2a2415;border-radius:4px;padding:8px 10px;margin-top:6px;font-size:13px;${n.d?'opacity:.6':''}"><div style="font:600 11px var(--fm);margin-bottom:3px">${NI[n.t]} ${n.t}${n.d?' · done':''} · ${dk(n.c)}</div><div style="white-space:pre-wrap;word-break:break-word;${n.d?'text-decoration:line-through':''}">${mx(n.x)}</div>${attHtml(n)}${n.t==='LDR'&&ldrList(n).length?`<div style="border-top:1px dashed #0004;margin-top:5px;padding-top:5px">${ldrHtml(n)}</div>`:''}<div style="display:flex;gap:6px;margin-top:6px"><button type="button" data-nact="edit" data-nid="${n.id}" style="${bt}">✎ Edit${n.t==='LDR'?' / add LDR questions':''}</button><button type="button" data-nact="done" data-nid="${n.id}" style="${bt}">${n.d?'↺ Reopen':'✓ Done'}</button></div></div>`).join(''):'<div style="opacity:.7;font-size:13px;margin-top:4px">No sticky notes for this chapter yet.</div>')+'</div>'}
 function pendList(){const a=S.notes.filter(n=>!n.d&&n.t!=='Note').sort((x,y)=>y.c-x.c).slice(0,8);if(!a.length)return'<small>Nothing pending. Add sticky notes from the punch-out box or the Chapters tab.</small>';
  return'<table>'+a.map(n=>`<tr><td>${NI[n.t]}</td><td><b style="color:${META[n.s].c}">${n.s}</b> ${esc(L[n.s][n.i].t)}<br><small>${esc((n.x||ldrAll(n)).slice(0,120))}</small></td><td><button class="btn ghost sm" data-nact="done" data-nid="${n.id}">✓ Done</button></td></tr>`).join('')+'</table>'}
 function vNotes(){
@@ -716,7 +798,7 @@ function vNotes(){
  return`<div class="card"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><div class="chips" style="margin:0">${chips}</div><button class="btn acc sm" data-act="addNoteAny">＋ New sticky note</button>${dataBar("notes")}</div>
  <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap"><select id="nvS" style="width:auto">${so}</select><select id="nvSt" style="width:auto"><option value="open" ${nSt==='open'?'selected':''}>Open</option><option value="done" ${nSt==='done'?'selected':''}>Done</option><option value="all" ${nSt==='all'?'selected':''}>Open + done</option></select><span style="display:flex;align-items:center;gap:5px;font-size:12px">LDR order ${qSortSel('qSortN')}</span><div style="position:relative;min-width:200px;flex:1"><input id="nvCh" autocomplete="off" style="width:100%" placeholder="Filter by chapter… (type to get suggestions)" value="${esc(nC>=0&&nS!=='all'?L[nS][nC].t:nCq)}">${nSug()}</div><input id="nvQ" style="flex:1;min-width:160px" placeholder="Search notes…" value="${esc(nQ)}"></div>
  ${nC>=0&&nS!=='all'?`<div class="hint" style="margin:0 0 8px">Showing only: <b>${esc(L[nS][nC].t)}</b> · <a href="#" data-act="clearC">show all chapters</a></div>`:''}
- ${ns.length?`<div class="notes">${ns.map((n,k)=>`<div class="sticky ${n.d?'done':''}" style="--bg:${NC[n.t]};--r:${(k%5)-2}deg"><div class="hd"><span>${NI[n.t]} ${n.t}</span><span style="color:${META[n.s].c};filter:brightness(.6)">${n.s}</span></div><div class="tx">${esc(n.x)}</div>${n.t==='LDR'&&ldrList(n).length?`<div style="font-size:12px;border-top:1px dashed #0004;padding-top:5px">${ldrHtml(n)}</div>`:''}<div class="ft"><span style="flex:1;min-width:100%;opacity:.75">${esc(L[n.s][n.i].t)} · ${dk(n.c)}</span><button data-nact="done" data-nid="${n.id}">${n.d?'↺ Reopen':'✓ Done'}</button><button data-nact="edit" data-nid="${n.id}">Edit</button><button data-nact="del" data-nid="${n.id}">✕</button></div></div>`).join('')}</div>`:'<small>No notes here. Add one with “＋ New sticky note”, from the punch-out box, or from a chapter row.</small>'}</div>`}
+ ${ns.length?`<div class="notes">${ns.map((n,k)=>`<div class="sticky ${n.d?'done':''}" style="--bg:${NC[n.t]};--r:${(k%5)-2}deg"><div class="hd"><span>${NI[n.t]} ${n.t}</span><span style="color:${META[n.s].c};filter:brightness(.6)">${n.s}</span></div><div class="tx">${mx(n.x)}</div>${attHtml(n)}${n.t==='LDR'&&ldrList(n).length?`<div style="font-size:12px;border-top:1px dashed #0004;padding-top:5px">${ldrHtml(n)}</div>`:''}<div class="ft"><span style="flex:1;min-width:100%;opacity:.75">${esc(L[n.s][n.i].t)} · ${dk(n.c)}</span><button data-nact="done" data-nid="${n.id}">${n.d?'↺ Reopen':'✓ Done'}</button><button data-nact="edit" data-nid="${n.id}">Edit</button><button data-nact="del" data-nid="${n.id}">✕</button></div></div>`).join('')}</div>`:'<small>No notes here. Add one with “＋ New sticky note”, from the punch-out box, or from a chapter row.</small>'}</div>`}
 function openNote(o){
  const n=o.id?S.notes.find(x=>x.id===o.id):null,d=$('#dlg');
  const s0=n?n.s:o.s,i0=n?n.i:(o.i||0),t0=n?n.t:(o.t||'Note');
@@ -726,15 +808,18 @@ function openNote(o){
  <label class="f">TYPE</label><select id="nfT">${NT.map(k=>`<option ${k===t0?'selected':''}>${k}</option>`).join('')}</select>
  <label class="f">NOTE</label>${micField('<textarea id="nfX" rows="4" placeholder="e.g. Revise section 54F conditions again / doubt on ITC blocked credit"></textarea>')}
  <div style="margin-top:6px;font-size:12px;opacity:.8">🎤 Voice language: <select id="nfVL" style="width:auto;padding:3px 6px"><option value="en-IN">English (India)</option><option value="ml-IN">Malayalam</option><option value="hi-IN">Hindi</option><option value="en-US">English (US)</option></select></div>
+ <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn ghost sm" id="nfImg">📷 Image</button><button type="button" class="btn ghost sm" id="nfRec">🎙 Voice note</button><button type="button" class="btn ghost sm" id="nfEqB">∑ Equation</button><input type="file" id="nfImgF" accept="image/*" multiple hidden></div>
+ <div id="nfEq" class="qb" style="display:none"><label class="f" style="margin-top:0">EQUATION (LaTeX) — live preview</label><input id="eqI" autocomplete="off" placeholder="e.g. \\frac{a}{b}"><div id="eqP" style="min-height:34px;padding:6px 2px;overflow-x:auto"></div><div id="eqT" style="display:flex;gap:4px;flex-wrap:wrap"></div><div style="display:flex;gap:6px;margin-top:8px"><button type="button" class="btn sm" id="eqIn">Insert inline</button><button type="button" class="btn sm" id="eqBl">Insert as block</button></div><div class="hint">You can also type directly in the note: $x^2$ for inline, $$ … $$ for a block.</div></div>
+ <div id="nfAtt"></div>
  <div id="nfL" style="display:none"><div class="hint" style="margin:10px 0 0">📖 Last Day Revision — add each question with its own page number and summary</div><div id="nfQs"></div><button type="button" class="btn ghost sm" id="nfAddQ" style="margin-top:8px">＋ Add another question</button></div>
  <div style="display:flex;gap:8px;margin-top:14px"><button class="btn acc" id="nfOK">Save</button><button class="btn ghost" id="nfNo">Cancel</button></div>`;
  const fill=(sel)=>{$('#nfC').innerHTML=L[$('#nfS').value].map(c=>`<option value="${c.i}">${pad(c.i+1)}. ${esc(c.t)}</option>`).join('');$('#nfC').value=sel};
- fill(i0);$('#nfS').onchange=()=>fill(0);if(n)$('#nfX').value=n.x;const ql=n?ldrList(n):[];(ql.length?ql:[{}]).forEach(addQ);
- $('#nfVL').value=vLang;$('#nfVL').onchange=()=>{vLang=$('#nfVL').value;if(REC)REC.stop()};d.onclose=()=>{if(REC)REC.stop()};
+ fill(i0);$('#nfS').onchange=()=>fill(0);if(n)$('#nfX').value=n.x;const ql=n?ldrList(n):[];(ql.length?ql:[{}]).forEach(addQ);nfWire(n);
+ $('#nfVL').value=vLang;$('#nfVL').onchange=()=>{vLang=$('#nfVL').value;if(REC)REC.stop()};d.onclose=()=>{if(REC)REC.stop();if(MR)MR.stop()};
  const tg=()=>{$('#nfL').style.display=$('#nfT').value==='LDR'?'block':'none'};$('#nfT').onchange=tg;tg();
  d.showModal();$('#nfNo').onclick=()=>d.close();
- $('#nfOK').onclick=()=>{if(REC)REC.stop();const x=$('#nfX').value.trim(),L1=$('#nfT').value==='LDR',q=L1?[...document.querySelectorAll('#nfQs .qb')].map(b=>({q:b.querySelector('.qn').value.trim(),p:b.querySelector('.qp').value.trim(),s:b.querySelector('.qs').value.trim(),r:b.querySelector('.qr').value,rv:Object.fromEntries([...b.querySelectorAll('.qd input')].map(i=>[i.dataset.k,i.checked?1:0])),m:[...b.querySelectorAll('.qm input:checked')].map(i=>i.dataset.k)})).filter(o=>o.q||o.p||o.s):[];if(!x&&!q.length)return alert(L1?'Add at least one question (number, page or summary), or write a note.':'Write something on the note.');
-  const v={s:$('#nfS').value,i:+$('#nfC').value,t:$('#nfT').value,x,q};
+ $('#nfOK').onclick=()=>{if(REC)REC.stop();const x=$('#nfX').value.trim(),L1=$('#nfT').value==='LDR',q=L1?[...document.querySelectorAll('#nfQs .qb')].map(b=>({q:b.querySelector('.qn').value.trim(),p:b.querySelector('.qp').value.trim(),s:b.querySelector('.qs').value.trim(),r:b.querySelector('.qr').value,rv:Object.fromEntries([...b.querySelectorAll('.qd input')].map(i=>[i.dataset.k,i.checked?1:0])),m:[...b.querySelectorAll('.qm input:checked')].map(i=>i.dataset.k)})).filter(o=>o.q||o.p||o.s):[];if(MR)return alert('Stop the voice recording first.');if(!x&&!q.length&&!nfA.length)return alert(L1?'Add at least one question (number, page or summary), or write a note.':'Write something on the note.');
+  const v={s:$('#nfS').value,i:+$('#nfC').value,t:$('#nfT').value,x,q,a:nfA.slice()};
   if(n){Object.assign(n,v);delete n.qn;delete n.qp;delete n.qs}else S.notes.push({id:uid(),...v,c:Date.now(),d:0,sid:(S.active&&S.active.s===v.s&&S.active.i===v.i)?'':''});
   save();d.close();render()}}
 
@@ -772,7 +857,7 @@ document.addEventListener('click',e=>{
  if(a==='discard'){if(confirm('Discard this running session without saving?')){S.active=null;save();render()}}
  if(a==='out')openOut();
  if(a==='addManual'){const st=new Date($('#mD').value+'T'+$('#mT').value).getTime(),mn=+$('#mM').value;if(!st||!mn)return alert('Enter a valid date, time and minutes.');S.sessions.push({id:uid(),s:$('#mS').value,i:+$('#mC').value,a:$('#mA').value,n:'',st,en:st+mn*6e4});save();render();fillMC()}
- if(a==='export')dlBackup();
+ if(a==='export')dlBackup();if(a==='exportZip')dlZip();
  if(a==='link')linkDlg();
  if(a==='logout')logout();
  if(a==='reconnect')reconnect();
@@ -800,7 +885,7 @@ function openOut(){
 document.addEventListener('change',e=>{const t=e.target;if(t.id==='pS'||t.id==='pC'||t.id==='pA')pTouched=true;
  if(t.dataset.qdone!==undefined){const[id,x,k]=t.dataset.qdone.split('|'),n=S.notes.find(z=>z.id===id);if(n){if(!Array.isArray(n.q)){n.q=ldrList(n);delete n.qn;delete n.qp;delete n.qs}const o=n.q[+x];if(o){o.rv=o.rv||{};o.rv[k]=t.checked?1:0;save();const y=window.scrollY;render();tickAll();scrollTo(0,y)}}return}
  if(t.id==='pS'){pS=t.value;pC=0;selSave();render()}
- else if(t.id==='pC'){pC=+t.value;selSave();const b=$('#pNotes');if(b)b.innerHTML=chNotes(pS,pC)}else if(t.id==='pA'){pA=t.value;selSave()}
+ else if(t.id==='pC'){pC=+t.value;selSave();const b=$('#pNotes');if(b){b.innerHTML=chNotes(pS,pC);hydrate(b)}}else if(t.id==='pA'){pA=t.value;selSave()}
  else if(t.id==='cF'){cF=t.value;render()}
  else if(t.id==='nvS'){nS=t.value;nC=-1;nCq='';render()}
  else if(t.id==='nvSt'){nSt=t.value;render()}
@@ -819,7 +904,7 @@ document.addEventListener('change',e=>{const t=e.target;if(t.id==='pS'||t.id==='
  else if(t.id==='sB'){S.set.base=t.value.trim();save()}
  else if(t.dataset.file){S.set.files[t.dataset.file]=t.value.trim();save()}
  else if(t.id==='impCsv'){const fs=[...t.files];if(!fs.length)return;Promise.all(fs.map(f=>f.text())).then(tx=>{const out=tx.map((x,k)=>{try{return fs[k].name+' → '+importCsv(x)}catch(e){return fs[k].name+' → '+((e&&e.message)||'could not read')}});save();render();if(tab==='log')fillMC();alert(out.join('\n'))});t.value=''}
- else if(t.id==='imp'){const f=t.files[0];if(!f)return;f.text().then(x=>{try{const r=unpack(JSON.parse(x));if(!Array.isArray(r.data.sessions))throw 0;S=mergeS([S,norm(r.data)]);fixNames();save();render();alert('Backup merged into your data.')}catch(_){alert('That file is not a valid backup.')}})}
+ else if(t.id==='imp'){const f=t.files[0];if(!f)return;readBackup(f).then(x=>{try{const r=unpack(JSON.parse(x));if(!Array.isArray(r.data.sessions))throw 0;S=mergeS([S,norm(r.data)]);fixNames();save();render();alert('Backup merged into your data.')}catch(_){alert('That file is not a valid backup.')}})}
 });
 document.addEventListener('input',e=>{if(e.target.id==='nvCh'){nCq=e.target.value;nC=-1;const p=e.target.selectionStart;render();const n=$('#nvCh');n.focus();n.setSelectionRange(p,p);return}if(e.target.id==='nvQ'){nQ=e.target.value;const p=e.target.selectionStart;render();const n=$('#nvQ');n.focus();n.setSelectionRange(p,p)}if(e.target.id==='pN')pN=e.target.value;if(e.target.id==='cQ'){cQ=e.target.value;const p=e.target.selectionStart;render();const n=$('#cQ');n.focus();n.setSelectionRange(p,p)}});
 
@@ -853,7 +938,7 @@ async function gSync(){if(!AUTH||!AUTH.google||!USER)return;if(!navigator.onLine
   if(GID){const e=await dRead(GID);if(e&&e.data){rs=e.data.savedAt||0;
    if(rs!==GLW){const b=JSON.stringify(S),rd=norm(e.data);S=mergeS([S,rd]);fixNames();ch=b!==JSON.stringify(S);if(gSig(S)!==gSig(rd)){S.savedAt=Date.now();ch=true}}}}
   if(!GID||S.savedAt!==rs)GID=await dWrite(GID,JSON.stringify({app:'ca-final-planner',v:2,user:USER,savedAt:S.savedAt||0,data:S}));
-  GLW=S.savedAt||0;GNEED=false;
+  GLW=S.savedAt||0;GNEED=false;try{await mDrive()}catch(e){}
   if(ch){try{localStorage.setItem(ukey(USER),JSON.stringify(S))}catch(x){}uiRefresh()}
   syncMsg('☁ synced '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));ubar();
  }while(GDIRTY)}catch(e){if(!navigator.onLine||e instanceof TypeError){syncMsg('📴 offline — saved on this device, will sync automatically when online')}else{syncMsg('⚠ Google Drive: '+(e.message||e));if(/expired/.test(e.message||''))GNEED=true}ubar()}
