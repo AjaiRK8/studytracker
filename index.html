@@ -20,6 +20,19 @@
 --fs:'IBM Plex Sans',system-ui,Segoe UI,Roboto,sans-serif;--fh:'Fraunces',Georgia,'Times New Roman',serif;--fm:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace}
 @media (prefers-color-scheme:dark){:root{--bg:#171613;--card:#211f1a;--ink:#efe9da;--mute:#a19a88;--line:#3a3629;--acc:#ff6a4d;--acc2:#efe9da}}
 *{box-sizing:border-box}
+#pdfhead{display:none}
+@media print{
+:root{--bg:#fff;--card:#fff;--ink:#1e1c18;--mute:#5f5a4e;--line:#cfc8b5;--acc:#d8432a;--acc2:#1e1c18}
+*{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+html,body{background:#fff!important}
+#nav,#ubar,#warn,#pbar,.noprint,button:not(.chip),select,input,textarea,.badge{display:none!important}
+.chip:not(.on){display:none!important}.chip{pointer-events:none}
+#pdfhead{display:block;font:600 12px var(--fm);color:var(--mute);margin:8px 0 12px}
+.wrap{max-width:none;padding:0}
+.card,.kpi,details{break-inside:avoid;box-shadow:none!important}
+[style*="overflow-x"]{overflow:visible!important}
+table{font-size:10px}
+}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--fs)}
 .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
 header{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:12px}
@@ -687,6 +700,17 @@ const cOpen=new Set(),cLog=new Set();let selUser='',pTouched=false,pInit='',tab=
 const TABS=[['punch','Punch In / Out'],['dash','Dashboard'],['cmp','Compare'],['chap','Chapters & Links'],['notes','Sticky Notes'],['log','Session Log'],['set','Settings']];
 /* main punch clock counts as "seen" only if its centre is on screen and nothing covers it */
 function clockSeen(){const c=document.querySelector('.clock.tick');if(!c)return false;const r=c.getBoundingClientRect();if(!r.width)return false;const x=r.left+r.width/2,y=r.top+r.height/2;if(x<0||y<0||x>innerWidth||y>innerHeight)return false;const e=document.elementFromPoint(x,y);return !!e&&(e===c||c.contains(e))}
+function shareBar(){return'<div class="noprint" style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn ghost sm" data-act="pdf" title="Opens the print dialog — choose Save as PDF, then share the file">📄 Share progress (PDF)</button></div>'}
+function sharePdf(){
+ const dets=[...document.querySelectorAll('#main details')],was=dets.map(d=>d.open);dets.forEach(d=>d.open=true);
+ let hd=$('#pdfhead');if(!hd){hd=document.createElement('div');hd.id='pdfhead';$('#main').before(hd)}
+ const dt=new Date().toISOString().slice(0,10);
+ hd.textContent='Study progress report · '+(tab==='cmp'?'Time comparison':'Dashboard')+' · '+USER+' · '+dt+' · '+Math.max(0,daysLeft())+' days to exam ('+S.set.exam+')';
+ let ps=$('#pgsz');if(!ps){ps=document.createElement('style');ps.id='pgsz';document.head.appendChild(ps)}
+ ps.textContent='@media print{@page{size:A4 '+(tab==='cmp'?'landscape':'portrait')+';margin:10mm}}';
+ const ttl=document.title;document.title='Study progress - '+USER+' - '+dt;
+ const done=()=>{document.title=ttl;dets.forEach((d,i)=>{d.open=was[i]})};
+ addEventListener('afterprint',done,{once:true});setTimeout(()=>print(),60)}
 function pbarUp(){const b=$('#pbar');if(!b)return;const desk=matchMedia('(min-width:761px)').matches,a=S.active,on=!!(a&&USER&&(tab!=='punch'||(desk&&!clockSeen())));
  const key=on+'|'+(a&&a.pz?1:0);if(b.dataset.k===key&&b.className===(on?'on':''))return;b.dataset.k=key;b.className=on?'on':'';
  if(!on){b.innerHTML='';return}
@@ -745,7 +769,7 @@ function vDash(){
  const dl=Math.max(1,daysLeft()),tg=+S.set.target||0;
  const wl=workload(),need=wl.units>0?(wl.units/(dl/7)).toFixed(1):'0';
  const kp=(v,l)=>`<div class="card kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`;
- let h=`<div class="grid kpis">${kp(fh(td)+' <small>/ '+tg+'h</small>','today vs daily target')}${kp(fh(wk),'last 7 days')}${kp(fh(tot),'total logged')}${kp(streak(m)+' d','current streak')}${kp(Math.round(done/all*100)+'%','syllabus (study + revisions + practice)')}${kp(need,'chapter-equivalents/week needed ('+pend+' to study + revisions/LDR/practice ≈ '+wl.rv.toFixed(0)+')')}${kp(S.notes.filter(n=>nAct(n)&&n.t==='Pending').length,'open pending items')}</div>`;
+ let h=shareBar()+`<div class="grid kpis">${kp(fh(td)+' <small>/ '+tg+'h</small>','today vs daily target')}${kp(fh(wk),'last 7 days')}${kp(fh(tot),'total logged')}${kp(streak(m)+' d','current streak')}${kp(Math.round(done/all*100)+'%','syllabus (study + revisions + practice)')}${kp(need,'chapter-equivalents/week needed ('+pend+' to study + revisions/LDR/practice ≈ '+wl.rv.toFixed(0)+')')}${kp(S.notes.filter(n=>nAct(n)&&n.t==='Pending').length,'open pending items')}</div>`;
  h+=`<details data-col="coach" ${(S.set.col||{}).coach?'':'open'}><summary>Coach</summary>${vCoach(m)}</details>`;h+=vRemember();
  if(S.active){const c=L[S.active.s][S.active.i];h+=`<div class="card live" style="margin-top:12px"><span class="dot"></span><b>Punched in:</b> ${esc(META[S.active.s].n)} — ${esc(c.t)} · <span class="mono tick"></span> <button class="btn acc sm" data-act="goPunch">Go to punch out</button></div>`}
  h+=`<div class="grid two" style="margin-top:12px"><div class="card"><h2>Daily total hours</h2>${chart14(m)}</div><div class="card"><h2>Consistency (16 weeks)</h2>${heat(m)}<div class="hint">Darker = closer to your daily target.</div></div></div>`;
@@ -1059,6 +1083,7 @@ document.addEventListener('click',e=>{
  if(a==='exportAll')exportAll();
  if(a==='chpw')chPwDlg();
  if(a==='gsync')gSync();
+ if(a==='pdf')sharePdf();
  if(a==='gre')gReconnect();
  if(a==='delacc')delAccDlg();
  if(a==='reset'){if(confirm('Delete ALL sessions and progress?')&&confirm('Really sure? This cannot be undone.')){S=JSON.parse(JSON.stringify(DEF));save();render()}}
@@ -1219,7 +1244,7 @@ function vCmp(){if(!S.sessions.length)return'<div class="card"><small>Log a few 
  const views=`<div class="chips">${[['sub','Subjects'],['chap','Chapters'],['pass','Revisions']].map(([k,n])=>chip('data-cmv="'+k+'"',n,'var(--ink)',cmV===k)).join('')}</div>`;
  const subs=cmV==='sub'?'':`<div class="chips">${(pass?['ALL',...ORDER]:ORDER).map(s=>chip('data-cms="'+s+'"',s==='ALL'?'All subjects':s,s==='ALL'?'var(--ink)':META[s].c,cmS===s)).join('')}</div>`;
  const mode=pass?'':`<select id="cmM" style="width:auto;margin-bottom:10px"><option value="h">Show: time spent</option><option value="r" ${cmM==='r'?'selected':''}>Show: % of Study time</option><option value="d" ${cmM==='d'?'selected':''}>Show: calendar days taken</option></select>`;
- return`<div class="card">${views}${subs}${mode}${cmV==='sub'?cmSub(ps):cmV==='chap'?cmChap(ps):cmPass(ps)}</div>`}
+ return shareBar()+`<div class="card">${views}${subs}${mode}${cmV==='sub'?cmSub(ps):cmV==='chap'?cmChap(ps):cmPass(ps)}</div>`}
 function cmCsv(){const rows=[['SubjectCode','ChapterNo','Chapter','Pass','Hours','Sessions','FirstDate','LastDate','CalendarDays']];
  ORDER.forEach(s=>L[s].forEach(c=>{const m=cmAgg(x=>x.s===s&&x.i===c.i);Object.keys(m).forEach(p=>{const g=m[p];rows.push([s,c.i+1,c.t,p,g.h.toFixed(2),g.n,dk(g.st),dk(g.en),cmSpan(g)])})}));csvOut('compare',rows)}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-cmv],[data-cms],[data-cmx],[data-cmcsv]');if(!t)return;const y=window.scrollY;
