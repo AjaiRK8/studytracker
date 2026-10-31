@@ -38,7 +38,6 @@ html.pdfmode table{font-size:11px}
 html.pdfmode .cmp .cmt{position:static!important}
 html.pdfmode table tr{break-inside:avoid}html.pdfmode thead{display:table-header-group}
 html.pdfmode.pdfland .card{break-inside:auto}
-@media print and (orientation:landscape){html.pdfmode .wrap{zoom:1!important}}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--fs)}
 .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
 header{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:12px}
@@ -714,9 +713,9 @@ function sharePdf(){
  const dt=new Date().toISOString().slice(0,10);
  hd.textContent='Study progress report · '+(land?'Time comparison':'Dashboard')+' · '+USER+' · '+dt+' · '+Math.max(0,daysLeft())+' days to exam ('+S.set.exam+')';
  let ps=$('#pgsz');if(!ps){ps=document.createElement('style');ps.id='pgsz';document.head.appendChild(ps)}
- ps.textContent='@media print{@page{size:A4 '+(land?'landscape':'portrait')+';margin:10mm}}';
- R.style.setProperty('--pw',PDFW+'px');R.style.setProperty('--pz',1);R.classList.add('pdfmode');R.classList.toggle('pdfland',land);
- R.style.setProperty('--pz',(718/PDFW)*.99)
+ ps.textContent='@media print{@page{size:A4 portrait;margin:10mm}}';
+ const W=land?820:PDFW;R.style.setProperty('--pw',W+'px');R.style.setProperty('--pz',1);R.classList.add('pdfmode');R.classList.toggle('pdfland',land);
+ R.style.setProperty('--pz',(718/W)*.99)
  const ttl=document.title;document.title='Study progress - '+USER+' - '+dt;
  let fin=0;const done=()=>{if(fin)return;fin=1;document.title=ttl;R.classList.remove('pdfmode','pdfland');R.style.removeProperty('--pw');R.style.removeProperty('--pz');dets.forEach((d,i)=>{d.open=was[i]})};
  addEventListener('afterprint',done,{once:true});addEventListener('pointerdown',done,{once:true,capture:true});setTimeout(()=>print(),80)}
