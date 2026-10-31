@@ -29,7 +29,7 @@ html.pdfmode #nav,html.pdfmode #ubar,html.pdfmode #warn,html.pdfmode #pbar,html.
 html.pdfmode .chip:not(.on){display:none!important}html.pdfmode .chip{pointer-events:none}
 html.pdfmode #pdfhead{display:block;font:600 12px var(--fm);color:var(--mute);margin:6px 0 10px}
 html.pdfmode .wrap{width:var(--pw,1040px)!important;max-width:none!important;margin:0!important;padding:0!important}
-html.pdfmode main{zoom:var(--pz,1)}
+html.pdfmode .wrap{zoom:var(--pz,1)}
 html.pdfmode .two{grid-template-columns:1fr 1fr!important}
 html.pdfmode .kpis{grid-template-columns:repeat(4,1fr)!important}
 html.pdfmode .card,html.pdfmode .kpi,html.pdfmode details{break-inside:avoid;box-shadow:none!important}
@@ -705,6 +705,7 @@ const TABS=[['punch','Punch In / Out'],['dash','Dashboard'],['cmp','Compare'],['
 /* main punch clock counts as "seen" only if its centre is on screen and nothing covers it */
 function clockSeen(){const c=document.querySelector('.clock.tick');if(!c)return false;const r=c.getBoundingClientRect();if(!r.width)return false;const x=r.left+r.width/2,y=r.top+r.height/2;if(x<0||y<0||x>innerWidth||y>innerHeight)return false;const e=document.elementFromPoint(x,y);return !!e&&(e===c||c.contains(e))}
 function shareBar(){return'<div class="noprint" style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn ghost sm" data-act="pdf" title="Opens the print dialog — choose Save as PDF, then share the file">📄 Share progress (PDF)</button></div>'}
+const PDFW=900;
 function sharePdf(){
  const R=document.documentElement,land=tab==='cmp',dets=[...document.querySelectorAll('#main details')],was=dets.map(d=>d.open);dets.forEach(d=>d.open=true);
  let hd=$('#pdfhead');if(!hd){hd=document.createElement('div');hd.id='pdfhead';$('#main').before(hd)}
@@ -712,7 +713,8 @@ function sharePdf(){
  hd.textContent='Study progress report · '+(land?'Time comparison':'Dashboard')+' · '+USER+' · '+dt+' · '+Math.max(0,daysLeft())+' days to exam ('+S.set.exam+')';
  let ps=$('#pgsz');if(!ps){ps=document.createElement('style');ps.id='pgsz';document.head.appendChild(ps)}
  ps.textContent='@media print{@page{size:A4 '+(land?'landscape':'portrait')+';margin:10mm}}';
- R.style.setProperty('--pw',(land?1040:715)+'px');R.style.setProperty('--pz',1);R.classList.add('pdfmode');R.classList.toggle('pdfland',land);
+ R.style.setProperty('--pw',(land?1040:PDFW)+'px');R.style.setProperty('--pz',1);R.classList.add('pdfmode');R.classList.toggle('pdfland',land);
+ if(!land)R.style.setProperty('--pz',(718/PDFW)*.99)
  const ttl=document.title;document.title='Study progress - '+USER+' - '+dt;
  let fin=0;const done=()=>{if(fin)return;fin=1;document.title=ttl;R.classList.remove('pdfmode','pdfland');R.style.removeProperty('--pw');R.style.removeProperty('--pz');dets.forEach((d,i)=>{d.open=was[i]})};
  addEventListener('afterprint',done,{once:true});addEventListener('pointerdown',done,{once:true,capture:true});setTimeout(()=>print(),80)}
