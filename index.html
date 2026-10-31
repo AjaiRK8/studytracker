@@ -397,9 +397,9 @@ function applyCust(){ORDER.forEach(s=>{const cu=S&&S.cust&&S.cust[s];L[s].length
 
 /* ---------- STATE ---------- */
 const K='caFinalPlanner.v1';
-const DEF={sessions:[],notes:[],del:[],progress:{},active:null,cust:{},set:{mf:{},noic:{},exam:'2027-05-02',target:6,revs:2,base:'',files:{DT:'Study material/DT module.pdf',IDT:'Study material/IDT module.pdf',AUD:'Study material/Audit Module.pdf',FR:'Study material/FR module.pdf',AFM:'Study material/AFM module.pdf'}}};
+const DEF={sessions:[],notes:[],tests:[],del:[],progress:{},active:null,cust:{},set:{mf:{},noic:{},exam:'2027-05-02',target:6,revs:2,base:'',files:{DT:'Study material/DT module.pdf',IDT:'Study material/IDT module.pdf',AUD:'Study material/Audit Module.pdf',FR:'Study material/FR module.pdf',AFM:'Study material/AFM module.pdf'}}};
 const $=s=>document.querySelector(s);
-var GD=null,GDBUSY=false,GDSEL=new Set();
+var GD=null,GDBUSY=false,GDSEL=new Set(),GFULL=false;
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pad=n=>String(n).padStart(2,'0');
 const dk=t=>{const d=new Date(t);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
@@ -411,10 +411,10 @@ function norm(r){const d=JSON.parse(JSON.stringify(DEF));r=r||{};return{...d,...
 function loadLocal(u){try{const r=JSON.parse(localStorage.getItem(ukey(u)));if(r)return norm(r)}catch(e){storeOK=false}return null}
 function fixNames(){(S.notes||[]).forEach(n=>{if(n.t==='Faculty')n.t='Additional Questions'});const o={DT:'DT_module.pdf',IDT:'IDT_module.pdf',AUD:'Audit_Module.pdf',FR:'FR_module.pdf',AFM:'AFM_module.pdf'};for(const k in o)if(S.set.files[k]===o[k])S.set.files[k]=DEF.set.files[k]}
 /* --- merge two or more copies of the same account (laptop + mobile) --- */
-function mergeS(list){list=list.slice().sort((a,b)=>(b.savedAt||0)-(a.savedAt||0));const base=JSON.parse(JSON.stringify(list[0])),del=new Set(),ss=new Map(),nn=new Map(),pr={};
+function mergeS(list){list=list.slice().sort((a,b)=>(b.savedAt||0)-(a.savedAt||0));const base=JSON.parse(JSON.stringify(list[0])),del=new Set(),ss=new Map(),nn=new Map(),tt=new Map(),pr={};
  list.forEach(x=>(x.del||[]).forEach(i=>del.add(i)));
- list.slice().reverse().forEach(x=>{(x.sessions||[]).forEach(v=>ss.set(v.id,v));(x.notes||[]).forEach(v=>nn.set(v.id,v));for(const k in x.progress||{}){pr[k]=pr[k]||{};for(const f in x.progress[k])pr[k][f]=(pr[k][f]||x.progress[k][f])?1:0}});
- base.sessions=[...ss.values()].filter(v=>!del.has(v.id));base.notes=[...nn.values()].filter(v=>!del.has(v.id));base.progress=pr;base.del=[...del];base.cust=Object.assign({},...list.slice().reverse().map(x=>x.cust||{}));
+ list.slice().reverse().forEach(x=>{(x.sessions||[]).forEach(v=>ss.set(v.id,v));(x.notes||[]).forEach(v=>nn.set(v.id,v));(x.tests||[]).forEach(v=>tt.set(v.id,v));for(const k in x.progress||{}){pr[k]=pr[k]||{};for(const f in x.progress[k])pr[k][f]=(pr[k][f]||x.progress[k][f])?1:0}});
+ base.sessions=[...ss.values()].filter(v=>!del.has(v.id));base.notes=[...nn.values()].filter(v=>!del.has(v.id));base.tests=[...tt.values()].filter(v=>!del.has(v.id));base.progress=pr;base.del=[...del];base.cust=Object.assign({},...list.slice().reverse().map(x=>x.cust||{}));
  const pa=list.reduce((b,x)=>((x.actAt||0)>(b.actAt||0)||((x.actAt||0)===(b.actAt||0)&&!b.active&&x.active))?x:b,list[0]),ps=list.reduce((b,x)=>(x.setAt||0)>(b.setAt||0)?x:b,list[0]),cl=v=>v==null?null:JSON.parse(JSON.stringify(v));
  base.active=cl(pa.active);base.actAt=pa.actAt||0;base.actSig=pa.actSig;if(ps.set){base.set=cl(ps.set);base.setAt=ps.setAt||0;base.setSig=ps.setSig}return base}
 /* --- password hashing (PBKDF2, browser built-in) --- */
@@ -438,7 +438,7 @@ async function flush(){if(!FH)return;if(busy){dirty=true;return}busy=true;try{do
   if(DH){try{const bd=await DH.getDirectoryHandle('backups',{create:true}),bh=await bd.getFileHandle('ca-final-planner-'+USER+'-backup-'+dk(Date.now())+'.json',{create:true}),w2=await bh.createWritable();await w2.write(txt);await w2.close()}catch(e){}}
   syncMsg('💾 saved to file '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'}))}while(dirty)}catch(e){syncMsg('⚠ file write failed — use “Change save file”')}busy=false}
 function syncMsg(t){syncTxt=t;const e=$('#sync');if(e)e.textContent=t}
-function ubar(){$('#ubar').innerHTML=USER?`<span class="mono">👤 ${esc(USER)}</span><span class="mono mute" id="sync">${esc(syncTxt||(AUTH&&AUTH.google?'☁ Google Drive':FH?'💾 file linked':'💾 saved in browser only'))}</span>${AUTH&&AUTH.google&&GNEED?'<button class="btn acc sm" data-act="gre">Reconnect Google</button>':''}${PD&&!FH?'<button class="btn acc sm" data-act="reconnect">Reconnect save file</button>':''}<button class="btn ghost sm" data-act="link">${FH?'Change save file':'Link auto-save file'}</button><button class="btn ghost sm" data-act="logout">Sign out</button>`:''}
+function ubar(){$('#ubar').innerHTML=USER?`<span class="mono">👤 ${esc(USER)}</span><span class="mono mute" id="sync">${esc(syncTxt||(AUTH&&AUTH.google?'☁ Google Drive':FH?'💾 file linked':'💾 saved in browser only'))}</span>${AUTH&&AUTH.google&&GNEED?'<button class="btn acc sm" data-act="gre">Reconnect Google</button>':''}${GFULL?'<button class="btn acc sm" data-act="gfull">Drive full — free up space</button>':''}${PD&&!FH?'<button class="btn acc sm" data-act="reconnect">Reconnect save file</button>':''}<button class="btn ghost sm" data-act="link">${FH?'Change save file':'Link auto-save file'}</button><button class="btn ghost sm" data-act="logout">Sign out</button>`:''}
 const FT=[{description:'JSON',accept:{'application/json':['.json']}}];
 function linkDlg(){const d=$('#dlg'),ok=!!window.showSaveFilePicker;
  d.innerHTML=`<h2 style="font:700 20px var(--fh);margin:0 0 6px">Auto-save file</h2>`+(ok?`<p style="font-size:13px">Select the folder where this HTML file lives (once). The planner then creates <b>ca-final-planner-${esc(USER)}.json</b> in it by itself and silently saves every punch-in, punch-out and change there, plus a daily backup copy in a <b>backups</b> sub-folder (last 30 days kept). Images and voice notes attached to sticky notes are saved in a <b>media</b> sub-folder next to it. On later sign-ins it reopens that file automatically — no file dialogs.</p><div style="display:grid;gap:8px"><button class="btn acc" id="lD">Select planner folder…</button><button class="btn ghost" id="lN">Or: create a specific file…</button><button class="btn ghost" id="lE">Or: use an existing file…</button><button class="btn ghost" id="lX">Not now</button></div>`:`<p style="font-size:13px">This browser can’t write files silently (use Chrome or Edge for that). Your data is still saved in the browser on every event, and a backup .json is downloaded on every punch-out and sign-out.</p><button class="btn ghost" id="lX">OK</button>`);
@@ -474,7 +474,7 @@ function mx(t){t=String(t==null?'':t);const K=window.katex;if(!K||t.indexOf('$')
  return o+esc(t.slice(l))}
 function insTxt(ta,s){const a=ta.selectionStart==null?ta.value.length:ta.selectionStart,b=ta.selectionEnd==null?a:ta.selectionEnd;ta.value=ta.value.slice(0,a)+s+ta.value.slice(b);ta.focus();ta.selectionStart=ta.selectionEnd=a+s.length}
 function renderAtt(){const b=$('#nfAtt');if(!b)return;b.innerHTML=nfA.map((a,i)=>'<div class="ai">'+(a.k==='pdf'?pdfA(a,1):a.k==='img'?'<img data-mid="'+esc(a.id)+'" alt="">':'<audio controls preload="none" data-mid="'+esc(a.id)+'"></audio>')+'<span class="mono" style="font-size:11px;color:var(--mute)">'+esc(a.nm)+' · '+fsz(a.sz||0)+'</span><button type="button" class="btn ghost sm" data-arm="'+i+'" title="Remove">✕</button></div>').join('');hydrate(b)}
-async function addMedia(b,k,mt,nm){const id=uid();await mPut(id,b);nfA.push({id,k,mt,x:extOf(mt),nm:nm||k,sz:b.size});renderAtt()}
+async function addMedia(b,k,mt,nm){if(k==='img'&&/^image\/(jpeg|png|webp)$/.test(mt)){const c=await imgShrink(b);if(c){b=c;mt='image/jpeg'}}const id=uid();await mPut(id,b);nfA.push({id,k,mt,x:extOf(mt),nm:nm||k,sz:b.size});renderAtt()}
 /* ===== photo editor (crop / draw / highlight / rotate) and live camera ===== */
 function ieDlg(){let d=document.getElementById('ied');if(d)d.remove();d=document.createElement('dialog');d.id='ied';d.className='ied';document.body.appendChild(d);d.addEventListener('cancel',e=>e.preventDefault());return d}
 function editImg(src){return new Promise(async res=>{
@@ -703,7 +703,7 @@ function workload(){let st=0,rv=0;ORDER.forEach(s=>L[s].forEach(c=>{const p=prog
 
 /* ---------- VIEWS ---------- */
 const cOpen=new Set(),cLog=new Set();let selUser='',pTouched=false,pInit='',tab='punch',pS='DT',pC=0,pA='Study',pN='',cS='DT',cQ='',cF='all';
-const TABS=[['punch','Punch In / Out'],['dash','Dashboard'],['cmp','Compare'],['chap','Chapters & Links'],['notes','Sticky Notes'],['log','Session Log'],['set','Settings']];
+const TABS=[['punch','Punch In / Out'],['dash','Dashboard'],['cmp','Compare'],['chap','Chapters & Links'],['notes','Sticky Notes'],['log','Session Log'],['mock','Mock Tests'],['set','Settings']];
 /* main punch clock counts as "seen" only if its centre is on screen and nothing covers it */
 function clockSeen(){const c=document.querySelector('.clock.tick');if(!c)return false;const r=c.getBoundingClientRect();if(!r.width)return false;const x=r.left+r.width/2,y=r.top+r.height/2;if(x<0||y<0||x>innerWidth||y>innerHeight)return false;const e=document.elementFromPoint(x,y);return !!e&&(e===c||c.contains(e))}
 function shareBar(){return'<div class="noprint" style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn ghost sm" data-act="pdf" title="Opens the print dialog — choose Save as PDF, then share the file">📄 Share progress (PDF)</button></div>'}
@@ -732,7 +732,7 @@ const SELK=()=>'caPlanner.sel.'+USER;
 function lastChap(s){if(!L[s])return null;let i=null,t=-1;S.sessions.forEach(x=>{if(x.s===s&&L[s][x.i]&&x.st>t){t=x.st;i=x.i}});if(S.active&&S.active.s===s&&L[s][S.active.i]&&S.active.st>t)i=S.active.i;return i}
 function selSave(){try{localStorage.setItem(SELK(),JSON.stringify({pS,pC,pA,cS}))}catch(e){}}
 function selLoad(){try{const o=JSON.parse(localStorage.getItem(SELK())||'null');if(!o)return false;if(L[o.cS])cS=o.cS;return false}catch(e){return false}}
-function render(){if(!USER)return;applyCust();buildActs();if(selUser!==USER){selUser=USER;if(selLoad())pTouched=true}nav();ubar();warn();const d=daysLeft();$('#dl').textContent=d>0?d:0;{const at=((S.set&&S.set.att)||'MAY 2027').toUpperCase();$('#ttl').innerHTML='CA FINAL <span>·</span> '+esc(at);document.title='CA Final '+at.charAt(0)+at.slice(1).toLowerCase()+' · Study Punch Card'}$('#main').innerHTML=({dash:vDash,cmp:vCmp,punch:()=>(S.active?'':vRemember())+vPunch(),chap:vChap,notes:vNotes,log:vLog,set:vSet})[tab]();hydrate();}
+function render(){if(!USER)return;applyCust();buildActs();if(selUser!==USER){selUser=USER;if(selLoad())pTouched=true}nav();ubar();warn();const d=daysLeft();$('#dl').textContent=d>0?d:0;{const at=((S.set&&S.set.att)||'MAY 2027').toUpperCase();$('#ttl').innerHTML='CA FINAL <span>·</span> '+esc(at);document.title='CA Final '+at.charAt(0)+at.slice(1).toLowerCase()+' · Study Punch Card'}$('#main').innerHTML=({dash:vDash,cmp:vCmp,punch:()=>(S.active?'':vRemember())+vPunch(),chap:vChap,notes:vNotes,log:vLog,mock:vMock,set:vSet})[tab]();hydrate();}
 
 function coachData(m){
  const day=n=>{const d=new Date();d.setDate(d.getDate()-n);return(m[dk(d)]||{}).t||0},tg=+S.set.target||0,dl=daysLeft(),T=[];
@@ -996,7 +996,7 @@ function pendList(){const a=S.notes.filter(n=>nAct(n)&&n.t==='Pending').sort((x,
  return'<table>'+a.map(n=>`<tr><td>${NI[n.t]}</td><td><b style="color:${META[n.s].c}">${n.s}</b> ${esc(L[n.s][n.i].t)}<br><small>${esc((n.x||ldrAll(n)).slice(0,120))}</small></td><td><button class="btn ghost sm" data-nact="done" data-nid="${n.id}">✓ Done</button></td></tr>`).join('')+'</table>'}
 function vNotes(){
  const q=nQ.toLowerCase();
- const ns=S.notes.filter(n=>(nT==='all'||n.t===nT)&&(nS==='all'||n.s===nS)&&(nC<0||n.i===nC)&&(nC>=0||!nCq||nHit(L[n.s][n.i].t,nWords(nCq)))&&stOf(n)===nSt&&(!q||n.x.toLowerCase().includes(q)||ldrAll(n).toLowerCase().includes(q)||L[n.s][n.i].t.toLowerCase().includes(q))).sort((a,b)=>b.c-a.c);
+ const ns=S.notes.filter(n=>(q||((nT==='all'||n.t===nT)&&(nS==='all'||n.s===nS)&&(nC<0||n.i===nC)&&(nC>=0||!nCq||nHit(L[n.s][n.i].t,nWords(nCq)))&&stOf(n)===nSt))&&(!q||n.x.toLowerCase().includes(q)||ldrAll(n).toLowerCase().includes(q)||L[n.s][n.i].t.toLowerCase().includes(q))).sort((a,b)=>b.c-a.c);
  const cnt=k=>S.notes.filter(n=>stOf(n)===nSt&&(k==='all'||n.t===k)).length;
  const stc=[['open','Notes'],['done','✓ Done'],['rem','🗑 Removed']].map(([k,t])=>`<button class="chip ${nSt===k?'on':''}" style="--c:var(--ink)" data-nst="${k}">${t} (${S.notes.filter(x=>stOf(x)===k).length})</button>`).join('');
  const chips=['all',...NT].map(k=>`<button class="chip ${nT===k?'on':''}" style="--c:${k==='all'?'var(--ink)':'#b98a00'}" data-ntype="${k}">${k==='all'?'All':NI[k]+' '+k} (${cnt(k)})</button>`).join('');
@@ -1098,7 +1098,7 @@ document.addEventListener('click',e=>{
  if(a==='chpw')chPwDlg();
  if(a==='gsync')gSync();
  if(a==='pdf')sharePdf();
- if(a==='gre')gReconnect();
+ if(a==='gre')gReconnect();if(a==='gfull'){tab='set';setSec='data';render();scrollTo(0,0);setTimeout(gdLoad,60)}
  if(a==='delacc')delAccDlg();
  if(a==='reset'){if(confirm('Delete ALL sessions and progress?')&&confirm('Really sure? This cannot be undone.')){S=JSON.parse(JSON.stringify(DEF));save();render()}}
 });
@@ -1165,7 +1165,7 @@ async function dWrite(id,txt){
  if(id){await gf('https://www.googleapis.com/upload/drive/v3/files/'+id+'?uploadType=media',{method:'PATCH',headers:{'Content-Type':'application/json'},body:txt});return id}
  const b='ca'+Date.now(),body='--'+b+'\r\nContent-Type: application/json\r\n\r\n'+JSON.stringify({name:DNAME,parents:['appDataFolder']})+'\r\n--'+b+'\r\nContent-Type: application/json\r\n\r\n'+txt+'\r\n--'+b+'--';
  const r=await gf('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+b},body});return(await r.json()).id}
-const gSig=x=>[...(x.sessions||[]).map(v=>'s'+v.id),...(x.notes||[]).map(v=>'n'+v.id),...(x.del||[]).map(v=>'d'+v),...Object.keys(x.progress||{}).flatMap(k=>Object.keys(x.progress[k]).filter(f=>x.progress[k][f]).map(f=>'p'+k+f))].sort().join();
+const gSig=x=>[...(x.sessions||[]).map(v=>'s'+v.id),...(x.notes||[]).map(v=>'n'+v.id),...(x.tests||[]).map(v=>'t'+v.id),...(x.del||[]).map(v=>'d'+v),...Object.keys(x.progress||{}).flatMap(k=>Object.keys(x.progress[k]).filter(f=>x.progress[k][f]).map(f=>'p'+k+f))].sort().join();
 async function gSync(){if(!AUTH||!AUTH.google||!USER)return;if(!navigator.onLine){syncMsg('📴 offline — saved on this device, will sync automatically when online');ubar();return}if(GBUSY){GDIRTY=true;return}GBUSY=true;
  try{do{GDIRTY=false;
   if(!GTOK){try{const o=JSON.parse(sessionStorage.getItem('caPlanner.gtok')||'null');if(o&&o.u===USER&&o.e>Date.now()){GTOK=o.t;GEXP=o.e}}catch(x){}}
@@ -1173,11 +1173,11 @@ async function gSync(){if(!AUTH||!AUTH.google||!USER)return;if(!navigator.onLine
   if(!GID)GID=await dFind();let rs=-2,ch=false;
   if(GID){const e=await dRead(GID);if(e&&e.data){rs=e.data.savedAt||0;
    if(rs!==GLW){const b=JSON.stringify(S),rd=norm(e.data),l0=Math.max(0,...S.sessions.map(z=>z.st));S=mergeS([S,rd]);fixNames();if(Math.max(0,...S.sessions.map(z=>z.st))>l0&&!S.active)pTouched=false;ch=b!==JSON.stringify(S);if(gSig(S)!==gSig(rd)){S.savedAt=Date.now();ch=true}}}}
-  if(!GID||S.savedAt!==rs)GID=await dWrite(GID,JSON.stringify({app:'ca-final-planner',v:2,user:USER,savedAt:S.savedAt||0,data:S}));
+  if(!GID||S.savedAt!==rs){const tx=JSON.stringify({app:'ca-final-planner',v:2,user:USER,savedAt:S.savedAt||0,data:S});GID=await dWrite(GID,tx);try{await gBk(tx)}catch(x){}}
   GLW=S.savedAt||0;GNEED=false;try{await mDrive()}catch(e){}try{GVER=(await(await gf('https://www.googleapis.com/drive/v3/files/'+GID+'?spaces=appDataFolder&fields=version')).json()).version}catch(x){}
   if(ch){try{localStorage.setItem(ukey(USER),JSON.stringify(S))}catch(x){}uiRefresh()}
-  syncMsg('☁ synced '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));ubar();
- }while(GDIRTY)}catch(e){if(!navigator.onLine||e instanceof TypeError){syncMsg('📴 offline — saved on this device, will sync automatically when online')}else{syncMsg('⚠ Google Drive: '+(e.message||e));if(/expired/.test(e.message||''))GNEED=true}ubar()}
+  GFULL=false;syncMsg('☁ synced '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));ubar();
+ }while(GDIRTY)}catch(e){if(!navigator.onLine||e instanceof TypeError){syncMsg('📴 offline — saved on this device, will sync automatically when online')}else{if(/quota|storage/i.test(e.message||'')){GFULL=true;syncMsg('⚠ Google storage full — saved on this device only')}else syncMsg('⚠ Google Drive: '+(e.message||e));if(/expired/.test(e.message||''))GNEED=true}ubar()}
  GBUSY=false}
 let gArmed=false;
 let gTry=0;
@@ -1186,6 +1186,37 @@ function gArm(){if(gArmed)return;gArmed=true;const E=['pointerdown','keydown','t
 /* silent auto-reconnect: renew the Google token shortly before it expires, and retry in the background while it is lost */
 setInterval(()=>{if(!USER||!AUTH||!AUTH.google||document.hidden||!navigator.onLine||GBUSY)return;const soon=GTOK&&GEXP&&GEXP-Date.now()<300000;if(GNEED?Date.now()-gTry>60000:soon&&Date.now()-gTry>90000)gAuto()},20000);
 async function gReconnect(){try{await gToken(true,USER)}catch(e){return alert(e.message)}GNEED=false;gSync()}
+/* ---------- v3 additions: image shrink, Drive backups, mock tests, revision/weekly card ---------- */
+async function imgShrink(b){try{const bm=await createImageBitmap(b),r=Math.min(1,1600/Math.max(bm.width,bm.height)),w=Math.round(bm.width*r),h=Math.round(bm.height*r),c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,w,h);g.drawImage(bm,0,0,w,h);const o=await new Promise(res=>c.toBlob(res,'image/jpeg',.82));return o&&o.size<b.size?o:null}catch(e){return null}}
+async function gBk(tx){const k='caPlanner.bk.'+USER,t=dk(Date.now());if(localStorage.getItem(k)===t)return;const bd='bk'+Date.now();
+ await gf('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+bd},body:'--'+bd+'\r\nContent-Type: application/json\r\n\r\n'+JSON.stringify({name:'bk-'+t+'.json',parents:['appDataFolder']})+'\r\n--'+bd+'\r\nContent-Type: application/json\r\n\r\n'+tx+'\r\n--'+bd+'--'});localStorage.setItem(k,t);
+ const j=await(await gf('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&pageSize=1000&fields=files(id,name)')).json();
+ for(const f of(j.files||[]).filter(f=>/^bk-/.test(f.name)).sort((a,b)=>a.name<b.name?1:-1).slice(5))await gf('https://www.googleapis.com/drive/v3/files/'+f.id,{method:'DELETE'})}
+async function gdRestore(id){if(GDBUSY)return;const x=gdItems().find(z=>z.f.id===id);if(!x)return;
+ if(x.kind==='backup'&&!confirm('Merge this backup back into your data? Nothing you have now is deleted.'))return;GDBUSY=true;GD.err='';gdRender();
+ try{await gdTok();
+  if(x.kind==='removed'){const nm=x.f.name.slice(2);await gf('https://www.googleapis.com/drive/v3/files/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:nm})});x.f.name=nm;const r=(S.rmA||[]).find(z=>z.fid===id);if(r){const n=S.notes.find(z=>z.id===r.nid);if(n&&!(n.a||[]).some(z=>z.id===r.id))(n.a=n.a||[]).push(r.a);S.rmA=S.rmA.filter(z=>z!==r)}save();render()}
+  else if(x.kind==='backup'){const j=await dRead(id);S=mergeS([S,norm(j.data)]);fixNames();save();render()}}
+ catch(e){GD.err=e.message||String(e)}GDBUSY=false;gdRender()}
+/* mock tests */
+function vMock(){const T=(S.tests||[]).slice().sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0),pc=t=>t.t?t.m/t.t*100:0,col=p=>p>=50?'var(--ok)':p>=40?'#b98a00':'var(--acc)';
+ const so=ORDER.map(s=>`<option value="${s}">${META[s].n}</option>`).join('');
+ let h=`<div class="card"><h2>Add test result</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px"><select id="mkS">${so}</select><select id="mkK"><option>Mock</option><option>MTP</option><option>RTP</option><option>Chapter test</option></select><input id="mkN" placeholder="Name (e.g. MTP 1 Series 1)"><input id="mkM" type="number" step="0.5" placeholder="Marks"><input id="mkT" type="number" value="100" placeholder="Out of"><input id="mkD" type="date" value="${dk(Date.now())}"></div><div style="margin-top:10px"><button class="btn acc" data-mk="add">Add result</button></div></div>`;
+ if(!T.length)return h+'<div class="card" style="margin-top:12px"><small>No results yet. Add your first mock/MTP/RTP score to see trends and averages.</small></div>';
+ const W=640,H=170,n=T.length,X=i=>n>1?30+i*(W-50)/(n-1):W/2,Y=p=>H-20-p*(H-35)/100;
+ let sv=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto"><line x1="25" x2="${W-10}" y1="${Y(40)}" y2="${Y(40)}" stroke="var(--acc)" stroke-dasharray="4 4"/><text x="${W-60}" y="${Y(40)-3}" font-size="10" fill="var(--mute)">40% pass</text><line x1="25" x2="${W-10}" y1="${Y(50)}" y2="${Y(50)}" stroke="var(--ok)" stroke-dasharray="4 4"/><text x="${W-60}" y="${Y(50)-3}" font-size="10" fill="var(--mute)">50%</text>`;
+ ORDER.forEach(s=>{const pts=T.map((t,i)=>t.s===s?[X(i),Y(pc(t))]:null).filter(Boolean);if(!pts.length)return;sv+=`<polyline fill="none" stroke="${META[s].c}" stroke-width="2" points="${pts.map(p=>p.join(',')).join(' ')}"/>`+pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="${META[s].c}"/>`).join('')});sv+='</svg>';
+ const av=ORDER.filter(s=>T.some(t=>t.s===s)).map(s=>{const l=T.filter(t=>t.s===s),a=l.reduce((x,t)=>x+pc(t),0)/l.length,z=pc(l[l.length-1]);return`<div style="border:1px solid var(--line);border-radius:8px;padding:8px 10px"><small class="mono" style="color:${META[s].c}">${META[s].n}</small><div style="font:700 18px var(--fh);color:${col(a)}">${a.toFixed(0)}% <small>avg · ${l.length} tests</small></div><small>latest ${z.toFixed(0)}%</small></div>`}).join('');
+ return h+`<div class="card" style="margin-top:12px"><h2>Trend</h2>${sv}<div style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">${av}</div></div><div class="card" style="margin-top:12px"><h2>All results</h2>${T.slice().reverse().map(t=>`<div style="display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)"><b style="color:${META[t.s].c};width:42px">${META[t.s].p||t.s}</b><div style="flex:1;min-width:0;overflow-wrap:anywhere">${esc(t.n||t.k)}<br><small>${esc(t.k)} · ${esc(t.d)}</small></div><span class="mono" style="color:${col(pc(t))};font-weight:700">${t.m}/${t.t} · ${pc(t).toFixed(0)}%</span><button class="btn ghost sm" data-mk="del" data-id="${esc(t.id)}">✕</button></div>`).join('')}</div>`}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-mk]');if(!b)return;e.preventDefault();
+ if(b.dataset.mk==='add'){const m=parseFloat($('#mkM').value),t=parseFloat($('#mkT').value)||100;if(isNaN(m)||m<0||m>t)return alert('Enter valid marks (0 to the total).');(S.tests=S.tests||[]).push({id:uid(),s:$('#mkS').value,k:$('#mkK').value,n:$('#mkN').value.trim(),m,t,d:$('#mkD').value||dk(Date.now())});save();render()}
+ else if(confirm('Delete this result?')){(S.del=S.del||[]).push(b.dataset.id);S.tests=(S.tests||[]).filter(x=>x.id!==b.dataset.id);save();render()}});
+/* dashboard: revision due + this week */
+function wkCard(){const now=Date.now(),W0=now-7*864e5,last={};S.sessions.forEach(x=>{const k=pk(x.s,x.i);if(!last[k]||x.en>last[k])last[k]=x.en});const IV=[3,7,14,21,30],due=[];
+ ORDER.forEach(s=>L[s].forEach(c=>{const p=prog(s,c.i);if(!p.s)return;const ks=PK.filter(k=>/^r\d+$/.test(k));let n=0;for(const k of ks){if(p[k])n++;else break}const l=last[pk(s,c.i)];if(!l||n>=ks.length)return;const od=(now-l)/864e5-IV[Math.min(n,IV.length-1)];if(od>=0)due.push({s,t:c.t,r:n+1,od})}));due.sort((a,b)=>b.od-a.od);
+ const ws=S.sessions.filter(x=>x.st>=W0),hr=ws.reduce((t,x)=>t+hrs(x),0),dys=new Set(ws.map(x=>dk(x.st))).size,pd=S.notes.filter(n=>nAct(n)&&n.t==='Pending').length,ts=(S.tests||[]).filter(t=>Date.parse(t.d)>=W0);
+ return`<div class="grid two" style="margin-top:12px"><div class="card"><h2>Revise today</h2>${due.length?due.slice(0,8).map(d=>`<div style="padding:5px 0;border-bottom:1px solid var(--line)"><b style="color:${META[d.s].c}">${d.s}</b> ${esc(d.t)} <small>· Rev ${d.r} · ${Math.round(d.od)}d overdue</small></div>`).join('')+(due.length>8?`<small>+${due.length-8} more</small>`:''):'<small>Nothing due. Revisions are suggested 3, 7, 14, 21 and 30 days after you last studied a chapter.</small>'}</div><div class="card"><h2>This week</h2><div style="line-height:1.9">⏱ <b>${fh(hr)}</b> over ${dys} day${dys===1?'':'s'}<br>📚 ${ws.length} sessions<br>📌 ${pd} pending notes<br>📝 ${ts.length} test${ts.length===1?'':'s'}${ts.length?' · avg '+(ts.reduce((t,x)=>t+(x.t?x.m/x.t*100:0),0)/ts.length).toFixed(0)+'%':''}</div></div></div>`}
+{const _d=vDash;vDash=function(){return _d()+wkCard()}}
 /* ---------- GOOGLE DRIVE STORAGE MANAGER (Settings → Backup & data) ---------- */
 const gdSz=b=>b>=1073741824?(b/1073741824).toFixed(2)+' GB':fsz(b);
 async function mDel(id){try{const d=await mdb();await new Promise(r=>{const t=d.transaction('m','readwrite');t.objectStore('m').delete(id);t.oncomplete=r;t.onerror=r})}catch(e){}if(MU[id]){try{URL.revokeObjectURL(MU[id])}catch(e){}delete MU[id]}}
@@ -1193,26 +1224,26 @@ async function gdTok(){if(!GTOK||Date.now()>=GEXP){try{const o=JSON.parse(sessio
 async function gdQuota(){try{return(await(await gf('https://www.googleapis.com/drive/v3/about?fields=storageQuota')).json()).storageQuota||null}catch(e){return null}}
 function gdItems(){const refs=new Map();(S.notes||[]).forEach(n=>(n.a||[]).forEach(a=>refs.set(a.id,{a,n})));
  return((GD&&GD.files)||[]).map(f=>{const sz=+f.size||0,m=/^m-(.+)\.(\w+)$/.exec(f.name);let kind='other',ref=null;
-  if(f.name===DNAME)kind='main';else if(m){ref=refs.get(m[1])||null;kind=ref?'media':'orphan'}
-  const age=Date.now()-(Date.parse(f.modifiedTime)||0);return{f,sz,kind,ref,recent:kind!=='media'&&kind!=='main'&&age<36e5}}).sort((a,b)=>b.sz-a.sz)}
+  if(f.name===DNAME)kind='main';else if(/^bk-/.test(f.name))kind='backup';else if(/^x-m-/.test(f.name))kind='removed';else if(m){ref=refs.get(m[1])||null;kind=ref?'media':'orphan'}
+  const age=Date.now()-(Date.parse(f.modifiedTime)||0);return{f,sz,kind,ref,recent:(kind==='orphan'||kind==='other')&&age<36e5}}).sort((a,b)=>b.sz-a.sz)}
 function gdInner(){const it=gdItems(),has=GD&&GD.files,sel=GDSEL||new Set();
  let h='<h2>Google Drive storage</h2><small>See how much space this planner uses in your Google Drive private app folder, and delete heavy or unused files if your Google storage is getting full.</small>';
  h+='<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-gd="load"'+(GDBUSY?' disabled':'')+'>'+(GDBUSY?'Working…':has?'↻ Refresh':'Check storage usage')+'</button></div>';
  if(GD&&GD.err)h+='<div class="warn" style="margin-top:10px">⚠ '+esc(GD.err)+(/expired|sign-in|Client ID/i.test(GD.err)?' — use “Reconnect Google” in Account &amp; sync.':'')+'</div>';
  if(!has)return h;
- const main=it.filter(x=>x.kind==='main'),med=it.filter(x=>x.kind==='media'),un=it.filter(x=>x.kind==='orphan'||x.kind==='other'),unOK=un.filter(x=>!x.recent),s=l=>l.reduce((t,x)=>t+x.sz,0),q=GD.q;
- h+='<div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px">'+[['Planner total',gdSz(s(it)),it.length+' files'],['Study data',gdSz(s(main)),'sessions, notes, settings'],['Note attachments',gdSz(s(med)),med.length+' files'],['Unused files',gdSz(s(un)),un.length+' files']].map(([a,b,c])=>'<div style="border:1px solid var(--line);border-radius:8px;padding:8px 10px"><small class="mono">'+a+'</small><div style="font:700 17px var(--fh)">'+b+'</div><small>'+c+'</small></div>').join('')+'</div>';
+ const main=it.filter(x=>x.kind==='main'||x.kind==='backup'),rmv=it.filter(x=>x.kind==='removed'),med=it.filter(x=>x.kind==='media'),un=it.filter(x=>x.kind==='orphan'||x.kind==='other'),unOK=un.filter(x=>!x.recent),s=l=>l.reduce((t,x)=>t+x.sz,0),q=GD.q;
+ h+='<div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px">'+[['Planner total',gdSz(s(it)),it.length+' files'],['Study data + backups',gdSz(s(main)),'sessions, notes, settings'],['Note attachments',gdSz(s(med)),med.length+' files'],['Unused files',gdSz(s(un)),un.length+' files']].map(([a,b,c])=>'<div style="border:1px solid var(--line);border-radius:8px;padding:8px 10px"><small class="mono">'+a+'</small><div style="font:700 17px var(--fh)">'+b+'</div><small>'+c+'</small></div>').join('')+'</div>';
  if(q&&q.limit){const lim=+q.limit,use=+q.usage||0,p=Math.min(100,use/lim*100);
   h+='<div style="margin-top:12px"><small class="mono">YOUR GOOGLE ACCOUNT (Drive + Gmail + Photos): '+gdSz(use)+' of '+gdSz(lim)+' used</small><div class="bar" style="margin-top:4px"><i style="width:'+p+'%;background:'+(p>=90?'var(--acc)':'var(--ok)')+'"></i></div>'+(p>=95?'<div class="warn" style="margin-top:8px">Your Google storage is almost full — new uploads and sync can fail. Delete files below, or free space in Drive / Gmail / Photos.</div>':'')+'</div>'}
  else if(q)h+='<div style="margin-top:12px"><small class="mono">YOUR GOOGLE ACCOUNT: '+gdSz(+q.usage||0)+' used (no storage limit)</small></div>';
  if(!it.length)return h+'<div style="margin-top:12px"><small>Nothing stored in Drive yet.</small></div>';
- h+='<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn acc sm" data-gd="unused"'+(GDBUSY||!unOK.length?' disabled':'')+'>Delete unused files ('+unOK.length+' · '+gdSz(s(unOK))+')</button><button class="btn ghost sm" data-gd="sel"'+(GDBUSY||!sel.size?' disabled':'')+'>Delete selected ('+sel.size+')</button></div>';
+ h+='<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn acc sm" data-gd="unused"'+(GDBUSY||!unOK.length?' disabled':'')+'>Delete unused files ('+unOK.length+' · '+gdSz(s(unOK))+')</button><button class="btn ghost sm" data-gd="sel"'+(GDBUSY||!sel.size?' disabled':'')+'>Delete selected ('+sel.size+')</button>'+(rmv.length?'<button class="btn ghost sm" data-gd="empty"'+(GDBUSY?' disabled':'')+'>Empty recently removed ('+rmv.length+' · '+gdSz(s(rmv))+')</button>':'')+'</div>';
  h+='<small style="display:block;margin-top:6px">Unused = files in Drive that no note uses any more (e.g. from deleted notes). Deleting an attachment that a note still uses also removes it from that note on all your devices — export a backup + media (.zip) first if you want to keep it. Largest files first.</small>';
  h+='<div style="margin-top:10px;max-height:420px;overflow:auto;border-top:1px solid var(--line)">'+it.map(x=>{const f=x.f,r=x.ref;let t,sub,bd='';
   if(x.kind==='main'){t='📒 Study data ('+esc(f.name)+')';sub='Your sessions, notes and settings — can’t be deleted here (it’s needed for sync).'}
-  else if(r){const n=r.n,a=r.a,c=L[n.s]&&L[n.s][n.i];t=(a.k==='img'?'🖼 ':a.k==='pdf'?'📄 ':'🎤 ')+esc(a.nm||f.name);sub=esc((META[n.s]?META[n.s].n:n.s)+' · ch '+(n.i+1)+(c?' '+c.t:'')+' · '+n.t+(n.x?' · “'+String(n.x).slice(0,40)+'”':''));if(n.rm)bd='<span class="mono" style="font-size:10px;color:var(--acc)"> IN TRASH</span>'}
+  else if(x.kind==='backup'){t='🗄 Daily backup '+esc(f.name.slice(3,13));sub='Automatic snapshot (latest 5 kept). Restore merges it back into your data.'}else if(x.kind==='removed'){t='↩ '+esc(f.name.slice(2));sub='Recently removed attachment — restore it, or empty to free the space.'}else if(r){const n=r.n,a=r.a,c=L[n.s]&&L[n.s][n.i];t=(a.k==='img'?'🖼 ':a.k==='pdf'?'📄 ':'🎤 ')+esc(a.nm||f.name);sub=esc((META[n.s]?META[n.s].n:n.s)+' · ch '+(n.i+1)+(c?' '+c.t:'')+' · '+n.t+(n.x?' · “'+String(n.x).slice(0,40)+'”':''));if(n.rm)bd='<span class="mono" style="font-size:10px;color:var(--acc)"> IN TRASH</span>'}
   else{t='🗑 '+esc(f.name);sub=x.kind==='orphan'?'Unused — no note uses this attachment':'Unknown file';bd=x.recent?'<span class="mono" style="font-size:10px;color:var(--mute)"> RECENT — may still be syncing</span>':'<span class="mono" style="font-size:10px;color:var(--acc)"> UNUSED</span>'}
-  return'<div style="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)">'+(x.kind==='main'?'<span style="width:18px"></span>':'<input type="checkbox" style="width:18px;height:18px;flex:none" data-gdsel="'+esc(f.id)+'"'+(sel.has(f.id)?' checked':'')+(GDBUSY?' disabled':'')+'>')+'<div style="flex:1;min-width:0"><div style="font-weight:600;overflow-wrap:anywhere">'+t+bd+'</div><small style="overflow-wrap:anywhere">'+sub+' · '+(f.modifiedTime?new Date(f.modifiedTime).toLocaleDateString():'')+'</small></div><span class="mono" style="font-size:12px;white-space:nowrap">'+gdSz(x.sz)+'</span>'+(x.kind==='main'?'':'<button class="btn ghost sm" data-gd="one" data-id="'+esc(f.id)+'"'+(GDBUSY?' disabled':'')+'>Delete</button>')+'</div>'}).join('')+'</div>';
+  return'<div style="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)">'+(x.kind==='main'?'<span style="width:18px"></span>':'<input type="checkbox" style="width:18px;height:18px;flex:none" data-gdsel="'+esc(f.id)+'"'+(sel.has(f.id)?' checked':'')+(GDBUSY?' disabled':'')+'>')+'<div style="flex:1;min-width:0"><div style="font-weight:600;overflow-wrap:anywhere">'+t+bd+'</div><small style="overflow-wrap:anywhere">'+sub+' · '+(f.modifiedTime?new Date(f.modifiedTime).toLocaleDateString():'')+'</small></div><span class="mono" style="font-size:12px;white-space:nowrap">'+gdSz(x.sz)+'</span>'+((x.kind==='backup'||x.kind==='removed')?'<button class="btn ghost sm" data-gd="restore" data-id="'+esc(f.id)+'"'+(GDBUSY?' disabled':'')+'>Restore</button>':'')+(x.kind==='main'?'':'<button class="btn ghost sm" data-gd="one" data-id="'+esc(f.id)+'"'+(GDBUSY?' disabled':'')+'>Delete</button>')+'</div>'}).join('')+'</div>';
  return h}
 function gdCard(){return AUTH&&AUTH.google?'<div class="card" id="gdCard">'+gdInner()+'</div>':''}
 function gdRender(){const c=$('#gdCard');if(c)c.innerHTML=gdInner()}
@@ -1223,13 +1254,13 @@ async function gdLoad(){if(GDBUSY)return;GDBUSY=true;GD=Object.assign(GD||{},{er
  catch(e){GD=Object.assign(GD||{},{err:e.message||String(e)})}
  GDBUSY=false;gdRender()}
 async function gdRun(list){if(!list.length||GDBUSY)return;const tot=list.reduce((t,x)=>t+x.sz,0),lk=list.filter(x=>x.ref).length,real=list.filter(x=>x.recent).length;
- if(!confirm('Delete '+list.length+' file'+(list.length>1?'s':'')+' from Google Drive and free '+gdSz(tot)+'?'+(lk?'\n\n'+lk+' of them '+(lk>1?'are':'is')+' attached to sticky notes. The attachment will be removed from the note on every device. Tip: use “Export backup + media (.zip)” first if you want to keep a copy.':'')+(real?'\n\nNote: '+real+' file'+(real>1?'s were':' was')+' added in the last hour — make sure your other devices have finished syncing.':'')+'\n\nThis cannot be undone.'))return;
+ if(!confirm('Delete '+list.length+' file'+(list.length>1?'s':'')+' from Google Drive and free '+gdSz(tot)+'?'+(lk?'\n\n'+lk+' of them '+(lk>1?'are':'is')+' attached to sticky notes. They move to “Recently removed” (restorable, but still using space until you press Empty) and disappear from the notes on every device.':'')+(real?'\n\nNote: '+real+' file'+(real>1?'s were':' was')+' added in the last hour — make sure your other devices have finished syncing.':'')+'\n\nThis cannot be undone.'))return;
  GDBUSY=true;GD.err='';gdRender();const done=new Set();let ch=false;
  try{await gdTok();
-  for(const x of list){try{await gf('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(x.f.id),{method:'DELETE'})}catch(e){if(!/ 404/.test(e.message||''))throw e}
-   done.add(x.f.id);
-   if(x.ref){const a=x.ref.a;x.ref.n.a=(x.ref.n.a||[]).filter(z=>z.id!==a.id);ch=true;await mDel(a.id);if(DH){try{await(await DH.getDirectoryHandle('media')).removeEntry(a.id+'.'+a.x)}catch(e){}}}
-   else{const m=/^m-(.+)\.\w+$/.exec(x.f.name);if(m)await mDel(m[1])}}}
+  for(const x of list){const a=x.ref&&x.ref.a;
+   if(x.ref){await gf('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(x.f.id),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'x-'+x.f.name})});x.f.name='x-'+x.f.name;(S.rmA=S.rmA||[]).push({id:a.id,a,nid:x.ref.n.id,fid:x.f.id,at:Date.now()});x.ref.n.a=(x.ref.n.a||[]).filter(z=>z.id!==a.id);ch=true;continue}
+   try{await gf('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(x.f.id),{method:'DELETE'})}catch(e){if(!/ 404/.test(e.message||''))throw e}
+   done.add(x.f.id);const m=/^(?:x-)?m-(.+)\.\w+$/.exec(x.f.name);if(m)await mDel(m[1]);if(x.kind==='removed'){S.rmA=(S.rmA||[]).filter(r=>r.fid!==x.f.id);ch=true}}}
  catch(e){GD.err=e.message||String(e)}
  GD.files=(GD.files||[]).filter(f=>!done.has(f.id));GDSEL=new Set();GD.q=await gdQuota()||GD.q;GDBUSY=false;
  if(ch){save();render()}else gdRender()}
@@ -1237,7 +1268,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-gd]');if(!
  if(k==='load')gdLoad();
  else if(k==='unused')gdRun(it.filter(x=>(x.kind==='orphan'||x.kind==='other')&&!x.recent));
  else if(k==='sel')gdRun(it.filter(x=>x.kind!=='main'&&GDSEL.has(x.f.id)));
- else if(k==='one')gdRun(it.filter(x=>x.kind!=='main'&&x.f.id===b.dataset.id))});
+ else if(k==='empty')gdRun(it.filter(x=>x.kind==='removed'));else if(k==='restore')gdRestore(b.dataset.id);else if(k==='one')gdRun(it.filter(x=>x.kind!=='main'&&x.f.id===b.dataset.id))});
 document.addEventListener('change',e=>{const c=e.target.closest&&e.target.closest('[data-gdsel]');if(!c)return;c.checked?GDSEL.add(c.dataset.gdsel):GDSEL.delete(c.dataset.gdsel);gdRender()});
 async function gLogin(){
  if(location.protocol==='file:')return am('Google sign-in only works when the planner is opened from a web address (e.g. GitHub Pages), not from a file on your computer.');
