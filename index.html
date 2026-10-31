@@ -1000,10 +1000,10 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-call]');if
 function pendList(){const a=S.notes.filter(n=>nAct(n)&&n.t==='Pending').sort((x,y)=>y.c-x.c).slice(0,8);if(!a.length)return'<small>Nothing pending. Add sticky notes from the punch-out box or the Chapters tab.</small>';
  return'<table>'+a.map(n=>`<tr><td>${NI[n.t]}</td><td><b style="color:${META[n.s].c}">${n.s}</b> ${esc(L[n.s][n.i].t)}<br><small>${esc((n.x||ldrAll(n)).slice(0,120))}</small></td><td><button class="btn ghost sm" data-nact="done" data-nid="${n.id}">✓ Done</button></td></tr>`).join('')+'</table>'}
 function vNotes(){
- const q=nQ.toLowerCase();
+ const q=nQ.toLowerCase();if(nSt!=='open'&&!S.notes.some(x=>stOf(x)===nSt))nSt='open';
  const ns=S.notes.filter(n=>(q||((nT==='all'||n.t===nT)&&(nS==='all'||n.s===nS)&&(nC<0||n.i===nC)&&(nC>=0||!nCq||nHit(L[n.s][n.i].t,nWords(nCq)))&&stOf(n)===nSt))&&(!q||n.x.toLowerCase().includes(q)||ldrAll(n).toLowerCase().includes(q)||L[n.s][n.i].t.toLowerCase().includes(q))).sort((a,b)=>b.c-a.c);
  const cnt=k=>S.notes.filter(n=>stOf(n)===nSt&&(k==='all'||n.t===k)).length;
- const stc=[['open','Notes'],['done','✓ Done'],['rem','🗑 Removed']].map(([k,t])=>`<button class="chip ${nSt===k?'on':''}" style="--c:var(--ink)" data-nst="${k}">${t} (${S.notes.filter(x=>stOf(x)===k).length})</button>`).join('');
+ const stc=[['open','Notes'],['done','✓ Done'],['rem','🗑 Removed']].filter(([k])=>k==='open'||S.notes.some(x=>stOf(x)===k)).map(([k,t])=>`<button class="chip ${nSt===k?'on':''}" style="--c:var(--ink)" data-nst="${k}">${t} (${S.notes.filter(x=>stOf(x)===k).length})</button>`).join('');
  const chips=['all',...NT].map(k=>`<button class="chip ${nT===k?'on':''}" style="--c:${k==='all'?'var(--ink)':'#b98a00'}" data-ntype="${k}">${k==='all'?'All':NI[k]+' '+k} (${cnt(k)})</button>`).join('');
  const so=['<option value="all">All subjects</option>',...ORDER.map(s=>`<option value="${s}" ${nS===s?'selected':''}>${META[s].p} · ${META[s].n}</option>`)].join('');
  return`<div class="card"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><div class="chips" style="margin:0">${chips}</div><button class="btn acc sm" data-act="addNoteAny">＋ New sticky note</button>${dataBar("notes")}</div>
@@ -1065,11 +1065,11 @@ document.addEventListener('click',e=>{
  if(t.dataset.go!==undefined){e.preventDefault();pS=cS;pC=+t.dataset.go;selSave();tab='punch';render();return}
  if(t.dataset.del){if(confirm('Delete this session?')){(S.del=S.del||[]).push(t.dataset.del);S.sessions=S.sessions.filter(x=>x.id!==t.dataset.del);save();render();fillMC()}return}
  if(t.dataset.nadd!==undefined){e.preventDefault();openNote({s:cS,i:+t.dataset.nadd});return}
- if(t.dataset.npick){e.preventDefault();const[s,i]=t.dataset.npick.split(':');nS=s;nC=+i;nCq='';render();return}
+ if(t.dataset.npick){e.preventDefault();const[s,i]=t.dataset.npick.split(':');nS=s;nC=+i;nCq='';nSt='open';render();return}
  if(t.dataset.nst){nSt=t.dataset.nst;render();return}
  if(t.dataset.nview){e.preventDefault();const[s,i]=t.dataset.nview.split(':');nS=s;nC=+i;nCq='';nSt='open';nT='all';tab='notes';render();return}
  if(t.dataset.nact){const id=t.dataset.nid,n=S.notes.find(x=>x.id===id);if(n){if(t.dataset.nact==='done'){n.d=n.d?0:1;save();render()}else if(t.dataset.nact==='edit')openNote({id});else if(t.dataset.nact==='addq')quickQ(id);else if(t.dataset.nact==='rm'){n.rm=Date.now();save();render()}else if(t.dataset.nact==='restore'){delete n.rm;save();render()}else if(t.dataset.nact==='del'&&confirm('Delete this note permanently? This cannot be undone.')){(S.del=S.del||[]).push(id);S.notes=S.notes.filter(x=>x.id!==id);save();render()}}return}
- if(t.dataset.ntype!==undefined){nT=t.dataset.ntype;render();return}
+ if(t.dataset.ntype!==undefined){nT=t.dataset.ntype;nSt='open';render();return}
  const a=t.dataset.act;e.preventDefault();
  if(a==='subR'||a==='subV'){if(a==='subR')S.set.cr=t.dataset.r;else S.set.sv=t.dataset.r;save();const y=window.scrollY;render();scrollTo(0,y);return}
   if(a==='chartR'){S.set.cr=t.dataset.r;save();const y=window.scrollY;render();scrollTo(0,y);return}
@@ -1123,7 +1123,7 @@ document.addEventListener('change',e=>{const t=e.target;if(t.id==='pS'||t.id==='
  if(t.id==='pS'){pS=t.value;pC=lastChap(pS)??0;selSave();render()}
  else if(t.id==='pC'){pC=+t.value;selSave();const b=$('#pNotes');if(b){b.innerHTML=chNotes(pS,pC,1);hydrate(b)}}else if(t.id==='pA'){pA=t.value;selSave()}
  else if(t.id==='cF'){cF=t.value;render()}
- else if(t.id==='nvS'){nS=t.value;nC=-1;nCq='';render()}
+ else if(t.id==='nvS'){nS=t.value;nC=-1;nCq='';nSt='open';render()}
  else if(t.id==='nvSt'){nSt=t.value;render()}
  else if(t.id==='qSortT'||t.id==='qSortN'){S.set.qSort=t.value==='qno'?'qno':'pri';save();const y=window.scrollY;render();tickAll();scrollTo(0,y)}
  else if(t.id==='qAllT'){S.set.qAll=t.checked?1:0;save();const y=window.scrollY;render();tickAll();scrollTo(0,y)}
