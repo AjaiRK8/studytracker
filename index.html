@@ -897,6 +897,10 @@ function vSet(){
 
 /* ---------- STICKY NOTES ---------- */
 const NT=['Note','Pending','Doubt','Important','Additional Questions','Amendment','LDR'],NC={Note:'#fff1a8',Pending:'#ffc999',Doubt:'#bfe0ff',Important:'#ffb3b3','Additional Questions':'#e3d1ff',Amendment:'#ffe08a',LDR:'#c9efc4'},NI={Note:'📝',Pending:'📌',Doubt:'❓',Important:'⭐','Additional Questions':'🧑‍🏫',Amendment:'📑',LDR:'📖'};
+/* duplicate guard: same source + question number (or page/summary when no number) within one chapter's LDR notes */
+const qKey=o=>{const f=x=>String(x||'').toLowerCase().replace(/\s+/g,'');return o.q||o.p?f(o.r)+'|'+f(o.q)+'|'+(o.q?'':f(o.p)):f(o.r)+'||s:'+f(o.s)};
+const ldrDups=(s,i,qs,skip)=>{const seen=new Set(),d=[];S.notes.forEach(z=>{if(z.rm||z.t!=='LDR'||z.s!==s||z.i!==i||z===skip)return;ldrList(z).forEach(o=>seen.add(qKey(o)))});qs.forEach(o=>{const k=qKey(o);if(seen.has(k))d.push(o);else seen.add(k)});return d};
+const dupMsg=d=>'Already added for this chapter: '+d.map(o=>ldrHead(o)||'(summary only)').join(', ')+'.\n\nChange or remove the duplicate.';
 const ldrList=n=>Array.isArray(n.q)?n.q:((n.qn||n.qp||n.qs)?[{q:n.qn||'',p:n.qp||'',s:n.qs||''}]:[]);
 const PRI=['High','Medium','Low'],PI={High:'🔴',Medium:'🟡',Low:'🟢'},PR=o=>{const k=PRI.indexOf(o.r);return k<0?3:k};
 /* reminders follow priority: High = every session; Medium = all except Last Day Revision; Low = Study, alternate revisions (R1, R3..) and Practice. */
@@ -963,6 +967,7 @@ function quickQ(id){const n=S.notes.find(x=>x.id===id);if(!n)return;const d=$('#
  addQ({});const b=d.querySelector('.qb');
  const save1=()=>{const o={q:b.querySelector('.qn').value.trim(),p:b.querySelector('.qp').value.trim(),s:b.querySelector('.qs').value.trim(),r:b.querySelector('.qr').value,rv:Object.fromEntries([...b.querySelectorAll('.qd input')].map(i=>[i.dataset.k,i.checked?1:0]))};
   if(!o.q&&!o.p&&!o.s){alert('Enter a question number, page or summary.');return false}
+  {const d=ldrDups(n.s,n.i,[o],null);if(d.length){alert(dupMsg(d));return false}}
   if(!Array.isArray(n.q)){n.q=ldrList(n);delete n.qn;delete n.qp;delete n.qs}n.q.push(o);save();render();return true};
  d.showModal();b.querySelector('.qn').focus();
  $('#qqNo').onclick=()=>d.close();$('#qqOK').onclick=()=>{if(save1())d.close()};$('#qqMore').onclick=()=>{if(save1())quickQ(id)}}
@@ -988,6 +993,7 @@ function openNote(o){
  d.showModal();$('#nfNo').onclick=()=>d.close();
  $('#nfOK').onclick=()=>{if(REC)REC.stop();const x=$('#nfX').value.trim(),L1=$('#nfT').value==='LDR',q=L1?[...document.querySelectorAll('#nfQs .qb')].map(b=>({q:b.querySelector('.qn').value.trim(),p:b.querySelector('.qp').value.trim(),s:b.querySelector('.qs').value.trim(),r:b.querySelector('.qr').value,rv:Object.fromEntries([...b.querySelectorAll('.qd input')].map(i=>[i.dataset.k,i.checked?1:0]))})).filter(o=>o.q||o.p||o.s):[];if(MR)return alert('Stop the voice recording first.');if(!x&&!q.length&&!nfA.length)return alert(L1?'Add at least one question (number, page or summary), or write a note.':'Write something on the note.');
   const v={s:$('#nfS').value,i:+$('#nfC').value,t:$('#nfT').value,x,q,a:nfA.slice()};
+  if(v.t==='LDR'&&q.length){const d=ldrDups(v.s,v.i,q,n||null);if(d.length)return alert(dupMsg(d))}
   if(n){Object.assign(n,v);delete n.qn;delete n.qp;delete n.qs}else{const ex=(v.t==='LDR'&&q.length)?S.notes.find(z=>!z.rm&&z.t==='LDR'&&z.s===v.s&&z.i===v.i):null;if(ex&&confirm('This chapter already has an LDR sticky note.\n\nOK = add these question(s) to it\nCancel = save as a separate new note')){if(!Array.isArray(ex.q)){ex.q=ldrList(ex);delete ex.qn;delete ex.qp;delete ex.qs}ex.q.push(...q);if(x)ex.x=(ex.x?ex.x+'\n\n':'')+x;ex.a=(ex.a||[]).concat(v.a)}else S.notes.push({id:uid(),...v,c:Date.now(),d:0,sid:''})}
   save();d.close();render()}}
 
