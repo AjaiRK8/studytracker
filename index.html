@@ -1327,8 +1327,8 @@ function cmTot(m,ps){const gs=ps.map(p=>m[p]).filter(Boolean);if(!gs.length)retu
  const t=cmM==='h'?fh(h):cmM==='r'?(sh?Math.round(h/sh*100)+'%':'–'):cmSpan({st:Math.min(...gs.map(g=>g.st)),en:Math.max(...gs.map(g=>g.en))})+'d';return`<td class="cmt"><b>${t}</b></td>`}
 function cmSub(ps){let rows='',bars='',mxT=.01;const T={};ORDER.forEach(s=>{T[s]=hoursOf(x=>x.s===s);mxT=Math.max(mxT,T[s])});
  ORDER.forEach(s=>{const m=cmAgg(x=>x.s===s),tot=T[s],nc=new Set(S.sessions.filter(x=>x.s===s).map(x=>x.i)).size;
-  rows+=`<tr><td><b style="color:${META[s].c}">${META[s].n}</b></td>${cmRow(m,ps)}${cmTot(m,ps)}</tr>`;
-  bars+=`<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;gap:8px;font-size:13px"><span>${META[s].n}</span><span class="mono">${fh(tot)}${nc?' · avg '+fh(tot/nc)+' / chapter':''}</span></div><div class="bar" style="display:flex;height:12px">${ps.map((p,k)=>m[p]?`<i style="width:${m[p].h/mxT*100}%;background:${CMC[k%7]}" title="${esc(p)}: ${fh(m[p].h)}"></i>`:'').join('')}</div></div>`});
+  rows+=`<tr data-cmgo="${s}" style="cursor:pointer" title="Open chapter-wise comparison"><td><b style="color:${META[s].c}">${META[s].n}</b> ▸</td>${cmRow(m,ps)}${cmTot(m,ps)}</tr>`;
+  bars+=`<div data-cmgo="${s}" style="margin:8px 0;cursor:pointer" title="Open chapter-wise comparison"><div style="display:flex;justify-content:space-between;gap:8px;font-size:13px"><span>${META[s].n}</span><span class="mono">${fh(tot)}${nc?' · avg '+fh(tot/nc)+' / chapter':''}</span></div><div class="bar" style="display:flex;height:12px">${ps.map((p,k)=>m[p]?`<i style="width:${m[p].h/mxT*100}%;background:${CMC[k%7]}" title="${esc(p)}: ${fh(m[p].h)}"></i>`:'').join('')}</div></div>`});
  const lg=ps.map((p,k)=>`<span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${CMC[k%7]}"></i> ${esc(p)}</span>`).join('');
  return`<div style="overflow-x:auto"><table class="cmp">${cmHead(ps,'Subject','Total')}${rows}<tr class="cmtr"><td>Total</td>${cmRow(cmAgg(()=>true),ps)}${cmTot(cmAgg(()=>true),ps)}</tr></table></div><h2 style="margin:18px 0 4px">Where the hours went</h2><div class="pips" style="margin:0 0 6px">${lg}</div>${bars}`}
 function cmChap(ps){const s=cmS,ls=L[s],A={};ls.forEach(c=>A[c.i]=cmAgg(x=>x.s===s&&x.i===c.i));
@@ -1356,8 +1356,8 @@ function vCmp(){if(!S.sessions.length)return'<div class="card"><small>Log a few 
  return shareBar()+`<div class="card">${views}${subs}${mode}${cmV==='sub'?cmSub(ps):cmV==='chap'?cmChap(ps):cmPass(ps)}</div>`}
 function cmCsv(){const rows=[['SubjectCode','ChapterNo','Chapter','Pass','Hours','Sessions','FirstDate','LastDate','CalendarDays']];
  ORDER.forEach(s=>L[s].forEach(c=>{const m=cmAgg(x=>x.s===s&&x.i===c.i);Object.keys(m).forEach(p=>{const g=m[p];rows.push([s,c.i+1,c.t,p,g.h.toFixed(2),g.n,dk(g.st),dk(g.en),cmSpan(g)])})}));csvOut('compare',rows)}
-document.addEventListener('click',e=>{const q=e.target.closest('[data-sset]');if(q){setSec=q.dataset.sset;render();return}const t=e.target.closest('[data-cmv],[data-cms],[data-cmx],[data-cmcsv]');if(!t)return;const y=window.scrollY;
- if(t.dataset.cmv)cmV=t.dataset.cmv;else if(t.dataset.cms)cmS=t.dataset.cms;else if(t.dataset.cmx!==undefined){const k=cmS+':'+t.dataset.cmx;cmOpen.has(k)?cmOpen.delete(k):cmOpen.add(k)}else{cmCsv();return}
+document.addEventListener('click',e=>{const q=e.target.closest('[data-sset]');if(q){setSec=q.dataset.sset;render();return}const t=e.target.closest('[data-cmv],[data-cms],[data-cmx],[data-cmcsv],[data-cmgo]');if(!t)return;const y=window.scrollY;
+ if(t.dataset.cmgo){cmV='chap';cmS=t.dataset.cmgo}else if(t.dataset.cmv)cmV=t.dataset.cmv;else if(t.dataset.cms)cmS=t.dataset.cms;else if(t.dataset.cmx!==undefined){const k=cmS+':'+t.dataset.cmx;cmOpen.has(k)?cmOpen.delete(k):cmOpen.add(k)}else{cmCsv();return}
  render();scrollTo(0,y)});
 document.addEventListener('change',e=>{if(e.target.id==='cmM'){cmM=e.target.value;render()}else if(e.target.id==='cmO'){cmO=+e.target.value;render()}});
 /* ---------- DAILY "REMEMBER TODAY" CARD (from sticky notes) ---------- */
