@@ -21,18 +21,20 @@
 @media (prefers-color-scheme:dark){:root{--bg:#171613;--card:#211f1a;--ink:#efe9da;--mute:#a19a88;--line:#3a3629;--acc:#ff6a4d;--acc2:#efe9da}}
 *{box-sizing:border-box}
 #pdfhead{display:none}
-@media print{
-:root{--bg:#fff;--card:#fff;--ink:#1e1c18;--mute:#5f5a4e;--line:#cfc8b5;--acc:#d8432a;--acc2:#1e1c18}
-*{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-html,body{background:#fff!important}
-#nav,#ubar,#warn,#pbar,.noprint,button:not(.chip),select,input,textarea,.badge{display:none!important}
-.chip:not(.on){display:none!important}.chip{pointer-events:none}
-#pdfhead{display:block;font:600 12px var(--fm);color:var(--mute);margin:8px 0 12px}
-.wrap{max-width:none;padding:0}
-.card,.kpi,details{break-inside:avoid;box-shadow:none!important}
-[style*="overflow-x"]{overflow:visible!important}
-table{font-size:10px}
-}
+@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+/* PDF mode: identical fixed layout on phone and desktop (class is on <html> only while sharing) */
+html.pdfmode{--bg:#fff;--card:#fff;--ink:#1e1c18;--mute:#5f5a4e;--line:#cfc8b5;--acc:#d8432a;--acc2:#1e1c18}
+html.pdfmode,html.pdfmode body{background:#fff!important}
+html.pdfmode #nav,html.pdfmode #ubar,html.pdfmode #warn,html.pdfmode #pbar,html.pdfmode .noprint,html.pdfmode button:not(.chip),html.pdfmode select,html.pdfmode input,html.pdfmode textarea,html.pdfmode .badge{display:none!important}
+html.pdfmode .chip:not(.on){display:none!important}html.pdfmode .chip{pointer-events:none}
+html.pdfmode #pdfhead{display:block;font:600 12px var(--fm);color:var(--mute);margin:6px 0 10px}
+html.pdfmode .wrap{width:var(--pw,1040px)!important;max-width:none!important;margin:0!important;padding:0!important}
+html.pdfmode main{zoom:var(--pz,1)}
+html.pdfmode .two{grid-template-columns:1fr 1fr!important}
+html.pdfmode .kpis{grid-template-columns:repeat(4,1fr)!important}
+html.pdfmode .card,html.pdfmode .kpi,html.pdfmode details{break-inside:avoid;box-shadow:none!important}
+html.pdfmode [style*="overflow-x"]{overflow:visible!important}
+html.pdfmode table{font-size:11px}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--fs)}
 .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
 header{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:12px}
@@ -702,15 +704,17 @@ const TABS=[['punch','Punch In / Out'],['dash','Dashboard'],['cmp','Compare'],['
 function clockSeen(){const c=document.querySelector('.clock.tick');if(!c)return false;const r=c.getBoundingClientRect();if(!r.width)return false;const x=r.left+r.width/2,y=r.top+r.height/2;if(x<0||y<0||x>innerWidth||y>innerHeight)return false;const e=document.elementFromPoint(x,y);return !!e&&(e===c||c.contains(e))}
 function shareBar(){return'<div class="noprint" style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn ghost sm" data-act="pdf" title="Opens the print dialog — choose Save as PDF, then share the file">📄 Share progress (PDF)</button></div>'}
 function sharePdf(){
- const dets=[...document.querySelectorAll('#main details')],was=dets.map(d=>d.open);dets.forEach(d=>d.open=true);
+ const R=document.documentElement,land=tab==='cmp',dets=[...document.querySelectorAll('#main details')],was=dets.map(d=>d.open);dets.forEach(d=>d.open=true);
  let hd=$('#pdfhead');if(!hd){hd=document.createElement('div');hd.id='pdfhead';$('#main').before(hd)}
  const dt=new Date().toISOString().slice(0,10);
- hd.textContent='Study progress report · '+(tab==='cmp'?'Time comparison':'Dashboard')+' · '+USER+' · '+dt+' · '+Math.max(0,daysLeft())+' days to exam ('+S.set.exam+')';
+ hd.textContent='Study progress report · '+(land?'Time comparison':'Dashboard')+' · '+USER+' · '+dt+' · '+Math.max(0,daysLeft())+' days to exam ('+S.set.exam+')';
  let ps=$('#pgsz');if(!ps){ps=document.createElement('style');ps.id='pgsz';document.head.appendChild(ps)}
- ps.textContent='@media print{@page{size:A4 '+(tab==='cmp'?'landscape':'portrait')+';margin:10mm}}';
+ ps.textContent='@media print{@page{size:A4 '+(land?'landscape':'portrait')+';margin:10mm}}';
+ R.style.setProperty('--pw',(land?1040:715)+'px');R.style.setProperty('--pz',1);R.classList.add('pdfmode');
+ if(land){const m=$('#main'),avail=718-hd.offsetHeight-14;R.style.setProperty('--pz',Math.min(1,avail/Math.max(1,m.scrollHeight))*.97)}
  const ttl=document.title;document.title='Study progress - '+USER+' - '+dt;
- const done=()=>{document.title=ttl;dets.forEach((d,i)=>{d.open=was[i]})};
- addEventListener('afterprint',done,{once:true});setTimeout(()=>print(),60)}
+ let fin=0;const done=()=>{if(fin)return;fin=1;document.title=ttl;R.classList.remove('pdfmode');R.style.removeProperty('--pw');R.style.removeProperty('--pz');dets.forEach((d,i)=>{d.open=was[i]})};
+ addEventListener('afterprint',done,{once:true});addEventListener('pointerdown',done,{once:true,capture:true});setTimeout(()=>print(),80)}
 function pbarUp(){const b=$('#pbar');if(!b)return;const desk=matchMedia('(min-width:761px)').matches,a=S.active,on=!!(a&&USER&&(tab!=='punch'||(desk&&!clockSeen())));
  const key=on+'|'+(a&&a.pz?1:0);if(b.dataset.k===key&&b.className===(on?'on':''))return;b.dataset.k=key;b.className=on?'on':'';
  if(!on){b.innerHTML='';return}
@@ -770,7 +774,7 @@ function vDash(){
  const wl=workload(),need=wl.units>0?(wl.units/(dl/7)).toFixed(1):'0';
  const kp=(v,l)=>`<div class="card kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`;
  let h=shareBar()+`<div class="grid kpis">${kp(fh(td)+' <small>/ '+tg+'h</small>','today vs daily target')}${kp(fh(wk),'last 7 days')}${kp(fh(tot),'total logged')}${kp(streak(m)+' d','current streak')}${kp(Math.round(done/all*100)+'%','syllabus (study + revisions + practice)')}${kp(need,'chapter-equivalents/week needed ('+pend+' to study + revisions/LDR/practice ≈ '+wl.rv.toFixed(0)+')')}${kp(S.notes.filter(n=>nAct(n)&&n.t==='Pending').length,'open pending items')}</div>`;
- h+=`<details data-col="coach" ${(S.set.col||{}).coach?'':'open'}><summary>Coach</summary>${vCoach(m)}</details>`;h+=vRemember();
+ h+=`<details data-col="coach" ${(S.set.col||{}).coach?'':'open'}><summary>Coach</summary>${vCoach(m)}</details>`;h+='<div class="noprint">'+vRemember()+'</div>';
  if(S.active){const c=L[S.active.s][S.active.i];h+=`<div class="card live" style="margin-top:12px"><span class="dot"></span><b>Punched in:</b> ${esc(META[S.active.s].n)} — ${esc(c.t)} · <span class="mono tick"></span> <button class="btn acc sm" data-act="goPunch">Go to punch out</button></div>`}
  h+=`<div class="grid two" style="margin-top:12px"><div class="card"><h2>Daily total hours</h2>${chart14(m)}</div><div class="card"><h2>Consistency (16 weeks)</h2>${heat(m)}<div class="hint">Darker = closer to your daily target.</div></div></div>`;
  h+=`<details data-col="subj" ${(S.set.col||{}).subj?'':'open'}><summary>Subjects</summary><div class="grid two">`;
@@ -780,7 +784,7 @@ function vDash(){
   <div class="bar"><i style="width:${cnt('s')/n*100}%;background:${M.c}"></i></div>
   <div class="pips">${PK.slice(1).map(k=>`<span>${k==='p'?'Practice':k==='l'?'Last Day':'Rev-'+k.slice(1)} ${cnt(k)}/${n}</span>`).join('')}</div>
   <div style="margin-top:8px;font-size:13px">${nx?`<b>Next:</b> ${esc(nx.t)} <span class="lkin">${links(s,nx).split('</a>').filter(Boolean).map(x=>x+'</a>').join(' · ')}</span>`:'<b>All chapters studied 🎉</b>'}</div><div class="gol">View all chapters &amp; links →</div></div>`});
- h+=`</div></details><div class="grid two" style="margin-top:12px"><div class="card"><h2>Hours by subject</h2>${subBars()}</div><div class="card"><h2>Recent sessions</h2>${recent(8)}</div><div class="card" style="grid-column:1/-1"><h2>Open pending, doubts &amp; important</h2>${pendList()}</div></div>`;
+ h+=`</div></details><div class="grid two" style="margin-top:12px"><div class="card"><h2>Hours by subject</h2>${subBars()}</div><div class="card"><h2>Recent sessions</h2>${recent(8)}</div><div class="card noprint" style="grid-column:1/-1"><h2>Open pending, doubts &amp; important</h2>${pendList()}</div></div>`;
  return h}
 
 function chart14(m){
