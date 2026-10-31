@@ -855,7 +855,7 @@ function vPunch(){
   return`<div class="punch"><div class="card live"><h2><span class="dot"></span>You are punched in</h2><div style="color:${META[a.s].c};font-weight:700">${esc(META[a.s].n)}</div><div style="font-size:18px">${esc(c.t)}</div><small>${esc(a.a)}${a.n?' · '+esc(a.n):''} · since ${new Date(a.st).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</small>
  <div class="clock tick">00:00:00</div><button class="btn acc big" data-act="out">PUNCH OUT</button><button class="btn ghost big" style="margin-top:8px" data-act="pause">${a.pz?'▶ Resume':'⏸ Pause'}</button>
  <div style="text-align:center;margin-top:6px;font-size:13px"><a href="#" data-act="discard" style="color:var(--acc,#d8432a)">✕ Discard this session</a></div>
- <button class="btn ghost" style="width:100%;margin-top:8px" data-act="addNote" data-s="${a.s}" data-i="${a.i}">＋ Sticky note (pending / doubt / important)</button>${ql||!hasN?chNotes(a.s,a.i,1):''}<div class="hint">The timer keeps running even if you close this tab.</div><div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">${links(a.s,c)}</div></div>${right}</div>`}
+ <div style="display:flex;gap:8px;margin-top:8px"><button class="btn ghost" style="flex:1" data-act="addNote" data-s="${a.s}" data-i="${a.i}">＋ Sticky note</button><button class="btn ghost" style="flex:1" data-act="addLdr" data-s="${a.s}" data-i="${a.i}">＋ LDR question</button></div>${ql||!hasN?chNotes(a.s,a.i,1):''}<div class="hint">The timer keeps running even if you close this tab.</div><div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">${links(a.s,c)}</div></div>${right}</div>`}
  const opts=ORDER.map(s=>`<option value="${s}" ${s===pS?'selected':''}>${META[s].p} · ${META[s].n}</option>`).join('');
  const ch=L[pS].map(c=>`<option value="${c.i}" ${c.i===pC?'selected':''}>${pad(c.i+1)}. ${esc(c.t)}</option>`).join('');
  const c=L[pS][pC]||L[pS][0];
@@ -1009,13 +1009,13 @@ function vNotes(){
  <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap"><select id="nvS" style="width:auto">${so}</select><span style="display:flex;align-items:center;gap:5px;font-size:12px">LDR order ${qSortSel('qSortN')}</span><div style="position:relative;min-width:200px;flex:1"><input id="nvCh" autocomplete="off" style="width:100%" placeholder="Filter by chapter… (type to get suggestions)" value="${esc(nC>=0&&nS!=='all'?L[nS][nC].t:nCq)}">${nSug()}</div><input id="nvQ" style="flex:1;min-width:160px" placeholder="Search notes…" value="${esc(nQ)}"></div>
  ${nC>=0&&nS!=='all'?`<div class="hint" style="margin:0 0 8px">Showing only: <b>${esc(L[nS][nC].t)}</b> · <a href="#" data-act="clearC">show all chapters</a></div>`:''}
  ${ns.length?`<div class="notes">${ns.map((n,k)=>`<div class="sticky ${isDone(n)||n.rm?'done':''}" style="--bg:${NC[n.t]};--r:${(k%5)-2}deg"><div class="hd"><span>${NI[n.t]} ${n.t}</span><span style="color:${META[n.s].c};filter:brightness(.6)">${n.s}</span></div>${n.t==='LDR'?ldrCnt(n):''}<div class="tx">${mx(n.x)}</div>${attHtml(n)}${n.t==='LDR'&&ldrList(n).length?`<div style="font-size:12px;border-top:1px dashed #0004;padding-top:5px">${ldrHtml(n)}</div>`:''}<div class="ft"><span style="flex:1;min-width:100%;opacity:.75">${esc(L[n.s][n.i].t)} · ${dk(n.c)}</span>${n.rm?`<button data-nact="restore" data-nid="${n.id}">↩ Restore</button><button data-nact="del" data-nid="${n.id}">Delete forever</button>`:`${n.t==='Pending'?`<button data-nact="done" data-nid="${n.id}">${isDone(n)?'↺ Reopen':'✓ Done'}</button>`:''}${n.t==='LDR'?`<button data-nact="addq" data-nid="${n.id}">＋ Question</button>`:''}<button data-nact="edit" data-nid="${n.id}">Edit</button><button data-nact="rm" data-nid="${n.id}">🗑 Remove</button>`}</div></div>`).join('')}</div>`:nSt==='rem'?'<small>Nothing in Removed.</small>':nSt==='done'?'<small>No done pending notes yet.</small>':'<small>No notes here. Add one with “＋ New sticky note”, from the punch-out box, or from a chapter row.</small>'}</div>`}
-function quickQ(id){const n=S.notes.find(x=>x.id===id);if(!n)return;const d=$('#dlg');if(d.open)d.close();
+function quickQ(id){const n=typeof id==='object'?id:S.notes.find(x=>x.id===id);if(!n)return;const d=$('#dlg');if(d.open)d.close();
  d.innerHTML=`<h2 style="font:700 20px var(--fh);margin:0 0 4px">Add LDR question</h2><div class="hint" style="margin:0 0 8px">${META[n.s].p} · ${esc(L[n.s][n.i].t)} · ${ldrList(n).length} question(s) already in this note</div><div id="nfQs"></div><div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn acc" id="qqOK">Save question</button><button class="btn ghost" id="qqMore">Save &amp; add another</button><button class="btn ghost" id="qqNo">Cancel</button></div>`;
  addQ({});const b=d.querySelector('.qb');
  const save1=()=>{const o={q:b.querySelector('.qn').value.trim(),p:b.querySelector('.qp').value.trim(),s:b.querySelector('.qs').value.trim(),r:b.querySelector('.qr').value,rv:Object.fromEntries([...b.querySelectorAll('.qd input')].map(i=>[i.dataset.k,i.checked?1:0]))};
   if(!o.q&&!o.p&&!o.s){alert('Enter a question number, page or summary.');return false}
   {const d=ldrDups(n.s,n.i,[o],null);if(d.length){alert(dupMsg(d));return false}}
-  if(!Array.isArray(n.q)){n.q=ldrList(n);delete n.qn;delete n.qp;delete n.qs}n.q.push(o);save();render();return true};
+  if(!Array.isArray(n.q)){n.q=ldrList(n);delete n.qn;delete n.qp;delete n.qs}n.q.push(o);if(!S.notes.includes(n))S.notes.push(n);save();render();return true};
  d.showModal();b.querySelector('.qn').focus();
  $('#qqNo').onclick=()=>d.close();$('#qqOK').onclick=()=>{if(save1())d.close()};$('#qqMore').onclick=()=>{if(save1())quickQ(id)}}
 function openNote(o){
@@ -1101,7 +1101,7 @@ document.addEventListener('click',e=>{
  if(a==='chpw')chPwDlg();
  if(a==='gsync')gSync();
  if(a==='pdf')sharePdf();
- if(a==='gre')gReconnect();if(a==='gfull'){tab='set';setSec='data';render();scrollTo(0,0);setTimeout(gdLoad,60)}
+ if(a==='gre')gReconnect();if(a==='addLdr'){const s=t.dataset.s,i=+t.dataset.i;quickQ(S.notes.find(x=>x.s===s&&x.i===i&&x.t==='LDR'&&!x.rm)||{id:uid(),s,i,t:'LDR',x:'',c:Date.now(),d:0,q:[]})}if(a==='gfull'){tab='set';setSec='data';render();scrollTo(0,0);setTimeout(gdLoad,60)}
  if(a==='delacc')delAccDlg();
  if(a==='reset'){if(confirm('Delete ALL sessions and progress?')&&confirm('Really sure? This cannot be undone.')){S=JSON.parse(JSON.stringify(DEF));save();render()}}
 });
