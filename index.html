@@ -54,7 +54,7 @@ nav button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .grid{display:grid;gap:12px}
 .kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .kpi .v{font:800 30px/1.05 var(--fh)}.kpi .l{font:11px var(--fm);color:var(--mute);text-transform:none;margin-top:4px}
-.two{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.two{grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))}
 .mono{font-family:var(--fm)}
 .mute{color:var(--mute)}
 small{color:var(--mute)}
@@ -76,8 +76,10 @@ label.f{display:block;font:11px var(--fm);color:var(--mute);margin:10px 0 4px}
 .btn{border:0;border-radius:8px;padding:10px 16px;font:700 14px var(--fs);cursor:pointer;background:var(--ink);color:var(--bg)}
 .btn.acc{background:var(--acc);color:#fff}.btn.ghost{background:none;border:1.5px solid var(--line);color:var(--ink)}
 .btn.sm{padding:5px 9px;font-size:12px}
-.punch{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
-@media(max-width:760px){.punch{grid-template-columns:1fr}}
+.punch{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:760px){.punch{grid-template-columns:minmax(0,1fr)}}
+.punch>*,.grid>*,.card{min-width:0}.card{overflow-wrap:break-word}select,input,textarea{min-width:0;max-width:100%;box-sizing:border-box}select{text-overflow:ellipsis}.card img,.card audio,.card svg{max-width:100%}
+@media(max-width:760px){.wrap{padding-left:10px;padding-right:10px}.card{padding:12px}}
 .clock{font:600 clamp(44px,10vw,76px)/1 var(--fm);letter-spacing:-.03em;text-align:center;margin:8px 0}
 .big{width:100%;padding:16px;font-size:18px;border-radius:12px}
 .live{border:2px solid var(--acc)}
@@ -1008,7 +1010,7 @@ function vNotes(){
  const so=['<option value="all">All subjects</option>',...ORDER.map(s=>`<option value="${s}" ${nS===s?'selected':''}>${META[s].p} · ${META[s].n}</option>`)].join('');
  return`<div class="card"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><div class="chips" style="margin:0">${chips}</div><button class="btn acc sm" data-act="addNoteAny">＋ New sticky note</button>${dataBar("notes")}</div>
  <div class="chips" style="margin:10px 0 0">${stc}</div>
- <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap"><select id="nvS" style="width:auto">${so}</select><span style="display:flex;align-items:center;gap:5px;font-size:12px">LDR order ${qSortSel('qSortN')}</span><div style="position:relative;min-width:200px;flex:1"><input id="nvCh" autocomplete="off" style="width:100%" placeholder="Filter by chapter… (type to get suggestions)" value="${esc(nC>=0&&nS!=='all'?L[nS][nC].t:nCq)}">${nSug()}</div><input id="nvQ" style="flex:1;min-width:160px" placeholder="Search notes…" value="${esc(nQ)}"></div>
+ <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap"><select id="nvS" style="width:auto;max-width:100%">${so}</select><span style="display:flex;align-items:center;gap:5px;font-size:12px">LDR order ${qSortSel('qSortN')}</span><div style="position:relative;min-width:min(200px,100%);flex:1 1 200px"><input id="nvCh" autocomplete="off" style="width:100%" placeholder="Filter by chapter… (type to get suggestions)" value="${esc(nC>=0&&nS!=='all'?L[nS][nC].t:nCq)}">${nSug()}</div><input id="nvQ" style="flex:1 1 160px;min-width:min(160px,100%)" placeholder="Search notes…" value="${esc(nQ)}"></div>
  ${nC>=0&&nS!=='all'?`<div class="hint" style="margin:0 0 8px">Showing only: <b>${esc(L[nS][nC].t)}</b> · <a href="#" data-act="clearC">show all chapters</a></div>`:''}
  ${ns.length?`<div class="notes">${ns.map((n,k)=>`<div class="sticky ${isDone(n)||n.rm?'done':''}" style="--bg:${NC[n.t]};--r:${(k%5)-2}deg"><div class="hd"><span>${NI[n.t]} ${n.t}</span><span style="color:${META[n.s].c};filter:brightness(.6)">${n.s}</span></div>${n.t==='LDR'?ldrCnt(n):''}<div class="tx">${mx(n.x)}</div>${attHtml(n)}${n.t==='LDR'&&ldrList(n).length?`<div style="font-size:12px;border-top:1px dashed #0004;padding-top:5px">${ldrHtml(n)}</div>`:''}<div class="ft"><span style="flex:1;min-width:100%;opacity:.75">${esc(L[n.s][n.i].t)} · ${dk(n.c)}</span>${n.rm?`<button data-nact="restore" data-nid="${n.id}">↩ Restore</button><button data-nact="del" data-nid="${n.id}">Delete forever</button>`:`${n.t==='Pending'?`<button data-nact="done" data-nid="${n.id}">${isDone(n)?'↺ Reopen':'✓ Done'}</button>`:''}${n.t==='LDR'?`<button data-nact="addq" data-nid="${n.id}">＋ Question</button>`:''}<button data-nact="edit" data-nid="${n.id}">Edit</button><button data-nact="rm" data-nid="${n.id}">🗑 Remove</button>`}</div></div>`).join('')}</div>`:nSt==='rem'?'<small>Nothing in Removed.</small>':nSt==='done'?'<small>No done pending notes yet.</small>':'<small>No notes here. Add one with “＋ New sticky note”, from the punch-out box, or from a chapter row.</small>'}</div>`}
 function quickQ(id){const n=typeof id==='object'?id:S.notes.find(x=>x.id===id);if(!n)return;const d=$('#dlg');if(d.open)d.close();
