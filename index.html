@@ -399,6 +399,7 @@ function applyCust(){ORDER.forEach(s=>{const cu=S&&S.cust&&S.cust[s];L[s].length
 const K='caFinalPlanner.v1';
 const DEF={sessions:[],notes:[],del:[],progress:{},active:null,cust:{},set:{mf:{},noic:{},exam:'2027-05-02',target:6,revs:2,base:'',files:{DT:'Study material/DT module.pdf',IDT:'Study material/IDT module.pdf',AUD:'Study material/Audit Module.pdf',FR:'Study material/FR module.pdf',AFM:'Study material/AFM module.pdf'}}};
 const $=s=>document.querySelector(s);
+var GD=null,GDBUSY=false,GDSEL=new Set();
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pad=n=>String(n).padStart(2,'0');
 const dk=t=>{const d=new Date(t);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
@@ -934,7 +935,7 @@ function vSet(){
    pace:`<div class="grid two"><div class="card"><h2>Pace weights</h2><label class="f">PACE WEIGHTS — effort of one pending pass as a fraction of studying a chapter once</label><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:6px">${PK.slice(1).map(k=>`<label class="mono" style="font-size:11px">${k==='p'?'Practice':k==='l'?'Last Day':'Rev '+k.slice(1)}<input type="number" min="0" max="2" step="0.05" data-pw="${k}" value="${pw(k)}"></label>`).join('')}</div><small>Used for the “chapter-equivalents/week needed” figure on the Dashboard and the Study coach pace tip. Study = 1.0.</small></div></div>`,
    mat:`<div class="grid two">${modOK()?`<div class="card"><h2>Module PDF links</h2><small>Paths are relative to this HTML file (default: Study material folder). Change if yours differ.</small><label class="f">FOLDER PREFIX (optional, e.g. file:///D:/CA/ or ../pdf/)</label><input id="sB" value="${esc(S.set.base)}">${f}</div>`:''}${myMat()}</div>`,
    acct:`<div class="grid two"><div class="card"><h2>Account · ${esc(USER)}</h2><small>Change your password, or remove this account from this browser.</small><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">${AUTH&&AUTH.google?'<small>Signed in with Google — no password to change.</small>':'<button class="btn" data-act="chpw">Change password</button>'}<button class="btn ghost" data-act="delacc">Delete account</button></div></div><div class="card"><h2>Google Drive sync</h2>${AUTH&&AUTH.google?`<small>Signed in as ${esc(USER)}. Your data is saved to a private app folder in your Google Drive (only this planner can see it). Open the same planner link on your phone, tap “Sign in with Google”, and the same data appears.</small><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="gsync">Sync now</button>${GNEED?'<button class="btn acc" data-act="gre">Reconnect Google</button>':''}</div>`:'<small>Sign out and choose “Sign in with Google” to sync across PC and mobile.</small>'}${GCID_DEFAULT?'':`<label class="f">GOOGLE CLIENT ID</label><input id="sG" value="${esc(gcid())}" placeholder="xxxx.apps.googleusercontent.com">`}</div></div>`,
-   data:`<div class="grid two"><div class="card"><h2>Backup</h2><small>Data is auto-saved on every event in this browser and in your linked file. Sticky-note images and voice notes are kept in the linked folder’s <b>media</b> sub-folder and in Google Drive; “Export backup + media” bundles the JSON and all media in one .zip (import it back with Import or on the sign-in screen).</small><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="export">Export backup</button><button class="btn" data-act="exportZip">Export backup + media (.zip)</button><label class="btn ghost" style="cursor:pointer">Import<input type="file" id="imp" accept=".json,.zip" hidden></label><button class="btn ghost" data-act="exportAll">Export all CSVs</button><label class="btn ghost" style="cursor:pointer">Import CSV<input type="file" id="impCsv" accept=".csv,text/csv" multiple hidden></label><button class="btn ghost" data-act="reset">Reset everything</button></div></div></div>`};
+   data:`<div class="grid two"><div class="card"><h2>Backup</h2><small>Data is auto-saved on every event in this browser and in your linked file. Sticky-note images and voice notes are kept in the linked folder’s <b>media</b> sub-folder and in Google Drive; “Export backup + media” bundles the JSON and all media in one .zip (import it back with Import or on the sign-in screen).</small><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="export">Export backup</button><button class="btn" data-act="exportZip">Export backup + media (.zip)</button><label class="btn ghost" style="cursor:pointer">Import<input type="file" id="imp" accept=".json,.zip" hidden></label><button class="btn ghost" data-act="exportAll">Export all CSVs</button><label class="btn ghost" style="cursor:pointer">Import CSV<input type="file" id="impCsv" accept=".csv,text/csv" multiple hidden></label><button class="btn ghost" data-act="reset">Reset everything</button></div></div>${gdCard()}</div>`};
   return chips+P[setSec]}
 
 /* ---------- STICKY NOTES ---------- */
@@ -1185,6 +1186,59 @@ function gArm(){if(gArmed)return;gArmed=true;const E=['pointerdown','keydown','t
 /* silent auto-reconnect: renew the Google token shortly before it expires, and retry in the background while it is lost */
 setInterval(()=>{if(!USER||!AUTH||!AUTH.google||document.hidden||!navigator.onLine||GBUSY)return;const soon=GTOK&&GEXP&&GEXP-Date.now()<300000;if(GNEED?Date.now()-gTry>60000:soon&&Date.now()-gTry>90000)gAuto()},20000);
 async function gReconnect(){try{await gToken(true,USER)}catch(e){return alert(e.message)}GNEED=false;gSync()}
+/* ---------- GOOGLE DRIVE STORAGE MANAGER (Settings → Backup & data) ---------- */
+const gdSz=b=>b>=1073741824?(b/1073741824).toFixed(2)+' GB':fsz(b);
+async function mDel(id){try{const d=await mdb();await new Promise(r=>{const t=d.transaction('m','readwrite');t.objectStore('m').delete(id);t.oncomplete=r;t.onerror=r})}catch(e){}if(MU[id]){try{URL.revokeObjectURL(MU[id])}catch(e){}delete MU[id]}}
+async function gdTok(){if(!GTOK||Date.now()>=GEXP){try{const o=JSON.parse(sessionStorage.getItem('caPlanner.gtok')||'null');if(o&&o.u===USER&&o.e>Date.now()){GTOK=o.t;GEXP=o.e}}catch(x){}}if(!GTOK||Date.now()>=GEXP)await gToken(false,USER)}
+async function gdQuota(){try{return(await(await gf('https://www.googleapis.com/drive/v3/about?fields=storageQuota')).json()).storageQuota||null}catch(e){return null}}
+function gdItems(){const refs=new Map();(S.notes||[]).forEach(n=>(n.a||[]).forEach(a=>refs.set(a.id,{a,n})));
+ return((GD&&GD.files)||[]).map(f=>{const sz=+f.size||0,m=/^m-(.+)\.(\w+)$/.exec(f.name);let kind='other',ref=null;
+  if(f.name===DNAME)kind='main';else if(m){ref=refs.get(m[1])||null;kind=ref?'media':'orphan'}
+  const age=Date.now()-(Date.parse(f.modifiedTime)||0);return{f,sz,kind,ref,recent:kind!=='media'&&kind!=='main'&&age<36e5}}).sort((a,b)=>b.sz-a.sz)}
+function gdInner(){const it=gdItems(),has=GD&&GD.files,sel=GDSEL||new Set();
+ let h='<h2>Google Drive storage</h2><small>See how much space this planner uses in your Google Drive private app folder, and delete heavy or unused files if your Google storage is getting full.</small>';
+ h+='<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-gd="load"'+(GDBUSY?' disabled':'')+'>'+(GDBUSY?'Working…':has?'↻ Refresh':'Check storage usage')+'</button></div>';
+ if(GD&&GD.err)h+='<div class="warn" style="margin-top:10px">⚠ '+esc(GD.err)+(/expired|sign-in|Client ID/i.test(GD.err)?' — use “Reconnect Google” in Account &amp; sync.':'')+'</div>';
+ if(!has)return h;
+ const main=it.filter(x=>x.kind==='main'),med=it.filter(x=>x.kind==='media'),un=it.filter(x=>x.kind==='orphan'||x.kind==='other'),unOK=un.filter(x=>!x.recent),s=l=>l.reduce((t,x)=>t+x.sz,0),q=GD.q;
+ h+='<div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px">'+[['Planner total',gdSz(s(it)),it.length+' files'],['Study data',gdSz(s(main)),'sessions, notes, settings'],['Note attachments',gdSz(s(med)),med.length+' files'],['Unused files',gdSz(s(un)),un.length+' files']].map(([a,b,c])=>'<div style="border:1px solid var(--line);border-radius:8px;padding:8px 10px"><small class="mono">'+a+'</small><div style="font:700 17px var(--fh)">'+b+'</div><small>'+c+'</small></div>').join('')+'</div>';
+ if(q&&q.limit){const lim=+q.limit,use=+q.usage||0,p=Math.min(100,use/lim*100);
+  h+='<div style="margin-top:12px"><small class="mono">YOUR GOOGLE ACCOUNT (Drive + Gmail + Photos): '+gdSz(use)+' of '+gdSz(lim)+' used</small><div class="bar" style="margin-top:4px"><i style="width:'+p+'%;background:'+(p>=90?'var(--acc)':'var(--ok)')+'"></i></div>'+(p>=95?'<div class="warn" style="margin-top:8px">Your Google storage is almost full — new uploads and sync can fail. Delete files below, or free space in Drive / Gmail / Photos.</div>':'')+'</div>'}
+ else if(q)h+='<div style="margin-top:12px"><small class="mono">YOUR GOOGLE ACCOUNT: '+gdSz(+q.usage||0)+' used (no storage limit)</small></div>';
+ if(!it.length)return h+'<div style="margin-top:12px"><small>Nothing stored in Drive yet.</small></div>';
+ h+='<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn acc sm" data-gd="unused"'+(GDBUSY||!unOK.length?' disabled':'')+'>Delete unused files ('+unOK.length+' · '+gdSz(s(unOK))+')</button><button class="btn ghost sm" data-gd="sel"'+(GDBUSY||!sel.size?' disabled':'')+'>Delete selected ('+sel.size+')</button></div>';
+ h+='<small style="display:block;margin-top:6px">Unused = files in Drive that no note uses any more (e.g. from deleted notes). Deleting an attachment that a note still uses also removes it from that note on all your devices — export a backup + media (.zip) first if you want to keep it. Largest files first.</small>';
+ h+='<div style="margin-top:10px;max-height:420px;overflow:auto;border-top:1px solid var(--line)">'+it.map(x=>{const f=x.f,r=x.ref;let t,sub,bd='';
+  if(x.kind==='main'){t='📒 Study data ('+esc(f.name)+')';sub='Your sessions, notes and settings — can’t be deleted here (it’s needed for sync).'}
+  else if(r){const n=r.n,a=r.a,c=L[n.s]&&L[n.s][n.i];t=(a.k==='img'?'🖼 ':a.k==='pdf'?'📄 ':'🎤 ')+esc(a.nm||f.name);sub=esc((META[n.s]?META[n.s].n:n.s)+' · ch '+(n.i+1)+(c?' '+c.t:'')+' · '+n.t+(n.x?' · “'+String(n.x).slice(0,40)+'”':''));if(n.rm)bd='<span class="mono" style="font-size:10px;color:var(--acc)"> IN TRASH</span>'}
+  else{t='🗑 '+esc(f.name);sub=x.kind==='orphan'?'Unused — no note uses this attachment':'Unknown file';bd=x.recent?'<span class="mono" style="font-size:10px;color:var(--mute)"> RECENT — may still be syncing</span>':'<span class="mono" style="font-size:10px;color:var(--acc)"> UNUSED</span>'}
+  return'<div style="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)">'+(x.kind==='main'?'<span style="width:18px"></span>':'<input type="checkbox" style="width:18px;height:18px;flex:none" data-gdsel="'+esc(f.id)+'"'+(sel.has(f.id)?' checked':'')+(GDBUSY?' disabled':'')+'>')+'<div style="flex:1;min-width:0"><div style="font-weight:600;overflow-wrap:anywhere">'+t+bd+'</div><small style="overflow-wrap:anywhere">'+sub+' · '+(f.modifiedTime?new Date(f.modifiedTime).toLocaleDateString():'')+'</small></div><span class="mono" style="font-size:12px;white-space:nowrap">'+gdSz(x.sz)+'</span>'+(x.kind==='main'?'':'<button class="btn ghost sm" data-gd="one" data-id="'+esc(f.id)+'"'+(GDBUSY?' disabled':'')+'>Delete</button>')+'</div>'}).join('')+'</div>';
+ return h}
+function gdCard(){return AUTH&&AUTH.google?'<div class="card" id="gdCard">'+gdInner()+'</div>':''}
+function gdRender(){const c=$('#gdCard');if(c)c.innerHTML=gdInner()}
+async function gdLoad(){if(GDBUSY)return;GDBUSY=true;GD=Object.assign(GD||{},{err:''});gdRender();
+ try{await gdTok();try{await gSync()}catch(e){}
+  let files=[],pt='';do{const j=await(await gf('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&pageSize=1000&fields=nextPageToken,files(id,name,size,modifiedTime)'+(pt?'&pageToken='+encodeURIComponent(pt):''))).json();files=files.concat(j.files||[]);pt=j.nextPageToken||''}while(pt);
+  GD={files,q:await gdQuota(),err:''};GDSEL=new Set()}
+ catch(e){GD=Object.assign(GD||{},{err:e.message||String(e)})}
+ GDBUSY=false;gdRender()}
+async function gdRun(list){if(!list.length||GDBUSY)return;const tot=list.reduce((t,x)=>t+x.sz,0),lk=list.filter(x=>x.ref).length,real=list.filter(x=>x.recent).length;
+ if(!confirm('Delete '+list.length+' file'+(list.length>1?'s':'')+' from Google Drive and free '+gdSz(tot)+'?'+(lk?'\n\n'+lk+' of them '+(lk>1?'are':'is')+' attached to sticky notes. The attachment will be removed from the note on every device. Tip: use “Export backup + media (.zip)” first if you want to keep a copy.':'')+(real?'\n\nNote: '+real+' file'+(real>1?'s were':' was')+' added in the last hour — make sure your other devices have finished syncing.':'')+'\n\nThis cannot be undone.'))return;
+ GDBUSY=true;GD.err='';gdRender();const done=new Set();let ch=false;
+ try{await gdTok();
+  for(const x of list){try{await gf('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(x.f.id),{method:'DELETE'})}catch(e){if(!/ 404/.test(e.message||''))throw e}
+   done.add(x.f.id);
+   if(x.ref){const a=x.ref.a;x.ref.n.a=(x.ref.n.a||[]).filter(z=>z.id!==a.id);ch=true;await mDel(a.id);if(DH){try{await(await DH.getDirectoryHandle('media')).removeEntry(a.id+'.'+a.x)}catch(e){}}}
+   else{const m=/^m-(.+)\.\w+$/.exec(x.f.name);if(m)await mDel(m[1])}}}
+ catch(e){GD.err=e.message||String(e)}
+ GD.files=(GD.files||[]).filter(f=>!done.has(f.id));GDSEL=new Set();GD.q=await gdQuota()||GD.q;GDBUSY=false;
+ if(ch){save();render()}else gdRender()}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-gd]');if(!b)return;e.preventDefault();const k=b.dataset.gd,it=gdItems();
+ if(k==='load')gdLoad();
+ else if(k==='unused')gdRun(it.filter(x=>(x.kind==='orphan'||x.kind==='other')&&!x.recent));
+ else if(k==='sel')gdRun(it.filter(x=>x.kind!=='main'&&GDSEL.has(x.f.id)));
+ else if(k==='one')gdRun(it.filter(x=>x.kind!=='main'&&x.f.id===b.dataset.id))});
+document.addEventListener('change',e=>{const c=e.target.closest&&e.target.closest('[data-gdsel]');if(!c)return;c.checked?GDSEL.add(c.dataset.gdsel):GDSEL.delete(c.dataset.gdsel);gdRender()});
 async function gLogin(){
  if(location.protocol==='file:')return am('Google sign-in only works when the planner is opened from a web address (e.g. GitHub Pages), not from a file on your computer.');
  if(!gcid())return am('Google sign-in is not set up yet — open “Google setup” below and paste your Client ID.');
