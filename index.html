@@ -685,9 +685,14 @@ function workload(){let st=0,rv=0;ORDER.forEach(s=>L[s].forEach(c=>{const p=prog
 /* ---------- VIEWS ---------- */
 const cOpen=new Set(),cLog=new Set();let selUser='',pTouched=false,pInit='',tab='punch',pS='DT',pC=0,pA='Study',pN='',cS='DT',cQ='',cF='all';
 const TABS=[['punch','Punch In / Out'],['dash','Dashboard'],['cmp','Compare'],['chap','Chapters & Links'],['notes','Sticky Notes'],['log','Session Log'],['set','Settings']];
-function pbarUp(){const b=$('#pbar');if(!b)return;const on=!!(S.active&&USER&&tab!=='punch');b.className=on?'on':'';
- if(!on){b.innerHTML='';return}const a=S.active;
+/* main punch clock counts as "seen" only if its centre is on screen and nothing covers it */
+function clockSeen(){const c=document.querySelector('.clock.tick');if(!c)return false;const r=c.getBoundingClientRect();if(!r.width)return false;const x=r.left+r.width/2,y=r.top+r.height/2;if(x<0||y<0||x>innerWidth||y>innerHeight)return false;const e=document.elementFromPoint(x,y);return !!e&&(e===c||c.contains(e))}
+function pbarUp(){const b=$('#pbar');if(!b)return;const desk=matchMedia('(min-width:761px)').matches,a=S.active,on=!!(a&&USER&&(tab!=='punch'||(desk&&!clockSeen())));
+ const key=on+'|'+(a&&a.pz?1:0);if(b.dataset.k===key&&b.className===(on?'on':''))return;b.dataset.k=key;b.className=on?'on':'';
+ if(!on){b.innerHTML='';return}
  b.innerHTML='<span class="dot"></span><span class="tick mono"></span><button class="btn ghost sm dsk" data-act="pause" title="'+(a.pz?'Resume':'Pause')+'" aria-label="'+(a.pz?'Resume':'Pause')+'">'+(a.pz?'▶':'⏸')+'</button><button class="btn acc sm dsk" data-act="out" title="Punch out" aria-label="Punch out">⏹</button><button class="btn acc sm mob" data-act="goPunch">Go to punch out</button>';tickAll()}
+let _pf=0;const pbarSoon=()=>{cancelAnimationFrame(_pf);_pf=requestAnimationFrame(()=>{if(USER&&tab==='punch')pbarUp()})};
+addEventListener('scroll',pbarSoon,true);setInterval(pbarSoon,600);
 addEventListener('resize',()=>{if(USER)pbarUp()});
 function nav(){setTimeout(pbarUp,0);$('#nav').innerHTML=TABS.map(([k,n])=>`<button class="${tab===k?'on':''}" aria-current="${tab===k?'page':'false'}" data-tab="${k}">${n}${k==='punch'&&S.active?' ●':''}${k==='notes'&&S.notes.some(nAct)?' ('+S.notes.filter(nAct).length+')':''}</button>`).join('')}
 const SELK=()=>'caPlanner.sel.'+USER;
