@@ -117,6 +117,8 @@ summary{cursor:pointer;font:700 20px var(--fh);margin:20px 0 8px}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 @media(pointer:coarse){nav button,.chip,.btn.sm{min-height:42px}}
 #pbar{display:none}
+#pbar .dsk{display:none}
+@media(min-width:761px){#pbar.on{display:flex;position:fixed;top:12px;right:12px;z-index:60;gap:10px;align-items:center;padding:8px 12px;background:var(--card);border:2px solid var(--acc);border-radius:12px;box-shadow:0 6px 20px #0004;max-width:min(520px,calc(100vw - 24px))}#pbar .mob{display:none}#pbar .dsk{display:inline-flex}#pbar .tick{font:600 20px var(--fm);letter-spacing:-.02em}#pbar .pl{font:600 11px var(--fm);color:var(--mute);max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 @media(max-width:760px){#pbar.on{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:50;gap:12px;align-items:center;justify-content:center;padding:10px;background:var(--card);border-top:2px solid var(--acc)}.wrap{padding-bottom:84px}}
 </style>
 </head>
@@ -683,7 +685,10 @@ function workload(){let st=0,rv=0;ORDER.forEach(s=>L[s].forEach(c=>{const p=prog
 /* ---------- VIEWS ---------- */
 const cOpen=new Set(),cLog=new Set();let selUser='',pTouched=false,pInit='',tab='punch',pS='DT',pC=0,pA='Study',pN='',cS='DT',cQ='',cF='all';
 const TABS=[['punch','Punch In / Out'],['dash','Dashboard'],['cmp','Compare'],['chap','Chapters & Links'],['notes','Sticky Notes'],['log','Session Log'],['set','Settings']];
-function pbarUp(){const b=$('#pbar');if(!b)return;const on=!!(S.active&&USER&&tab!=='punch');b.className=on?'on':'';b.innerHTML=on?'<span class="dot"></span><span class="tick mono"></span><button class="btn acc sm" data-act="goPunch">Go to punch out</button>':'';tickAll()}
+function pbarUp(){const b=$('#pbar');if(!b)return;const desk=window.matchMedia('(min-width:761px)').matches,on=!!(S.active&&USER&&(desk||tab!=='punch'));b.className=on?'on':'';
+ if(!on){b.innerHTML='';return}const a=S.active,c=L[a.s]&&L[a.s][a.i];
+ b.innerHTML='<span class="dot"></span><span class="tick mono"></span><span class="pl dsk" title="'+esc(META[a.s].n+' — '+(c?c.t:''))+'"><b style="color:'+META[a.s].c+'">'+a.s+'</b> '+esc(c?c.t:'')+'</span><button class="btn ghost sm dsk" data-act="pause">'+(a.pz?'▶ Resume':'⏸ Pause')+'</button><button class="btn acc sm dsk" data-act="out">Punch out</button><button class="btn acc sm mob" data-act="goPunch">Go to punch out</button>';tickAll()}
+addEventListener('resize',()=>{if(USER)pbarUp()});
 function nav(){setTimeout(pbarUp,0);$('#nav').innerHTML=TABS.map(([k,n])=>`<button class="${tab===k?'on':''}" aria-current="${tab===k?'page':'false'}" data-tab="${k}">${n}${k==='punch'&&S.active?' ●':''}${k==='notes'&&S.notes.some(nAct)?' ('+S.notes.filter(nAct).length+')':''}</button>`).join('')}
 const SELK=()=>'caPlanner.sel.'+USER;
 function lastChap(s){if(!L[s])return null;let i=null,t=-1;S.sessions.forEach(x=>{if(x.s===s&&L[s][x.i]&&x.st>t){t=x.st;i=x.i}});if(S.active&&S.active.s===s&&L[s][S.active.i]&&S.active.st>t)i=S.active.i;return i}
