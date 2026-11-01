@@ -768,16 +768,18 @@ const TABS=[['punch','Punch In / Out'],['dash','Dashboard'],['cmp','Compare'],['
 function clockSeen(){const c=document.querySelector('.clock.tick');if(!c)return false;const r=c.getBoundingClientRect();if(!r.width)return false;const x=r.left+r.width/2,y=r.top+r.height/2;if(x<0||y<0||x>innerWidth||y>innerHeight)return false;const e=document.elementFromPoint(x,y);return !!e&&(e===c||c.contains(e))}
 function shareBar(){return'<div class="noprint" style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn ghost sm" data-act="pdf" title="Opens the print dialog — choose Save as PDF, then share the file">📄 Share progress (PDF)</button></div>'}
 const PDFW=900;
+/* name printed on the shared PDF — never the Google email address */
+const pdfName=()=>{const n=dispName();return n&&n.includes('@')?'Student':n};
 function sharePdf(){
  const R=document.documentElement,land=tab==='cmp',dets=[...document.querySelectorAll('#main details')],was=dets.map(d=>d.open);dets.forEach(d=>d.open=true);
  let hd=$('#pdfhead');if(!hd){hd=document.createElement('div');hd.id='pdfhead';$('#main').before(hd)}
  const dt=new Date().toISOString().slice(0,10);
- hd.textContent='Study progress report · '+(land?'Time comparison':'Dashboard')+' · '+USER+' · '+dt+' · '+Math.max(0,daysLeft())+' days to exam ('+S.set.exam+')';
+ hd.textContent='Study progress report · '+(land?'Time comparison':'Dashboard')+' · '+pdfName()+' · '+dt+' · '+Math.max(0,daysLeft())+' days to exam ('+S.set.exam+')';
  let ps=$('#pgsz');if(!ps){ps=document.createElement('style');ps.id='pgsz';document.head.appendChild(ps)}
  ps.textContent='@media print{@page{size:A4 portrait;margin:10mm}}';
  const W=land?820:PDFW;R.style.setProperty('--pw',W+'px');R.style.setProperty('--pz',1);R.classList.add('pdfmode');R.classList.toggle('pdfland',land);
  R.style.setProperty('--pz',(718/W)*.99)
- const ttl=document.title;document.title='Study progress - '+USER+' - '+dt;
+ const ttl=document.title;document.title='Study progress - '+pdfName()+' - '+dt;
  let fin=0;const done=()=>{if(fin)return;fin=1;document.title=ttl;R.classList.remove('pdfmode','pdfland');R.style.removeProperty('--pw');R.style.removeProperty('--pz');dets.forEach((d,i)=>{d.open=was[i]})};
  addEventListener('afterprint',done,{once:true});addEventListener('pointerdown',done,{once:true,capture:true});setTimeout(()=>print(),80)}
 function pbarUp(){const b=$('#pbar');if(!b)return;const desk=matchMedia('(min-width:761px)').matches,a=S.active,on=!!(a&&USER&&(tab!=='punch'||(desk&&!clockSeen())));
