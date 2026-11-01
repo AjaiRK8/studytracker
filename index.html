@@ -417,7 +417,7 @@ const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 /* ---------- STYLED DIALOGS (replace the browser's plain confirm / prompt / alert) ---------- */
 function uiDlg(cls){const d=document.createElement('dialog');d.className='ui-dlg '+(cls||'');document.body.appendChild(d);return d}
 function uiAsk(o){return new Promise(res=>{const d=uiDlg(o.danger?'dng':''),inp=o.input!==undefined;
- d.innerHTML='<div class="ui-in"><div class="ui-ic" aria-hidden="true">'+(o.icon||'❔')+'</div><div class="ui-t">'+esc(o.title)+'</div><div class="ui-m">'+esc(o.msg)+'</div>'+(inp?'<input class="ui-i" type="text" value="'+esc(o.input)+'" placeholder="'+esc(o.ph||'')+'">':'')+'<div class="ui-b">'+(o.cancel===null?'':'<button class="btn ghost" data-r="0">'+esc(o.cancel||'Cancel')+'</button>')+'<button class="btn acc" data-r="1">'+esc(o.ok||'OK')+'</button></div></div>';
+ d.innerHTML='<div class="ui-in"><div class="ui-ic" aria-hidden="true">'+(o.icon||'❔')+'</div><div class="ui-t">'+esc(o.title)+'</div><div class="ui-m">'+esc(o.msg)+'</div>'+(inp?'<input class="ui-i" type="'+(o.type||'text')+'" value="'+esc(o.input)+'" placeholder="'+esc(o.ph||'')+'">':'')+'<div class="ui-b">'+(o.cancel===null?'':'<button class="btn ghost" data-r="0">'+esc(o.cancel||'Cancel')+'</button>')+'<button class="btn acc" data-r="1">'+esc(o.ok||'OK')+'</button></div></div>';
  let done=0;const fin=v=>{if(done)return;done=1;d.close();setTimeout(()=>d.remove(),50);res(v)};
  const val=()=>inp?d.querySelector('.ui-i').value:true;
  d.addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(b){fin(b.dataset.r==='1'?val():(inp?null:false));return}if(e.target===d)fin(inp?null:false)});
@@ -432,6 +432,9 @@ function uiConfirm(msg,o){o=o||{};msg=String(msg==null?'':msg);
  const dg=/^(Delete|Permanently|Remove|Discard|Really)/i.exec(msg),word=dg?(/^Really/i.test(dg[1])?'Yes, I’m sure':/^Permanently/i.test(dg[1])?'Delete':cap(dg[1].toLowerCase())):'';
  const danger=o.danger!==undefined?o.danger:!!dg;
  return uiAsk({title:o.title||(danger?'Are you sure?':'Please confirm'),msg,ok:ok||(danger?word:'Yes'),cancel:cancel||(danger?'Keep it':'Cancel'),danger,icon:o.icon||(danger?'🗑️':'❔')})}
+/* first punch-in of the day: the person can keep the current time, type the real wake-up time, or fall back to the default */
+async function uiWake(now){const v=await uiAsk({title:'☀️ First punch-in today',msg:'What time did you wake up? The current time is filled in — change it if you woke up earlier, or choose “Use default” to use your usual wake-up time.',input:now,type:'time',ok:'Set wake-up time',cancel:'Use default',icon:'☀️'});
+ if(!v||!/^\d{2}:\d{2}$/.test(v))return'';return v>now?now:v}
 function uiPrompt(msg,def){return uiAsk({title:'Enter a link',msg:String(msg||''),input:def||'',ph:'https://…',ok:'Save',cancel:'Cancel',icon:'🔗'})}
 window.alert=function(m){m=String(m==null?'':m);const o=document.querySelector('dialog.ui-al');if(o){const p=document.createElement('p');p.textContent=m;o.querySelector('.ui-m').appendChild(p);return}
  const d=uiDlg('ui-al');d.innerHTML='<div class="ui-in"><div class="ui-ic" aria-hidden="true">ℹ️</div><div class="ui-t">Heads up</div><div class="ui-m"><p></p></div><div class="ui-b"><button class="btn acc">Got it</button></div></div>';d.querySelector('p').textContent=m;
@@ -1177,7 +1180,7 @@ document.addEventListener('click',async e=>{
  if(a==='editS')editSess(t.dataset.id);
  if(a==='goPunch'){tab='punch';render();tickAll()}
  if(a==='wdClear'){S.set.wd={d:dk(Date.now()),t:''};save();render();return}
- if(a==='in'){{const nw=new Date(),wd=S.set.wd;if(!wd||wd.d!==dk(nw)){const hmn=pad(nw.getHours())+':'+pad(nw.getMinutes());S.set.wd={d:dk(nw),t:await uiConfirm('Set '+hmn+' as today’s wake-up time?',{title:'☀️ First punch-in today',ok:'Yes, use '+hmn,cancel:'No, use default',icon:'☀️'})?hmn:''}}}S.active={s:pS,i:pC,a:pA,n:$('#pN').value.trim(),st:Date.now()};save();render();tickAll()}
+ if(a==='in'){{const nw=new Date(),wd=S.set.wd;if(!wd||wd.d!==dk(nw)){const hmn=pad(nw.getHours())+':'+pad(nw.getMinutes());S.set.wd={d:dk(nw),t:await uiWake(hmn)}}}S.active={s:pS,i:pC,a:pA,n:$('#pN').value.trim(),st:Date.now()};save();render();tickAll()}
  if(a==='discard'){if(await uiConfirm('Discard this running session without saving?')){S.active=null;save();render()}}
  if(a==='out')openOut();
  if(a==='addManual'){const st=new Date($('#mD').value+'T'+$('#mT').value).getTime(),mn=+$('#mM').value;if(!st||!mn)return alert('Enter a valid date, time and minutes.');S.sessions.push({id:uid(),s:$('#mS').value,i:+$('#mC').value,a:$('#mA').value,n:'',st,en:st+mn*6e4});save();render();fillMC()}
