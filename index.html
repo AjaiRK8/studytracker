@@ -928,6 +928,23 @@ function editSess(id){const x=S.sessions.find(z=>z.id===id);if(!x)return;const d
  const fc=v=>{$('#eC').innerHTML=L[$('#eS').value].map(c=>`<option value="${c.i}" ${c.i===v?'selected':''}>${pad(c.i+1)}. ${esc(c.t)}</option>`).join('')};fc(x.i);$('#eS').onchange=()=>fc(-1);
  $('#eNo').onclick=()=>d.close();
  $('#eOk').onclick=()=>{const st=new Date($('#eD').value+'T'+$('#eT').value).getTime(),mn=+$('#eM').value;if(!st||!mn)return alert('Enter a valid date, time and minutes.');Object.assign(x,{st,en:st+mn*6e4,s:$('#eS').value,i:+$('#eC').value,a:$('#eA').value,n:$('#eN').value.trim()});save();d.close();render();fillMC()};d.showModal()}
+/* optional graph for the Session Log: study time per day (stacked by subject) for the sessions matching the filter */
+function lgGraph(A){if(!A.length)return'<div class="hint" style="margin-bottom:10px">No sessions match the filter, so there is nothing to chart.</div>';
+ const ks=A.map(x=>dk(x.st)).sort(),pd=k=>new Date(k+'T00:00:00');let st=pd(lF.f||ks[0]),en=pd(lF.t||dk(Date.now()));if(en<st)en=new Date(st);
+ let n=Math.round((en-st)/864e5)+1,cut=false;if(n>60){st=new Date(en);st.setDate(st.getDate()-59);n=60;cut=true}
+ const days=[],per={};for(let i=0;i<n;i++){const d=new Date(st);d.setDate(d.getDate()+i);days.push(d);per[dk(d)]={}}
+ A.forEach(x=>{const o=per[dk(x.st)];if(o)o[x.s]=(o[x.s]||0)+hrs(x)});
+ const tots=days.map(d=>Object.values(per[dk(d)]).reduce((a,b)=>a+b,0)),sum=tots.reduce((a,b)=>a+b,0),act=tots.filter(v=>v>0).length,best=Math.max(...tots),mx=Math.max(best,1)*1.1;
+ const W=700,H=180,T=12,B=22,g=n>40?1:n>20?2:4,bw=Math.max(1,(W-g*(n+1))/n),ph=H-T-B,lab=Math.max(1,Math.ceil(n/12)),present=ORDER.filter(s=>days.some(d=>per[dk(d)][s]>0));
+ let sv=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Study time per day" style="display:block;overflow:visible">`;
+ const gy=v=>T+ph-ph*v/mx;[Math.ceil(mx/2),Math.ceil(mx)].filter((v,i,a)=>v>0&&a.indexOf(v)===i&&v<=mx).forEach(v=>{sv+=`<line x1="0" x2="${W}" y1="${gy(v)}" y2="${gy(v)}" stroke="var(--line)" stroke-dasharray="3 3"/><text x="2" y="${gy(v)-3}" font-size="10" fill="currentColor" opacity=".55" font-family="monospace">${v}h</text>`});
+ days.forEach((d,i)=>{const k=dk(d),x=g+i*(bw+g);let y=T+ph;
+  present.forEach(s=>{const h=per[k][s];if(!h)return;const hh=ph*h/mx;y-=hh;sv+=`<rect x="${x}" y="${y}" width="${bw}" height="${hh}" fill="${META[s].c}" rx="${bw>6?2:0}"><title>${k} · ${META[s].n}: ${fh(h)}</title></rect>`});
+  if(tots[i]>0)sv+=`<rect x="${x}" y="${T}" width="${bw}" height="${ph}" fill="transparent"><title>${k} — ${fh(tots[i])}</title></rect>`;
+  if(i%lab===0||i===n-1)sv+=`<text x="${x+bw/2}" y="${H-6}" text-anchor="middle" font-size="10" fill="currentColor" opacity=".65" font-family="monospace">${d.getDate()}/${d.getMonth()+1}</text>`});
+ sv+=`<line x1="0" x2="${W}" y1="${T+ph}" y2="${T+ph}" stroke="var(--ink)" opacity=".4"/></svg>`;
+ const lg=present.map(s=>`<span style="display:inline-flex;gap:5px;align-items:center;font-size:12px;margin-right:10px"><i style="width:10px;height:10px;border-radius:3px;background:${META[s].c}"></i>${META[s].n}</span>`).join('');
+ return`<div style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 12px"><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin-bottom:6px"><span>⏱ <b>${fh(sum)}</b></span><span>📅 ${act} active day${act===1?'':'s'}</span><span>⌀ ${fh(act?sum/act:0)} / active day</span><span>🏆 best ${fh(best)}</span></div>${sv}<div style="margin-top:6px">${lg}</div>${cut?'<small>Showing the last 60 days of the selected range.</small>':''}</div>`}
 const lgCol=new Set(),lgDays=()=>[...new Set(S.sessions.filter(lFilt).map(x=>dk(x.st)))];
 function vLog(){
  const A=[...S.sessions].filter(lFilt).sort((a,b)=>b.st-a.st),r=lF.all?A:A.slice(0,300);const m=byDay(),cn={};A.forEach(x=>{const k=dk(x.st);cn[k]=(cn[k]||0)+1});let last='',t='';
@@ -938,7 +955,7 @@ function vLog(){
  <label class="f">DATE</label><input type="date" id="mD" value="${dk(Date.now())}"><label class="f">START TIME</label><input type="time" id="mT" value="09:00"><label class="f">MINUTES</label><input type="number" id="mM" value="60" min="1">
  <label class="f">SUBJECT</label><select id="mS">${opts}</select><label class="f">CHAPTER</label><select id="mC"></select><label class="f">ACTIVITY</label><select id="mA">${ACTS.map(a=>`<option>${a}</option>`).join('')}</select>
  <div style="margin-top:12px"><button class="btn" data-act="addManual">Add session</button></div></div>
- <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><h2 style="margin:0">All sessions</h2>${dataBar("sessions")}</div>${r.length?'<div style="display:flex;gap:6px;margin-bottom:8px"><button class="btn ghost sm" data-act="lgAll" data-v="exp">⊞ Expand all</button><button class="btn ghost sm" data-act="lgAll" data-v="col">⊟ Collapse all</button></div>':''}${lfBar()}${r.length?`<table>${t}</table>`:'<small>No sessions.</small>'}${A.length>r.length?`<button class="btn ghost sm" data-act="lfAll">Show all ${A.length}</button>`:''}</div></div>`}
+ <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><h2 style="margin:0">All sessions</h2>${dataBar("sessions")}</div><div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">${r.length?'<button class="btn ghost sm" data-act="lgAll" data-v="exp">⊞ Expand all</button><button class="btn ghost sm" data-act="lgAll" data-v="col">⊟ Collapse all</button>':''}<button class="btn ghost sm" data-act="lgGr" style="margin-left:auto" aria-pressed="${S.set.lgG?'true':'false'}">📊 ${S.set.lgG?'Hide graph':'Show graph'}</button></div>${lfBar()}${S.set.lgG?lgGraph(A):''}${r.length?`<table>${t}</table>`:'<small>No sessions.</small>'}${A.length>r.length?`<button class="btn ghost sm" data-act="lfAll">Show all ${A.length}</button>`:''}</div></div>`}
 
 
 /* ---------- MY STUDY MATERIAL (Settings) ---------- */
@@ -1150,6 +1167,7 @@ document.addEventListener('click',async e=>{
  if(a==='mmRep'){const r=mmParse();if(!r.length)return;if(await uiConfirm('Replace all '+mmS+' chapters with '+r.length+' from the list? Progress/notes stay on the same chapter numbers; those beyond the new count are removed.')){const s=mmS;S.cust=S.cust||{};S.cust[s]=r;remap(s,j=>j<r.length?j:-1);mmFin()}}
  if(a==='pause'){const x=S.active;if(x){if(x.pz){x.pd=(x.pd||0)+Date.now()-x.pz;delete x.pz}else x.pz=Date.now();save();render();tickAll()}}
  if(a==='plAdd'){const q=planGet();if(!q.it.some(x=>x.s===pS&&x.i===pC)&&q.it.length<15){q.it.push({s:pS,i:pC,x:0});save();render()}}
+ if(a==='lgGr'){S.set.lgG=S.set.lgG?0:1;save();const y=window.scrollY;render();scrollTo(0,y);return}
  if(a==='lgAll'){if(t.dataset.v==='col')lgDays().forEach(d=>lgCol.add(d));else lgCol.clear();const y=window.scrollY;render();scrollTo(0,y);return}
  if(a==='lgDay'){const d=t.dataset.d;lgCol.has(d)?lgCol.delete(d):lgCol.add(d);const y=window.scrollY;render();scrollTo(0,y);return}
  if(a==='plLdr'){const x=planGet().it[+t.dataset.k];if(x){const k=x.s+':'+x.i;plOpen[k]=!plOpen[k];render()}return}
