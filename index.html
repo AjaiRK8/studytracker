@@ -1049,8 +1049,21 @@ function openNote(o){
   if(n){Object.assign(n,v);delete n.qn;delete n.qp;delete n.qs}else{const ex=(v.t==='LDR'&&q.length)?S.notes.find(z=>!z.rm&&z.t==='LDR'&&z.s===v.s&&z.i===v.i):null;if(ex&&confirm('This chapter already has an LDR sticky note.\n\nOK = add these question(s) to it\nCancel = save as a separate new note')){if(!Array.isArray(ex.q)){ex.q=ldrList(ex);delete ex.qn;delete ex.qp;delete ex.qs}ex.q.push(...q);if(x)ex.x=(ex.x?ex.x+'\n\n':'')+x;ex.a=(ex.a||[]).concat(v.a)}else S.notes.push({id:uid(),...v,c:Date.now(),d:0,sid:''})}
   save();d.close();render()}}
 
-function planGet(){const d=dk(Date.now());if(!S.plan||S.plan.d!==d)S.plan={d,it:[]};return S.plan}
-function planHtml(){const p=planGet();return '<h2 style="margin-top:18px">Today’s plan</h2>'+(p.it.length?p.it.map((x,k)=>{const c=L[x.s]&&L[x.s][x.i];return c?`<div style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="checkbox" style="width:auto" data-pl="${k}" ${x.x?'checked':''} aria-label="Done"><span style="flex:1;${x.x?'text-decoration:line-through;opacity:.6':''}"><b style="color:${META[x.s].c}">${x.s}</b> ${esc(c.t)}</span><button class="btn ghost sm" data-act="plDel" data-k="${k}" aria-label="Remove from plan">✕</button></div>`:''}).join(''):'<small>Nothing planned.</small>')+(p.it.length<5?'<div><button class="btn ghost sm" style="margin-top:6px" data-act="plAdd">＋ Add selected chapter</button></div>':'')}
+function revDueList(){const now=Date.now(),last={};S.sessions.forEach(x=>{const k=pk(x.s,x.i);if(!last[k]||x.en>last[k])last[k]=x.en});const IV=[3,7,14,21,30],due=[],sa={},tp={},tpc={};
+ ORDER.forEach(s=>{const t=(S.tests||[]).filter(x=>x.s===s&&now-Date.parse(x.d)<60*864e5).sort((a,b)=>a.d<b.d?1:-1).slice(0,3);if(!t.length)return;const a=t.reduce((q,x)=>q+(x.t?x.m/x.t*100:0),0)/t.length;tpc[s]=a;if(a<40)tp[s]=2;else if(a<50)tp[s]=1});
+ ORDER.forEach(s=>{const r=L[s].map(c=>cfOf(s,c.i)).filter(Boolean);if(r.length)sa[s]=r.reduce((a,b)=>a+b,0)/r.length});
+ ORDER.forEach(s=>L[s].forEach(c=>{const p=prog(s,c.i);if(!p.s)return;const pen=tp[s]||0,cf=Math.max(1,(cfOf(s,c.i)||3)-pen),ks=PK.filter(k=>/^r\d+$/.test(k));let n=0;for(const k of ks){if(p[k])n++;else break}const l=last[pk(s,c.i)];if(!l)return;
+  const weak=cf<=2,fin=n>=ks.length;if(fin&&!weak)return;const mul=[.4,.6,1,1.4,1.8][cf-1]*(pen||(sa[s]&&sa[s]<3)?.8:1),od=(now-l)/864e5-IV[Math.min(n,IV.length-1)]*mul;
+  if(od>=0)due.push({s,i:c.i,t:c.t,r:fin?0:n+1,od,cf:cfOf(s,c.i),pr:od+(4-cf)*2})}));due.sort((a,b)=>b.pr-a.pr);
+return due}
+/* Today's plan: unfinished items carry over to the next day (kept until ticked or ✕ removed); due revisions are added automatically */
+function planGet(){const d=dk(Date.now());if(!S.plan||S.plan.d!==d){const o=S.plan;S.plan={d,rm:[],it:o&&o.it?o.it.filter(x=>!x.x).map(x=>({...x,od:x.od||o.d})):[]}}if(!S.plan.rm)S.plan.rm=[];return S.plan}
+function planSync(){const p=planGet(),due=revDueList(),n0=JSON.stringify(p.it);
+ p.it.forEach(x=>{if(x.rv&&!x.x&&!due.some(z=>z.s===x.s&&z.i===x.i))x.x=1});
+ let open=p.it.filter(x=>x.rv&&!x.x).length;
+ for(const z of due){if(open>=5)break;if(p.it.some(x=>x.s===z.s&&x.i===z.i)||p.rm.includes(z.s+':'+z.i))continue;p.it.push({s:z.s,i:z.i,x:0,rv:1,lb:z.r?'Rev '+z.r:'Extra revision'});open++}
+ if(JSON.stringify(p.it)!==n0)save()}
+function planHtml(){planSync();const p=planGet(),fd=s=>new Date(s+'T00:00').toLocaleDateString([],{day:'numeric',month:'short'}),pc=p.it.filter(x=>!x.x).length;return '<h2 style="margin-top:18px">Today’s plan'+(pc?' <small>· '+pc+' pending</small>':'')+'</h2>'+(p.it.length?p.it.map((x,k)=>{const c=L[x.s]&&L[x.s][x.i];return c?`<div style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="checkbox" style="width:auto" data-pl="${k}" ${x.x?'checked':''} aria-label="Done"><span style="flex:1;${x.x?'text-decoration:line-through;opacity:.6':''}"><b style="color:${META[x.s].c}">${x.s}</b> ${esc(c.t)}${x.rv?' <small>· 🔁 '+esc(x.lb||'Revision')+'</small>':''}${x.od&&!x.x?' <small style="color:var(--acc,#d8432a)">· ⏳ pending since '+fd(x.od)+'</small>':''}</span><button class="btn ghost sm" data-act="plDel" data-k="${k}" aria-label="Remove from plan">✕</button></div>`:''}).join(''):'<small>Nothing planned.</small>')+(p.it.length<15?'<div><button class="btn ghost sm" style="margin-top:6px" data-act="plAdd">＋ Add selected chapter</button></div>':'')}
 /* ---------- ACTIONS ---------- */
 function elapsed(a){return Math.max(0,(a.pz||Date.now())-a.st-(a.pd||0))}
 /* ---------- DAY EFFICIENCY (study time ÷ time awake so far; uses wake/sleep times from Settings) ---------- */
@@ -1099,8 +1112,8 @@ document.addEventListener('click',e=>{
  if(a==='mmApp'){const r=mmParse();if(!r.length)return;ensureCust(mmS);S.cust[mmS].push(...r);mmFin()}
  if(a==='mmRep'){const r=mmParse();if(!r.length)return;if(confirm('Replace all '+mmS+' chapters with '+r.length+' from the list? Progress/notes stay on the same chapter numbers; those beyond the new count are removed.')){const s=mmS;S.cust=S.cust||{};S.cust[s]=r;remap(s,j=>j<r.length?j:-1);mmFin()}}
  if(a==='pause'){const x=S.active;if(x){if(x.pz){x.pd=(x.pd||0)+Date.now()-x.pz;delete x.pz}else x.pz=Date.now();save();render();tickAll()}}
- if(a==='plAdd'){const q=planGet();if(!q.it.some(x=>x.s===pS&&x.i===pC)&&q.it.length<5){q.it.push({s:pS,i:pC,x:0});save();render()}}
- if(a==='plDel'){planGet().it.splice(+t.dataset.k,1);save();render()}
+ if(a==='plAdd'){const q=planGet();if(!q.it.some(x=>x.s===pS&&x.i===pC)&&q.it.length<15){q.it.push({s:pS,i:pC,x:0});save();render()}}
+ if(a==='plDel'){const q=planGet(),r=q.it.splice(+t.dataset.k,1)[0];if(r&&r.rv)q.rm.push(r.s+':'+r.i);save();render()}
  if(a==='lfAll'){lF.all=1;render();fillMC()}
  if(a==='editS')editSess(t.dataset.id);
  if(a==='goPunch'){tab='punch';render();tickAll()}
