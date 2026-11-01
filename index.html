@@ -914,11 +914,22 @@ function cLogHtml(s,i){const r=S.sessions.filter(x=>x.s===s&&x.i===i).sort((a,b)
 function cPanel(s,c){const k=s+':'+c.i,n=S.sessions.filter(x=>x.s===s&&x.i===c.i).length,o=cLog.has(k);
  return`<div class="cpanel"><div style="margin-bottom:8px"><small class="mono">MY CONFIDENCE</small> ${[1,2,3,4,5].map(v=>`<button type="button" class="chip ${cfOf(s,c.i)===v?'on':''}" style="--c:var(--ink)" data-cf="${s}:${c.i}:${v}" title="${CFL[v-1]}">${v}</button>`).join(' ')} <small>${cfOf(s,c.i)?CFL[cfOf(s,c.i)-1]:'not rated'}</small></div><button type="button" class="btn ghost sm" data-clog="${c.i}">${o?'▾ Hide':'▸ Show'} session log (${n})</button>${o?'<div style="margin-top:6px">'+cLogHtml(s,c.i)+'</div>':''}${chNotes(s,c.i)}<div style="margin-top:8px"><button type="button" class="btn ghost sm" data-nadd="${c.i}">＋ Sticky note</button></div></div>`}
 /* one simple dropdown: progress (every Study / Revision / LDR / Practice box, pending or done) plus a few extras */
-function cfOpts(){const sel=v=>cF===v||(v==='k:s:0'&&cF==='pend')?' selected':'';
- return'<option value="all">All chapters</option><optgroup label="Progress">'+PK.map((k,j)=>`<option value="k:${k}:0"${sel('k:'+k+':0')}>${esc(ACTS[j])} · pending</option><option value="k:${k}:1"${sel('k:'+k+':1')}>${esc(ACTS[j])} · done</option>`).join('')+'</optgroup><optgroup label="Other">'+[['notime','No time logged yet'],['notes','Has sticky notes'],['pnotes','Has pending notes'],['ldrq','Has LDR questions'],['lowcf','Low confidence (1–2)']].map(([v,l])=>`<option value="${v}"${sel(v)}>${l}</option>`).join('')+'</optgroup>'}
+let cFOpen=false;const cFG=new Set();
+const CFX=[['notes','Notes',[['notes','Has sticky notes'],['pnotes','Has pending notes'],['ldrq','Has LDR questions']]],['conf','Confidence',[['lowcf','1–2 (low)'],['cf23','2–3'],['cf4','4'],['cf5','5 (strong)'],['cf0','Not rated yet']]],['oth','Other',[['notime','No time logged yet']]]];
+const cfGrpOf=v=>/^k:/.test(v)||v==='pend'?'prog':(CFX.find(g=>g[2].some(o=>o[0]===v))||[])[0]||'';
+function cfLabel(v){if(v==='pend')v='k:s:0';const m=/^k:(\w+):([01])$/.exec(v);if(m){const j=PK.indexOf(m[1]);return(ACTS[j]||m[1])+' · '+(m[2]==='1'?'done':'pending')}for(const g of CFX){const o=g[2].find(o=>o[0]===v);if(o)return g[1]+': '+o[1]}return'All chapters'}
+/* filter button + expandable sub-groups (Progress / Notes / Confidence / Other) */
+function cfBtn(){const on=cF!=='all';return`<button type="button" class="btn ghost sm" data-act="cfTog" aria-expanded="${cFOpen}" style="${on?'border-color:var(--ink);font-weight:700':''}">🔎 ${on?esc(cfLabel(cF)):'Filter'} ${cFOpen?'▴':'▾'}</button>${on?'<button type="button" class="btn ghost sm" data-act="cfSet" data-v="all" title="Clear filter" aria-label="Clear filter">✕</button>':''}`}
+function cfPanel(){const ch=(v,l)=>`<button type="button" class="chip ${cF===v||(v==='k:s:0'&&cF==='pend')?'on':''}" style="--c:var(--ink)" data-act="cfSet" data-v="${v}">${l}</button>`,
+ hd=(k,t)=>`<button type="button" class="btn ghost sm" data-act="cfGrp" data-g="${k}" aria-expanded="${cFG.has(k)}" style="width:100%;text-align:left;margin-top:6px">${cFG.has(k)?'▾':'▸'} ${t}</button>`;
+ let h='<div style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:8px"><div class="chips" style="margin:0">'+ch('all','All chapters')+'</div>';
+ h+=hd('prog','Progress (study, revisions, practice)');
+ if(cFG.has('prog'))h+='<div style="margin:6px 0 2px">'+PK.map((k,j)=>`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:4px 0"><span style="min-width:120px;font-size:13px">${esc(ACTS[j])}</span>${ch('k:'+k+':0','Pending')}${ch('k:'+k+':1','Done')}</div>`).join('')+'</div>';
+ CFX.forEach(([k,t,o])=>{h+=hd(k,t);if(cFG.has(k))h+='<div class="chips" style="margin:6px 0 2px">'+o.map(([v,l])=>ch(v,l)).join('')+'</div>'});
+ return h+'</div>'}
 function cMatch(c,p){if(cF==='all')return true;if(cF==='pend')return!p.s;const m=/^k:(\w+):([01])$/.exec(cF);if(m)return!!p[m[1]]===(m[2]==='1');
  const nt=S.notes.filter(n=>n.s===cS&&n.i===c.i&&nAct(n));
- switch(cF){case'notime':return!S.sessions.some(x=>x.s===cS&&x.i===c.i);case'notes':return nt.length>0;case'pnotes':return nt.some(n=>n.t==='Pending');case'ldrq':return nt.some(n=>n.t==='LDR');case'lowcf':{const v=cfOf(cS,c.i);return v>0&&v<=2}}return true}
+ switch(cF){case'notime':return!S.sessions.some(x=>x.s===cS&&x.i===c.i);case'notes':return nt.length>0;case'pnotes':return nt.some(n=>n.t==='Pending');case'ldrq':return nt.some(n=>n.t==='LDR');case'lowcf':{const v=cfOf(cS,c.i);return v>0&&v<=2}case'cf23':{const v=cfOf(cS,c.i);return v>=2&&v<=3}case'cf4':return cfOf(cS,c.i)===4;case'cf5':return cfOf(cS,c.i)===5;case'cf0':return!cfOf(cS,c.i)}return true}
 function vChap(){
  const chips=ORDER.map(s=>`<button class="chip ${cS===s?'on':''}" style="--c:${META[s].c}" data-sub="${s}">${s}</button>`).join('');
  let g='',rows='',shown=0;const q=cQ.toLowerCase();
@@ -928,7 +939,7 @@ function vChap(){
   rows+=`<div class="row"><span class="no">${pad(c.i+1)}</span><div class="tt" data-cexp="${c.i}" style="cursor:pointer" title="Click to expand / collapse"><span style="display:inline-block;width:1.1em;color:var(--mute)">${cOpen.has(cS+':'+c.i)?'▾':'▸'}</span>${esc(c.t)}<small>${c.nb?'Notebook p.'+esc(c.nb)+' ':''}${nbadge(cS,c.i)}</small></div><div class="tm mono">${tm?fh(tm):'–'}</div>
   <div class="chk">${PK.map((k,j)=>`<label title="${ACTS[j]}"><input type="checkbox" data-pk="${k}" data-i="${c.i}" ${p[k]?'checked':''}>${PL(k)}</label>`).join('')}</div>
   <div class="lk">${links(cS,c)}<a href="#" data-go="${c.i}">▶ punch in</a><a href="#" data-nadd="${c.i}">＋ sticky note</a></div></div>${cOpen.has(cS+':'+c.i)?cPanel(cS,c):''}`});
- return`<div class="card"><div class="chips">${chips}</div><div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap"><input id="cQ" style="flex:1;min-width:180px" placeholder="Search chapters…" value="${esc(cQ)}"><select id="cF" style="width:auto" title="Filter chapters">${cfOpts()}</select>${dataBar("prog")}</div>
+ return`<div class="card"><div class="chips">${chips}</div><div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap"><input id="cQ" style="flex:1;min-width:180px" placeholder="Search chapters…" value="${esc(cQ)}">${cfBtn()}${dataBar("prog")}</div>${cFOpen?cfPanel():''}
  ${cF!=='all'||q?'<div class="hint" style="margin:0 0 6px">Showing '+shown+' of '+L[cS].length+' chapters</div>':''}<div class="hint" style="margin:0 0 6px">S = Study done · R1, R2… = Revisions · LDR = Last Day Revision · P = Practice. ${modOK()?'Module links open the ICAI PDF at that page (PDF page number) — PDFs are expected in the “Study material” folder next to this file.':'Links open the official ICAI material.'}</div><div style="display:flex;gap:6px;margin:0 0 6px"><button type="button" class="btn ghost sm" data-call="open">▾ Expand all</button><button type="button" class="btn ghost sm" data-call="close">▸ Collapse all</button></div>${rows||'<small>No chapters match.</small>'}</div>`}
 
 let lF={s:'all',f:'',t:'',all:0};
@@ -1178,6 +1189,9 @@ document.addEventListener('click',async e=>{
  if(a==='mmRep'){const r=mmParse();if(!r.length)return;if(await uiConfirm('Replace all '+mmS+' chapters with '+r.length+' from the list? Progress/notes stay on the same chapter numbers; those beyond the new count are removed.')){const s=mmS;S.cust=S.cust||{};S.cust[s]=r;remap(s,j=>j<r.length?j:-1);mmFin()}}
  if(a==='pause'){const x=S.active;if(x){if(x.pz){x.pd=(x.pd||0)+Date.now()-x.pz;delete x.pz}else x.pz=Date.now();save();render();tickAll()}}
  if(a==='plAdd'){const q=planGet();if(!q.it.some(x=>x.s===pS&&x.i===pC)&&q.it.length<15){q.it.push({s:pS,i:pC,x:0});save();render()}}
+ if(a==='cfTog'){cFOpen=!cFOpen;if(cFOpen&&cF!=='all')cFG.add(cfGrpOf(cF));const y=window.scrollY;render();scrollTo(0,y);return}
+ if(a==='cfGrp'){const g=t.dataset.g;cFG.has(g)?cFG.delete(g):cFG.add(g);const y=window.scrollY;render();scrollTo(0,y);return}
+ if(a==='cfSet'){cF=t.dataset.v;cFOpen=false;const y=window.scrollY;render();scrollTo(0,y);return}
  if(a==='lgGr'){S.set.lgG=S.set.lgG?0:1;save();const y=window.scrollY;render();scrollTo(0,y);return}
  if(a==='lgAll'){if(t.dataset.v==='col')lgDays().forEach(d=>lgCol.add(d));else lgCol.clear();const y=window.scrollY;render();scrollTo(0,y);return}
  if(a==='lgDay'){const d=t.dataset.d;lgCol.has(d)?lgCol.delete(d):lgCol.add(d);const y=window.scrollY;render();scrollTo(0,y);return}
