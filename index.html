@@ -650,7 +650,7 @@ function importCsv(text){const rows=csvParse(text);if(rows.length<2)throw new Er
  if(H.includes('minutes')&&H.includes('date')){const have=new Set(S.sessions.map(x=>x.id));
   body.forEach(r=>{const s=sub(r),i=chi(r),d=pdate(g(r,'date')),mn=+g(r,'minutes');if(!ok(s,i)||!d||!(mn>0)){skip++;return}
    const st=new Date(d+'T'+ptime(g(r,'start'))).getTime();if(!st){skip++;return}const id=g(r,'id')||('csv-'+st+'-'+s+'-'+i);if(have.has(id)){skip++;return}
-   have.add(id);S.del=(S.del||[]).filter(x=>x!==id);S.sessions.push({id,s,i,a:(ACTS.includes(g(r,'activity'))||/^Revision \d+$/.test(g(r,'activity')))?g(r,'activity'):'Study',n:g(r,'note'),st,en:st+mn*6e4});add++});return'sessions: '+add+' added, '+skip+' skipped'}
+   have.add(id);S.del=(S.del||[]).filter(x=>x!==id);S.sessions.push({id,s,i,a:(actAll().includes(g(r,'activity'))||/^Revision \d+$/.test(g(r,'activity')))?g(r,'activity'):'Study',n:g(r,'note'),st,en:st+mn*6e4});add++});return'sessions: '+add+' added, '+skip+' skipped'}
  if(H.includes('type')&&H.includes('note')&&H.includes('status')){const have=new Set(S.notes.map(x=>x.id));
   body.forEach(r=>{const s=sub(r),i=chi(r),t=NT.find(k=>k.toLowerCase()===g(r,'type').toLowerCase()),x=g(r,'note');if(!ok(s,i)||!t||(!x&&!g(r,'ldrdata'))){skip++;return}
    const id=g(r,'id')||uid();if(have.has(id)){skip++;return}have.add(id);S.del=(S.del||[]).filter(z=>z!==id);
@@ -726,6 +726,7 @@ function fh(h){const m=Math.round(h*60);return m<60?m+'m':Math.floor(m/60)+'h '+
 function clk(ms){const s=Math.max(0,Math.floor(ms/1000));return pad(Math.floor(s/3600))+':'+pad(Math.floor((s%3600)/60))+':'+pad(s%60)}
 let ACTS=['Study','Revision 1','Revision 2','Last Day Revision','Practice'];
 let PK=['s','r1','r2','l','p'];
+const actAll=()=>[...ACTS,'Class'];/* “Class” = time spent attending a class; it is a logged activity only (no progress tick box) */
 function buildActs(){const n=Math.max(1,Math.min(10,Math.round(+(S&&S.set&&S.set.revs))||2)),r=Array.from({length:n},(_,k)=>k+1);
  ACTS=['Study',...r.map(k=>'Revision '+k),'Last Day Revision','Practice'];PK=['s',...r.map(k=>'r'+k),'l','p']}
 const PL=k=>k==='s'?'S':k==='p'?'P':k==='l'?'LDR':k.toUpperCase();
@@ -894,7 +895,7 @@ function qTodo(a,bare){const k=PK[ACTS.indexOf(a.a)];if(!k)return'';
   (dn.length?`<details style="margin-top:8px"><summary class="hint" style="cursor:pointer">Done in ${esc(a.a)} (${dn.length})</summary>${dn.map(z=>row(z,1)).join('')}</details>`:'')+'</div>'}
 function vPunch(){
  /* default the form to the most recent saved session until the user picks something else */
- if(!pTouched&&!S.active){const l=[...S.sessions].sort((a,b)=>b.st-a.st)[0];if(l&&l.id!==pInit&&L[l.s]&&L[l.s][l.i]){pInit=l.id;pS=l.s;pC=l.i;cS=l.s;if(ACTS.includes(l.a))pA=l.a}}
+ if(!pTouched&&!S.active){const l=[...S.sessions].sort((a,b)=>b.st-a.st)[0];if(l&&l.id!==pInit&&L[l.s]&&L[l.s][l.i]){pInit=l.id;pS=l.s;pC=l.i;cS=l.s;if(actAll().includes(l.a))pA=l.a}}
  const td=(byDay()[dk(Date.now())]||{}).t||0;
  if(S.active){const a=S.active,c=L[a.s][a.i];
   const ql=qTodo(a,1),hasN=S.notes.some(n=>n.s===a.s&&n.i===a.i),right=ql?`<div class="card">${ql}</div>`:hasN?`<div class="card"><h2 style="margin-bottom:0">Sticky notes</h2>${chNotes(a.s,a.i,1)}</div>`:`<div class="card">${S.set.liveTd===0?`<h2>Today</h2><div class="clock" style="text-align:left">${fh(td)}</div>${effHtml(td)}<small>Target ${S.set.target}h · ${td>=S.set.target?'target reached 🎯':fh(Math.max(0,S.set.target-td))+' to go'}</small>`:''}<div class="hint" style="${S.set.liveTd===0?'margin-top:14px':''}">No LDR questions or sticky notes for this chapter yet.</div></div>`;
@@ -908,7 +909,7 @@ function vPunch(){
  return`<div class="punch"><div class="card"><h2>Punch in</h2>
  <label class="f">SUBJECT</label><select id="pS">${opts}</select>
  <label class="f">CHAPTER / TOPIC</label><select id="pC">${ch}</select>
- <label class="f">ACTIVITY</label><select id="pA">${ACTS.map(a=>`<option ${a===pA?'selected':''}>${a}</option>`).join('')}</select>
+ <label class="f">ACTIVITY</label><select id="pA">${actAll().map(a=>`<option ${a===pA?'selected':''}>${a}</option>`).join('')}</select>
  <label class="f">NOTE (optional)</label><input id="pN" value="${esc(pN)}" placeholder="e.g. RTP questions, exam-oriented notes">
  <div style="margin-top:14px"><button class="btn acc big" data-act="in">PUNCH IN</button></div>
  <div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">${links(pS,c)}</div>
@@ -921,7 +922,7 @@ function cPanel(s,c){const k=s+':'+c.i,n=S.sessions.filter(x=>x.s===s&&x.i===c.i
  return`<div class="cpanel"><div style="margin-bottom:8px"><small class="mono">MY CONFIDENCE</small> ${[1,2,3,4,5].map(v=>`<button type="button" class="chip ${cfOf(s,c.i)===v?'on':''}" style="--c:var(--ink)" data-cf="${s}:${c.i}:${v}" title="${CFL[v-1]}">${v}</button>`).join(' ')} <small>${cfOf(s,c.i)?CFL[cfOf(s,c.i)-1]:'not rated'}</small></div><button type="button" class="btn ghost sm" data-clog="${c.i}">${o?'▾ Hide':'▸ Show'} session log (${n})</button>${o?'<div style="margin-top:6px">'+cLogHtml(s,c.i)+'</div>':''}${chNotes(s,c.i)}<div style="margin-top:8px"><button type="button" class="btn ghost sm" data-nadd="${c.i}">＋ Sticky note</button></div></div>`}
 /* one simple dropdown: progress (every Study / Revision / LDR / Practice box, pending or done) plus a few extras */
 let cFOpen=false;const cFG=new Set();
-const CFX=[['notes','Notes',[['notes','Has sticky notes'],['pnotes','Has pending notes'],['ldrq','Has LDR questions']]],['conf','Confidence',[['lowcf','1–2 (low)'],['cf23','2–3'],['cf4','4'],['cf5','5 (strong)'],['cf0','Not rated yet']]],['oth','Other',[['notime','No time logged yet']]]];
+const CFX=[['notes','Notes',[['notes','Has sticky notes'],['pnotes','Has pending notes'],['ldrq','Has LDR questions']]],['conf','Confidence',[['lowcf','1–2 (low)'],['cf23','2–3'],['cf4','4'],['cf5','5 (strong)'],['cf0','Not rated yet']]],['oth','Other',[['notime','No time logged yet'],['cls','Class attended'],['nocls','No class attended yet']]]];
 const cfGrpOf=v=>/^k:/.test(v)||v==='pend'?'prog':(CFX.find(g=>g[2].some(o=>o[0]===v))||[])[0]||'';
 function cfLabel(v){if(v==='pend')v='k:s:0';const m=/^k:(\w+):([01])$/.exec(v);if(m){const j=PK.indexOf(m[1]);return(ACTS[j]||m[1])+' · '+(m[2]==='1'?'done':'pending')}for(const g of CFX){const o=g[2].find(o=>o[0]===v);if(o)return g[1]+': '+o[1]}return'All chapters'}
 /* filter button + expandable sub-groups (Progress / Notes / Confidence / Other) */
@@ -935,7 +936,7 @@ function cfPanel(){const ch=(v,l)=>`<button type="button" class="chip ${cF===v||
  return h+'</div>'}
 function cMatch(c,p){if(cF==='all')return true;if(cF==='pend')return!p.s;const m=/^k:(\w+):([01])$/.exec(cF);if(m)return!!p[m[1]]===(m[2]==='1');
  const nt=S.notes.filter(n=>n.s===cS&&n.i===c.i&&nAct(n));
- switch(cF){case'notime':return!S.sessions.some(x=>x.s===cS&&x.i===c.i);case'notes':return nt.length>0;case'pnotes':return nt.some(n=>n.t==='Pending');case'ldrq':return nt.some(n=>n.t==='LDR');case'lowcf':{const v=cfOf(cS,c.i);return v>0&&v<=2}case'cf23':{const v=cfOf(cS,c.i);return v>=2&&v<=3}case'cf4':return cfOf(cS,c.i)===4;case'cf5':return cfOf(cS,c.i)===5;case'cf0':return!cfOf(cS,c.i)}return true}
+ switch(cF){case'notime':return!S.sessions.some(x=>x.s===cS&&x.i===c.i);case'cls':return S.sessions.some(x=>x.s===cS&&x.i===c.i&&x.a==='Class');case'nocls':return!S.sessions.some(x=>x.s===cS&&x.i===c.i&&x.a==='Class');case'notes':return nt.length>0;case'pnotes':return nt.some(n=>n.t==='Pending');case'ldrq':return nt.some(n=>n.t==='LDR');case'lowcf':{const v=cfOf(cS,c.i);return v>0&&v<=2}case'cf23':{const v=cfOf(cS,c.i);return v>=2&&v<=3}case'cf4':return cfOf(cS,c.i)===4;case'cf5':return cfOf(cS,c.i)===5;case'cf0':return!cfOf(cS,c.i)}return true}
 function vChap(){
  const chips=ORDER.map(s=>`<button class="chip ${cS===s?'on':''}" style="--c:${META[s].c}" data-sub="${s}">${s}</button>`).join('');
  let g='',rows='',shown=0;const q=cQ.toLowerCase();
@@ -952,7 +953,7 @@ let lF={s:'all',f:'',t:'',all:0};
 const lFilt=x=>(lF.s==='all'||x.s===lF.s)&&(!lF.f||dk(x.st)>=lF.f)&&(!lF.t||dk(x.st)<=lF.t);
 const lfBar=()=>`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><select id="lfS" style="width:auto"><option value="all">All subjects</option>${ORDER.map(s=>`<option value="${s}" ${lF.s===s?'selected':''}>${META[s].n}</option>`).join('')}</select><input type="date" id="lfF" value="${lF.f}" style="width:auto" aria-label="From date"><input type="date" id="lfT" value="${lF.t}" style="width:auto" aria-label="To date"></div>`;
 function editSess(id){const x=S.sessions.find(z=>z.id===id);if(!x)return;const d=$('#dlg'),dt=new Date(x.st);
- d.innerHTML=`<h2 style="font:700 20px var(--fh);margin:0 0 6px">Edit session</h2><label class="f">DATE</label><input type="date" id="eD" value="${dk(x.st)}"><label class="f">START TIME</label><input type="time" id="eT" value="${pad(dt.getHours())}:${pad(dt.getMinutes())}"><label class="f">MINUTES</label><input type="number" id="eM" min="1" value="${Math.max(1,Math.round((x.en-x.st)/6e4))}"><label class="f">SUBJECT</label><select id="eS">${ORDER.map(s=>`<option value="${s}" ${s===x.s?'selected':''}>${META[s].n}</option>`).join('')}</select><label class="f">CHAPTER</label><select id="eC"></select><label class="f">ACTIVITY</label><select id="eA">${ACTS.map(a=>`<option ${a===x.a?'selected':''}>${a}</option>`).join('')}</select><label class="f">NOTE</label><input id="eN" value="${esc(x.n||'')}"><div style="display:flex;gap:8px;margin-top:16px"><button class="btn acc" id="eOk">Save</button><button class="btn ghost" id="eNo">Cancel</button></div>`;
+ d.innerHTML=`<h2 style="font:700 20px var(--fh);margin:0 0 6px">Edit session</h2><label class="f">DATE</label><input type="date" id="eD" value="${dk(x.st)}"><label class="f">START TIME</label><input type="time" id="eT" value="${pad(dt.getHours())}:${pad(dt.getMinutes())}"><label class="f">MINUTES</label><input type="number" id="eM" min="1" value="${Math.max(1,Math.round((x.en-x.st)/6e4))}"><label class="f">SUBJECT</label><select id="eS">${ORDER.map(s=>`<option value="${s}" ${s===x.s?'selected':''}>${META[s].n}</option>`).join('')}</select><label class="f">CHAPTER</label><select id="eC"></select><label class="f">ACTIVITY</label><select id="eA">${actAll().map(a=>`<option ${a===x.a?'selected':''}>${a}</option>`).join('')}</select><label class="f">NOTE</label><input id="eN" value="${esc(x.n||'')}"><div style="display:flex;gap:8px;margin-top:16px"><button class="btn acc" id="eOk">Save</button><button class="btn ghost" id="eNo">Cancel</button></div>`;
  const fc=v=>{$('#eC').innerHTML=L[$('#eS').value].map(c=>`<option value="${c.i}" ${c.i===v?'selected':''}>${pad(c.i+1)}. ${esc(c.t)}</option>`).join('')};fc(x.i);$('#eS').onchange=()=>fc(-1);
  $('#eNo').onclick=()=>d.close();
  $('#eOk').onclick=()=>{const st=new Date($('#eD').value+'T'+$('#eT').value).getTime(),mn=+$('#eM').value;if(!st||!mn)return alert('Enter a valid date, time and minutes.');Object.assign(x,{st,en:st+mn*6e4,s:$('#eS').value,i:+$('#eC').value,a:$('#eA').value,n:$('#eN').value.trim()});save();d.close();render();fillMC()};d.showModal()}
@@ -981,7 +982,7 @@ function vLog(){
  const opts=ORDER.map(s=>`<option value="${s}">${META[s].n}</option>`).join('');
  return`<div class="grid two"><div class="card"><h2>Add a past session</h2>
  <label class="f">DATE</label><input type="date" id="mD" value="${dk(Date.now())}"><label class="f">START TIME</label><input type="time" id="mT" value="09:00"><label class="f">MINUTES</label><input type="number" id="mM" value="60" min="1">
- <label class="f">SUBJECT</label><select id="mS">${opts}</select><label class="f">CHAPTER</label><select id="mC"></select><label class="f">ACTIVITY</label><select id="mA">${ACTS.map(a=>`<option>${a}</option>`).join('')}</select>
+ <label class="f">SUBJECT</label><select id="mS">${opts}</select><label class="f">CHAPTER</label><select id="mC"></select><label class="f">ACTIVITY</label><select id="mA">${actAll().map(a=>`<option>${a}</option>`).join('')}</select>
  <div style="margin-top:12px"><button class="btn" data-act="addManual">Add session</button></div></div>
  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><h2 style="margin:0">All sessions</h2>${dataBar("sessions")}</div><div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">${r.length?'<button class="btn ghost sm" data-act="lgAll" data-v="exp">⊞ Expand all</button><button class="btn ghost sm" data-act="lgAll" data-v="col">⊟ Collapse all</button>':''}<button class="btn ghost sm" data-act="lgGr" style="margin-left:auto" aria-pressed="${S.set.lgG?'true':'false'}">📊 ${S.set.lgG?'Hide graph':'Show graph'}</button></div>${lfBar()}${S.set.lgG?lgGraph(A):''}${r.length?`<table>${t}</table>`:'<small>No sessions.</small>'}${A.length>r.length?`<button class="btn ghost sm" data-act="lfAll">Show all ${A.length}</button>`:''}</div></div>`}
 
@@ -1240,11 +1241,11 @@ function openOut(){
  const d=$('#dlg');d.innerHTML=`<h2 style="font:700 20px var(--fh);margin:0 0 6px">Punch out</h2><div style="color:${META[a.s].c};font-weight:700">${esc(c.t)}</div><small>${esc(a.a)}</small>
  ${mn>360?'<div class="warn">⚠ Timer ran '+fh(mn/60)+'. Forgot to punch out? Trim the minutes.</div>':''}<label class="f">MINUTES STUDIED (edit if you took a break)</label><input type="number" id="oM" min="0" value="${mn}"><label class="f">NOTE</label><input id="oN" value="${esc(a.n)}">
  <label class="f">HOW CONFIDENT ARE YOU IN THIS CHAPTER NOW? (optional)</label><select id="oCf"><option value="">— skip —</option>${CFL.map((t,i)=>`<option value="${i+1}" ${cfOf(a.s,a.i)===i+1?'selected':''}>${i+1} · ${t}</option>`).join('')}</select><label class="f">STICKY NOTE (optional) — what is pending / unclear / important?</label>${micField('<textarea id="oX" rows="2"></textarea>')}<select id="oT" style="margin-top:6px">${NT.filter(x=>x!=='LDR').map(x=>`<option>${x}</option>`).join('')}</select>
- <label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:14px"><input type="checkbox" id="oD" style="width:auto" ${already?'disabled checked':''}> Mark “${a.a}” complete for this chapter</label>
+ ${j<0?'':`<label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:14px"><input type="checkbox" id="oD" style="width:auto" ${already?'disabled checked':''}> Mark “${a.a}” complete for this chapter</label>`}
  <div style="display:flex;gap:8px;margin-top:16px"><button class="btn acc" id="oS">Save session</button><button class="btn ghost" id="oC">Keep running</button></div>`;
  d.showModal();$('#oC').onclick=()=>d.close();
  $('#oS').onclick=()=>{{const cf=+$('#oCf').value;if(cf)(S.conf=S.conf||{})[pk(a.s,a.i)]={v:cf,at:Date.now()}}const m=+$('#oM').value||0;const sid=uid();if(m>0)S.sessions.push({id:sid,s:a.s,i:a.i,a:a.a,n:$('#oN').value.trim(),st:a.st,en:a.st+m*6e4});const nx=$('#oX').value.trim();if(nx)S.notes.push({id:uid(),s:a.s,i:a.i,t:$('#oT').value,x:nx,c:Date.now(),d:0,sid:m>0?sid:''});
-  if($('#oD').checked&&!$('#oD').disabled){const p=S.progress[pk(a.s,a.i)]=S.progress[pk(a.s,a.i)]||{};p[PK[j]]=1}
+  if($('#oD')&&$('#oD').checked&&!$('#oD').disabled){const p=S.progress[pk(a.s,a.i)]=S.progress[pk(a.s,a.i)]||{};p[PK[j]]=1}
   planGet().it.forEach(x=>{if(x.s===a.s&&x.i===a.i&&m>0&&!x.rv)x.x=1});
   if(m>0){const ne=Date.now(),dn=new Date(ne),k=dk(a.st),o=(S.set.dl||{})[k];if(!o||!o.e||ne>=o.e)dlSet(k,{s:pad(dn.getHours())+':'+pad(dn.getMinutes()),e:ne})}
   S.active=null;save();d.close();render();if(!FH&&!(AUTH&&AUTH.google))dlBackup()}}
