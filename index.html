@@ -850,13 +850,13 @@ function chart14(m){
 function heat(m){const tg=+S.set.target||4;const end=new Date();end.setDate(end.getDate()+(6-end.getDay()));const cells=[];for(let i=16*7-1;i>=0;i--){const d=new Date(end);d.setDate(d.getDate()-i);cells.push(d)}
  return'<div class="heat">'+cells.map(d=>{const v=(m[dk(d)]||{}).t||0;const fut=d>new Date();const a=v?Math.min(1,.2+v/tg*.8):0;return`<i title="${dk(d)}: ${fh(v)}" style="${fut?'opacity:.25':''}${a?`;background:rgba(216,67,42,${a})`:''}"></i>`}).join('')+'</div>'}
 function subBars(){
- const R=['14','30','all'].includes(S.set.cr)?S.set.cr:'14',V='pie';
- let cut=0;if(R!=='all'){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(R==='14'?13:29));cut=d.getTime()}
+ const RS=['today','14','30','all'],R=RS.includes(S.set.sr)?S.set.sr:(['14','30','all'].includes(S.set.cr)?S.set.cr:'14'),V='pie';
+ let cut=0;if(R!=='all'){const d=new Date();d.setHours(0,0,0,0);if(R!=='today')d.setDate(d.getDate()-(R==='14'?13:29));cut=d.getTime()}
  const hs=ORDER.map(s=>({s,h:hoursOf(x=>x.s===s&&x.st>=cut)})),tot=hs.reduce((a,b)=>a+b.h,0);
  const chip=(act,k,l,on)=>`<button type="button" class="chip${on?' on':''}" data-act="${act}" data-r="${k}" style="${on?'background:var(--ink,#222);color:var(--bg,#fff);border-color:var(--ink,#222)':''}">${l}</button>`;
- const ctl=`<div class="chips" style="margin:0 0 8px">${[['14','Last 14 days'],['30','Last 30 days'],['all','From start']].map(([k,l])=>chip('subR',k,l,R===k)).join('')}</div>`;
+ const ctl=`<div class="chips" style="margin:0 0 8px">${[['today','Today'],['14','Last 14 days'],['30','Last 30 days'],['all','From start']].map(([k,l])=>chip('subR',k,l,R===k)).join('')}</div>`;
  if(V==='pie'){
-  if(tot<=0)return ctl+'<small>No study time logged in this range.</small>';
+  if(tot<=0)return ctl+'<small>No study time logged '+(R==='today'?'today yet':'in this range')+'.</small>';
   const cx=90,cy=90,r=80,ri=46,pt=(a,rr)=>[cx+rr*Math.sin(a),cy-rr*Math.cos(a)];let ang=0,sv=`<svg viewBox="0 0 180 180" width="180" height="180" role="img" aria-label="Hours by subject" style="flex:none">`;
   const act=hs.filter(x=>x.h>0);
   act.forEach(x=>{const f=x.h/tot,c=META[x.s].c,tt=`<title>${esc(META[x.s].n)}: ${fh(x.h)} (${Math.round(f*100)}%)</title>`;
@@ -928,16 +928,17 @@ function editSess(id){const x=S.sessions.find(z=>z.id===id);if(!x)return;const d
  const fc=v=>{$('#eC').innerHTML=L[$('#eS').value].map(c=>`<option value="${c.i}" ${c.i===v?'selected':''}>${pad(c.i+1)}. ${esc(c.t)}</option>`).join('')};fc(x.i);$('#eS').onchange=()=>fc(-1);
  $('#eNo').onclick=()=>d.close();
  $('#eOk').onclick=()=>{const st=new Date($('#eD').value+'T'+$('#eT').value).getTime(),mn=+$('#eM').value;if(!st||!mn)return alert('Enter a valid date, time and minutes.');Object.assign(x,{st,en:st+mn*6e4,s:$('#eS').value,i:+$('#eC').value,a:$('#eA').value,n:$('#eN').value.trim()});save();d.close();render();fillMC()};d.showModal()}
+const lgCol=new Set(),lgDays=()=>[...new Set(S.sessions.filter(lFilt).map(x=>dk(x.st)))];
 function vLog(){
- const A=[...S.sessions].filter(lFilt).sort((a,b)=>b.st-a.st),r=lF.all?A:A.slice(0,300);const m=byDay();let last='',t='';
- r.forEach(x=>{const k=dk(x.st);if(k!==last){last=k;t+=`<tr><td colspan="4" style="background:var(--line)"><b class="mono">${k}</b> — ${fh(m[k].t)}</td></tr>`}const c=L[x.s][x.i];
+ const A=[...S.sessions].filter(lFilt).sort((a,b)=>b.st-a.st),r=lF.all?A:A.slice(0,300);const m=byDay(),cn={};A.forEach(x=>{const k=dk(x.st);cn[k]=(cn[k]||0)+1});let last='',t='';
+ r.forEach(x=>{const k=dk(x.st),col=lgCol.has(k);if(k!==last){last=k;t+=`<tr data-act="lgDay" data-d="${k}" style="cursor:pointer" title="${col?'Show':'Hide'} this day’s sessions"><td colspan="4" style="background:var(--line)"><span style="display:inline-block;width:16px">${col?'▸':'▾'}</span><b class="mono">${k}</b> — ${fh(m[k].t)}${col?' <small>· '+cn[k]+' session'+(cn[k]>1?'s':'')+'</small>':''}</td></tr>`}if(col)return;const c=L[x.s][x.i];
   t+=`<tr><td class="mono">${new Date(x.st).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</td><td><b style="color:${META[x.s].c}">${x.s}</b> ${esc(c?c.t:'')}<br><small>${esc(x.a)}${x.n?' · '+esc(x.n):''}${S.notes.filter(z=>z.sid===x.id).map(z=>'<br>'+NI[z.t]+' '+esc(z.x.slice(0,80))).join('')}</small></td><td class="mono">${fh(hrs(x))}</td><td><button class="btn ghost sm" data-act="editS" data-id="${x.id}" aria-label="Edit session">✎</button> <button class="btn ghost sm" data-del="${x.id}" aria-label="Delete session">✕</button></td></tr>`});
  const opts=ORDER.map(s=>`<option value="${s}">${META[s].n}</option>`).join('');
  return`<div class="grid two"><div class="card"><h2>Add a past session</h2>
  <label class="f">DATE</label><input type="date" id="mD" value="${dk(Date.now())}"><label class="f">START TIME</label><input type="time" id="mT" value="09:00"><label class="f">MINUTES</label><input type="number" id="mM" value="60" min="1">
  <label class="f">SUBJECT</label><select id="mS">${opts}</select><label class="f">CHAPTER</label><select id="mC"></select><label class="f">ACTIVITY</label><select id="mA">${ACTS.map(a=>`<option>${a}</option>`).join('')}</select>
  <div style="margin-top:12px"><button class="btn" data-act="addManual">Add session</button></div></div>
- <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><h2 style="margin:0">All sessions</h2>${dataBar("sessions")}</div>${lfBar()}${r.length?`<table>${t}</table>`:'<small>No sessions.</small>'}${A.length>r.length?`<button class="btn ghost sm" data-act="lfAll">Show all ${A.length}</button>`:''}</div></div>`}
+ <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><h2 style="margin:0">All sessions</h2>${dataBar("sessions")}</div>${r.length?'<div style="display:flex;gap:6px;margin-bottom:8px"><button class="btn ghost sm" data-act="lgAll" data-v="exp">⊞ Expand all</button><button class="btn ghost sm" data-act="lgAll" data-v="col">⊟ Collapse all</button></div>':''}${lfBar()}${r.length?`<table>${t}</table>`:'<small>No sessions.</small>'}${A.length>r.length?`<button class="btn ghost sm" data-act="lfAll">Show all ${A.length}</button>`:''}</div></div>`}
 
 
 /* ---------- MY STUDY MATERIAL (Settings) ---------- */
@@ -1136,7 +1137,7 @@ document.addEventListener('click',async e=>{
  if(t.dataset.nact){const id=t.dataset.nid,n=S.notes.find(x=>x.id===id);if(n){if(t.dataset.nact==='done'){n.d=n.d?0:1;save();render()}else if(t.dataset.nact==='edit')openNote({id});else if(t.dataset.nact==='addq')quickQ(id);else if(t.dataset.nact==='rm'){n.rm=Date.now();save();render()}else if(t.dataset.nact==='restore'){delete n.rm;save();render()}else if(t.dataset.nact==='del'&&await uiConfirm('Delete this note permanently? This cannot be undone.')){(S.del=S.del||[]).push(id);S.notes=S.notes.filter(x=>x.id!==id);save();render()}}return}
  if(t.dataset.ntype!==undefined){nT=t.dataset.ntype;nSt='open';render();return}
  const a=t.dataset.act;e.preventDefault();
- if(a==='subR'||a==='subV'){if(a==='subR')S.set.cr=t.dataset.r;else S.set.sv=t.dataset.r;save();const y=window.scrollY;render();scrollTo(0,y);return}
+ if(a==='subR'||a==='subV'){if(a==='subR')S.set.sr=t.dataset.r;else S.set.sv=t.dataset.r;save();const y=window.scrollY;render();scrollTo(0,y);return}
   if(a==='chartR'){S.set.cr=t.dataset.r;save();const y=window.scrollY;render();scrollTo(0,y);return}
  if(a==='addNote')openNote({s:t.dataset.s,i:+t.dataset.i});
  if(a==='addNoteAny')openNote({s:nS!=='all'?nS:ORDER[0],i:nC>=0?nC:0,t:nT!=='all'?nT:'Note'});
@@ -1149,6 +1150,8 @@ document.addEventListener('click',async e=>{
  if(a==='mmRep'){const r=mmParse();if(!r.length)return;if(await uiConfirm('Replace all '+mmS+' chapters with '+r.length+' from the list? Progress/notes stay on the same chapter numbers; those beyond the new count are removed.')){const s=mmS;S.cust=S.cust||{};S.cust[s]=r;remap(s,j=>j<r.length?j:-1);mmFin()}}
  if(a==='pause'){const x=S.active;if(x){if(x.pz){x.pd=(x.pd||0)+Date.now()-x.pz;delete x.pz}else x.pz=Date.now();save();render();tickAll()}}
  if(a==='plAdd'){const q=planGet();if(!q.it.some(x=>x.s===pS&&x.i===pC)&&q.it.length<15){q.it.push({s:pS,i:pC,x:0});save();render()}}
+ if(a==='lgAll'){if(t.dataset.v==='col')lgDays().forEach(d=>lgCol.add(d));else lgCol.clear();const y=window.scrollY;render();scrollTo(0,y);return}
+ if(a==='lgDay'){const d=t.dataset.d;lgCol.has(d)?lgCol.delete(d):lgCol.add(d);const y=window.scrollY;render();scrollTo(0,y);return}
  if(a==='plLdr'){const x=planGet().it[+t.dataset.k];if(x){const k=x.s+':'+x.i;plOpen[k]=!plOpen[k];render()}return}
  if(a==='plGo'){const x=planGet().it[+t.dataset.k];if(x){pS=x.s;pC=x.i;cS=x.s;const ac=plAct(x);if(ACTS.includes(ac))pA=ac;pTouched=true;render();scrollTo(0,0)}return}
  if(a==='plDel'){const q=planGet(),r=q.it.splice(+t.dataset.k,1)[0];if(r&&r.rv)q.rm.push(r.s+':'+r.i);save();render()}
