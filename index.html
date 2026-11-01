@@ -1058,12 +1058,15 @@ function revDueList(){const now=Date.now(),last={};S.sessions.forEach(x=>{const 
 return due}
 /* Today's plan: unfinished items carry over to the next day (kept until ticked or ✕ removed); due revisions are added automatically */
 function planGet(){const d=dk(Date.now());if(!S.plan||S.plan.d!==d){const o=S.plan;S.plan={d,rm:[],it:o&&o.it?o.it.filter(x=>!x.x).map(x=>({...x,od:x.od||o.d})):[]}}if(!S.plan.rm)S.plan.rm=[];return S.plan}
+let plOpen={};
+const plAct=x=>{const m=/^Rev (\d+)/.exec(x.lb||'');return m?'Revision '+m[1]:ACTS[ACTS.length-3]},plKey=x=>PK[ACTS.indexOf(plAct(x))];
+function plLdr(x){const k=plKey(x);if(!k)return{p:0,d:0};let p=0,d=0;S.notes.filter(n=>n.s===x.s&&n.i===x.i&&n.t==='LDR').forEach(n=>ldrList(n).forEach(o=>{if(!remindsIn(o,k))return;if(o.rv&&o.rv[k])d++;else p++}));return{p,d}}
 function planSync(){const p=planGet(),due=revDueList(),n0=JSON.stringify(p.it);
- p.it.forEach(x=>{if(x.rv&&!x.x&&!due.some(z=>z.s===x.s&&z.i===x.i))x.x=1});
+ p.it.forEach(x=>{if(x.rv&&!x.x){const z=due.find(z=>z.s===x.s&&z.i===x.i);if(!z||(z.r?'Rev '+z.r:'Extra revision')!==x.lb)x.x=1}});
  let open=p.it.filter(x=>x.rv&&!x.x).length;
  for(const z of due){if(open>=5)break;if(p.it.some(x=>x.s===z.s&&x.i===z.i)||p.rm.includes(z.s+':'+z.i))continue;p.it.push({s:z.s,i:z.i,x:0,rv:1,lb:z.r?'Rev '+z.r:'Extra revision'});open++}
  if(JSON.stringify(p.it)!==n0)save()}
-function planHtml(){planSync();const p=planGet(),fd=s=>new Date(s+'T00:00').toLocaleDateString([],{day:'numeric',month:'short'}),pc=p.it.filter(x=>!x.x).length;return '<h2 style="margin-top:18px">Today’s plan'+(pc?' <small>· '+pc+' pending</small>':'')+'</h2>'+(p.it.length?p.it.map((x,k)=>{const c=L[x.s]&&L[x.s][x.i];return c?`<div style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="checkbox" style="width:auto" data-pl="${k}" ${x.x?'checked':''} aria-label="Done"><span style="flex:1;${x.x?'text-decoration:line-through;opacity:.6':''}"><b style="color:${META[x.s].c}">${x.s}</b> ${esc(c.t)}${x.rv?' <small>· 🔁 '+esc(x.lb||'Revision')+'</small>':''}${x.od&&!x.x?' <small style="color:var(--acc,#d8432a)">· ⏳ pending since '+fd(x.od)+'</small>':''}</span><button class="btn ghost sm" data-act="plDel" data-k="${k}" aria-label="Remove from plan">✕</button></div>`:''}).join(''):'<small>Nothing planned.</small>')+(p.it.length<15?'<div><button class="btn ghost sm" style="margin-top:6px" data-act="plAdd">＋ Add selected chapter</button></div>':'')}
+function planHtml(){planSync();const p=planGet(),fd=s=>new Date(s+'T00:00').toLocaleDateString([],{day:'numeric',month:'short'}),pc=p.it.filter(x=>!x.x).length;return '<h2 style="margin-top:18px">Today’s plan'+(pc?' <small>· '+pc+' pending</small>':'')+'</h2>'+(p.it.length?p.it.map((x,k)=>{const c=L[x.s]&&L[x.s][x.i];return c?`<div style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="checkbox" style="width:auto" data-pl="${k}" ${x.x?'checked':''} aria-label="Done"><span style="flex:1;${x.x?'text-decoration:line-through;opacity:.6':''}"><b style="color:${META[x.s].c}">${x.s}</b> ${esc(c.t)}${x.rv?' <small>· 🔁 '+esc(x.lb||'Revision')+'</small>':''}${x.od&&!x.x?' <small style="color:var(--acc,#d8432a)">· ⏳ pending since '+fd(x.od)+'</small>':''}</span>${x.rv&&!x.x?`<button class="btn ghost sm" data-act="plGo" data-k="${k}" title="Open this chapter in the punch-in form">▶</button>`:''}${x.rv&&(q=>q.p+q.d>0)(plLdr(x))?`<button class="btn ghost sm" data-act="plLdr" data-k="${k}" title="LDR questions for this revision">📖 ${plLdr(x).p}</button>`:''}<button class="btn ghost sm" data-act="plDel" data-k="${k}" aria-label="Remove from plan">✕</button></div>${x.rv&&plOpen[x.s+':'+x.i]?'<div style="margin:2px 0 10px 26px">'+qTodo({s:x.s,i:x.i,a:plAct(x)},1)+'</div>':''}`:''}).join(''):'<small>Nothing planned.</small>')+(p.it.length<15?'<div><button class="btn ghost sm" style="margin-top:6px" data-act="plAdd">＋ Add selected chapter</button></div>':'')}
 /* ---------- ACTIONS ---------- */
 function elapsed(a){return Math.max(0,(a.pz||Date.now())-a.st-(a.pd||0))}
 /* ---------- DAY EFFICIENCY (study time ÷ time awake so far; uses wake/sleep times from Settings) ---------- */
@@ -1113,6 +1116,8 @@ document.addEventListener('click',e=>{
  if(a==='mmRep'){const r=mmParse();if(!r.length)return;if(confirm('Replace all '+mmS+' chapters with '+r.length+' from the list? Progress/notes stay on the same chapter numbers; those beyond the new count are removed.')){const s=mmS;S.cust=S.cust||{};S.cust[s]=r;remap(s,j=>j<r.length?j:-1);mmFin()}}
  if(a==='pause'){const x=S.active;if(x){if(x.pz){x.pd=(x.pd||0)+Date.now()-x.pz;delete x.pz}else x.pz=Date.now();save();render();tickAll()}}
  if(a==='plAdd'){const q=planGet();if(!q.it.some(x=>x.s===pS&&x.i===pC)&&q.it.length<15){q.it.push({s:pS,i:pC,x:0});save();render()}}
+ if(a==='plLdr'){const x=planGet().it[+t.dataset.k];if(x){const k=x.s+':'+x.i;plOpen[k]=!plOpen[k];render()}return}
+ if(a==='plGo'){const x=planGet().it[+t.dataset.k];if(x){pS=x.s;pC=x.i;cS=x.s;const ac=plAct(x);if(ACTS.includes(ac))pA=ac;pTouched=true;render();scrollTo(0,0)}return}
  if(a==='plDel'){const q=planGet(),r=q.it.splice(+t.dataset.k,1)[0];if(r&&r.rv)q.rm.push(r.s+':'+r.i);save();render()}
  if(a==='lfAll'){lF.all=1;render();fillMC()}
  if(a==='editS')editSess(t.dataset.id);
@@ -1147,7 +1152,7 @@ function openOut(){
  d.showModal();$('#oC').onclick=()=>d.close();
  $('#oS').onclick=()=>{{const cf=+$('#oCf').value;if(cf)(S.conf=S.conf||{})[pk(a.s,a.i)]={v:cf,at:Date.now()}}const m=+$('#oM').value||0;const sid=uid();if(m>0)S.sessions.push({id:sid,s:a.s,i:a.i,a:a.a,n:$('#oN').value.trim(),st:a.st,en:a.st+m*6e4});const nx=$('#oX').value.trim();if(nx)S.notes.push({id:uid(),s:a.s,i:a.i,t:$('#oT').value,x:nx,c:Date.now(),d:0,sid:m>0?sid:''});
   if($('#oD').checked&&!$('#oD').disabled){const p=S.progress[pk(a.s,a.i)]=S.progress[pk(a.s,a.i)]||{};p[PK[j]]=1}
-  planGet().it.forEach(x=>{if(x.s===a.s&&x.i===a.i&&m>0)x.x=1});S.active=null;save();d.close();render();if(!FH&&!(AUTH&&AUTH.google))dlBackup()}}
+  planGet().it.forEach(x=>{if(x.s===a.s&&x.i===a.i&&m>0&&!x.rv)x.x=1});S.active=null;save();d.close();render();if(!FH&&!(AUTH&&AUTH.google))dlBackup()}}
 document.addEventListener('change',e=>{const t=e.target;if(t.id==='pS'||t.id==='pC'||t.id==='pA')pTouched=true;
  if(t.dataset.qdone!==undefined){const[id,x,k]=t.dataset.qdone.split('|'),n=S.notes.find(z=>z.id===id);if(n){if(!Array.isArray(n.q)){n.q=ldrList(n);delete n.qn;delete n.qp;delete n.qs}const o=n.q[+x];if(o){o.rv=o.rv||{};o.rv[k]=t.checked?1:0;save();const y=window.scrollY;render();tickAll();scrollTo(0,y)}}return}
  if(t.id==='pS'){pS=t.value;pC=lastChap(pS)??0;selSave();render()}
@@ -1158,7 +1163,8 @@ document.addEventListener('change',e=>{const t=e.target;if(t.id==='pS'||t.id==='
  else if(t.id==='qSortT'||t.id==='qSortN'){S.set.qSort=t.value==='qno'?'qno':'pri';save();const y=window.scrollY;render();tickAll();scrollTo(0,y)}
  else if(t.id==='qAllT'){S.set.qAll=t.checked?1:0;save();const y=window.scrollY;render();tickAll();scrollTo(0,y)}
  else if(t.id==='mS')fillMC();
- else if(t.dataset.pl!==undefined){const it=planGet().it[+t.dataset.pl];if(it){it.x=t.checked?1:0;save();render()}}
+ else if(t.dataset.pl!==undefined){const it=planGet().it[+t.dataset.pl];if(it){if(it.rv&&t.checked){const q=plLdr(it);if(q.p>0&&!confirm(q.p+' LDR question(s) are still not ticked for '+plAct(it)+'.\n\nMark this revision done anyway?')){render();return}}
+  it.x=t.checked?1:0;const kk=it.rv?plKey(it):'';if(kk&&kk!=='s'){const pr=S.progress[pk(it.s,it.i)]=S.progress[pk(it.s,it.i)]||{};pr[kk]=t.checked?1:0}save();render()}}
  else if(t.dataset.pw!==undefined){S.set.pw=S.set.pw||{};S.set.pw[t.dataset.pw]=t.value===''?'':Math.max(0,+t.value||0);save();render()}
  else if(t.dataset.wt!==undefined){S.set.wt=S.set.wt||{};S.set.wt[t.dataset.wt]=+t.value||0;save()}
  else if(t.id==='lfS'||t.id==='lfF'||t.id==='lfT'){lF[t.id==='lfS'?'s':t.id==='lfF'?'f':'t']=t.value;lF.all=0;render();fillMC()}
