@@ -114,6 +114,17 @@ td,th{padding:7px 6px;border-bottom:1px dashed var(--line);text-align:left;verti
 .nb{display:inline-block;background:#ffe27a;color:#2a2415;border-radius:4px;padding:0 6px;margin-left:4px;font:600 11px var(--fm)}
 dialog{border:2px solid var(--ink);border-radius:12px;background:var(--card);color:var(--ink);max-width:420px;width:92%}
 dialog::backdrop{background:#0008}
+.ui-dlg{border:none;padding:0;border-radius:20px;background:var(--card);color:var(--ink);width:min(92vw,400px);max-width:none;box-shadow:0 28px 70px #0008;animation:uiPop .2s cubic-bezier(.2,.9,.3,1.2)}
+.ui-dlg::backdrop{background:rgba(20,18,14,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);animation:uiFade .2s}
+.ui-in{padding:24px 22px 18px}.ui-ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:23px;background:var(--bg);border:1.5px solid var(--line)}
+.ui-dlg.dng .ui-ic{background:#d8432a22;border-color:#d8432a66}
+.ui-t{font:700 20px var(--fh);margin:14px 0 6px;line-height:1.25}.ui-m{font-size:14px;color:var(--mute);white-space:pre-line;line-height:1.55;word-break:break-word}
+.ui-m p{margin:0 0 8px}.ui-in input.ui-i{width:100%;margin-top:12px;box-sizing:border-box}
+.ui-b{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}.ui-b .btn{flex:1 1 110px;padding:12px 16px}
+.ui-dlg.dng .btn.acc{background:#c0321c}
+@keyframes uiPop{from{opacity:0;transform:translateY(14px) scale(.94)}to{opacity:1;transform:none}}@keyframes uiFade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.ui-dlg,.ui-dlg::backdrop{animation:none}}
+
 .hint{font:12px var(--fm);color:var(--mute);margin-top:10px}
 .warn{background:#ffe9a8;color:#332;padding:8px 12px;border-radius:6px;font-size:13px;margin-bottom:10px}
 #auth{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
@@ -403,6 +414,28 @@ const DEF={sessions:[],notes:[],tests:[],papers:[],del:[],progress:{},active:nul
 const $=s=>document.querySelector(s);
 var GD=null,GDBUSY=false,GDSEL=new Set(),GFULL=false;
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* ---------- STYLED DIALOGS (replace the browser's plain confirm / prompt / alert) ---------- */
+function uiDlg(cls){const d=document.createElement('dialog');d.className='ui-dlg '+(cls||'');document.body.appendChild(d);return d}
+function uiAsk(o){return new Promise(res=>{const d=uiDlg(o.danger?'dng':''),inp=o.input!==undefined;
+ d.innerHTML='<div class="ui-in"><div class="ui-ic" aria-hidden="true">'+(o.icon||'❔')+'</div><div class="ui-t">'+esc(o.title)+'</div><div class="ui-m">'+esc(o.msg)+'</div>'+(inp?'<input class="ui-i" type="text" value="'+esc(o.input)+'" placeholder="'+esc(o.ph||'')+'">':'')+'<div class="ui-b">'+(o.cancel===null?'':'<button class="btn ghost" data-r="0">'+esc(o.cancel||'Cancel')+'</button>')+'<button class="btn acc" data-r="1">'+esc(o.ok||'OK')+'</button></div></div>';
+ let done=0;const fin=v=>{if(done)return;done=1;d.close();setTimeout(()=>d.remove(),50);res(v)};
+ const val=()=>inp?d.querySelector('.ui-i').value:true;
+ d.addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(b){fin(b.dataset.r==='1'?val():(inp?null:false));return}if(e.target===d)fin(inp?null:false)});
+ d.addEventListener('cancel',e=>{e.preventDefault();fin(inp?null:false)});
+ d.addEventListener('keydown',e=>{if(e.key==='Enter'&&inp&&e.target.classList.contains('ui-i')){e.preventDefault();fin(val())}});
+ d.showModal();const f=inp?d.querySelector('.ui-i'):d.querySelector('[data-r="1"]');if(f){f.focus();if(inp)f.select()}})}
+function uiConfirm(msg,o){o=o||{};msg=String(msg==null?'':msg);
+ const mo=/^OK = (.*)$/m.exec(msg),mc=/^Cancel = (.*)$/m.exec(msg);let ok=o.ok,cancel=o.cancel;
+ const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+ if(mo){ok=ok||cap(mo[1].trim());msg=msg.replace(mo[0],'')}if(mc){cancel=cancel||cap(mc[1].trim());msg=msg.replace(mc[0],'')}
+ msg=msg.replace(/\n{3,}/g,'\n\n').trim();
+ const dg=/^(Delete|Permanently|Remove|Discard|Really)/i.exec(msg),word=dg?(/^Really/i.test(dg[1])?'Yes, I’m sure':/^Permanently/i.test(dg[1])?'Delete':cap(dg[1].toLowerCase())):'';
+ const danger=o.danger!==undefined?o.danger:!!dg;
+ return uiAsk({title:o.title||(danger?'Are you sure?':'Please confirm'),msg,ok:ok||(danger?word:'Yes'),cancel:cancel||(danger?'Keep it':'Cancel'),danger,icon:o.icon||(danger?'🗑️':'❔')})}
+function uiPrompt(msg,def){return uiAsk({title:'Enter a link',msg:String(msg||''),input:def||'',ph:'https://…',ok:'Save',cancel:'Cancel',icon:'🔗'})}
+window.alert=function(m){m=String(m==null?'':m);const o=document.querySelector('dialog.ui-al');if(o){const p=document.createElement('p');p.textContent=m;o.querySelector('.ui-m').appendChild(p);return}
+ const d=uiDlg('ui-al');d.innerHTML='<div class="ui-in"><div class="ui-ic" aria-hidden="true">ℹ️</div><div class="ui-t">Heads up</div><div class="ui-m"><p></p></div><div class="ui-b"><button class="btn acc">Got it</button></div></div>';d.querySelector('p').textContent=m;
+ const c=()=>{d.close();setTimeout(()=>d.remove(),50)};d.querySelector('button').onclick=c;d.addEventListener('click',e=>{if(e.target===d)c()});d.addEventListener('cancel',e=>{e.preventDefault();c()});d.showModal();d.querySelector('button').focus()};
 const pad=n=>String(n).padStart(2,'0');
 const dk=t=>{const d=new Date(t);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
 const UK='caFinalPlanner.users',LK='caFinalPlanner.lastUser',KP='caFinalPlanner.keep';
@@ -536,7 +569,7 @@ async function recToggle(btn){if(MR){MR.stop();return}
  r.start(1000);btn.textContent='⏹ Stop 00:00'}
 function nfWire(n){nfA=n&&n.a?n.a.map(a=>({...a})):[];renderAtt();
  $('#nfImg').onclick=()=>$('#nfImgF').click();$('#nfCam').onclick=camAdd;$('#nfCamF').onchange=async e=>{for(const f of [...e.target.files])await addImg(f,0,1);e.target.value=''};$('#nfImgF').onchange=async e=>{for(const f of [...e.target.files])await addImg(f);e.target.value=''};
- $('#nfPdf').onclick=()=>$('#nfPdfF').click();$('#nfPdfF').onchange=async e=>{for(const f of [...e.target.files]){if(f.size>40*1048576&&!confirm(f.name+' is '+fsz(f.size)+' — large files slow down syncing. Attach anyway?'))continue;await addMedia(f,'pdf','application/pdf',f.name)}e.target.value=''};
+ $('#nfPdf').onclick=()=>$('#nfPdfF').click();$('#nfPdfF').onchange=async e=>{for(const f of [...e.target.files]){if(f.size>40*1048576&&!await uiConfirm(f.name+' is '+fsz(f.size)+' — large files slow down syncing. Attach anyway?'))continue;await addMedia(f,'pdf','application/pdf',f.name)}e.target.value=''};
  $('#nfRec').onclick=e=>{if(REC)REC.stop();recToggle(e.currentTarget)};
  $('#nfAtt').onclick=e=>{const b=e.target.closest('[data-arm]');if(b){nfA.splice(+b.dataset.arm,1);renderAtt()}};
  $('#nfX').addEventListener('paste',e=>{const it=[...((e.clipboardData||{}).items||[])].filter(i=>i.type.indexOf('image/')===0);if(it.length){e.preventDefault();it.forEach(i=>addImg(i.getAsFile()))}});
@@ -630,7 +663,7 @@ function delAccDlg(){const d=$('#dlg'),has=!!DH;
  d.innerHTML=`<h2 style="font:700 20px var(--fh);margin:0 0 6px">Delete account “${esc(USER)}”</h2><p style="font-size:13px">Removes this login and its study data from this browser. A final backup is ${has?'kept in your planner folder':'saved/downloaded first'} unless you tick the box below.</p>${AUTH.google?'':'<label class="f">PASSWORD</label><input type="password" id="daP" autocomplete="current-password">'}${has?`<label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px"><input type="checkbox" id="daF" style="width:auto"> Also permanently delete this account’s JSON file and backups from the folder</label>`:''}<div class="amsg" id="daM"></div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn acc" id="daOK">Delete account</button><button class="btn ghost" id="daNo">Cancel</button></div>`;
  d.showModal();$('#daNo').onclick=()=>d.close();
  $('#daOK').onclick=async()=>{const m=t=>$('#daM').textContent=t;if(!AUTH.google&&!await chk($('#daP').value,AUTH))return m('Wrong password.');
-  const wipe=has&&$('#daF').checked;if(!confirm(wipe?'Permanently delete this account AND its files in the folder?':'Delete this account from this browser?'))return;
+  const wipe=has&&$('#daF').checked;if(!await uiConfirm(wipe?'Permanently delete this account AND its files in the folder?':'Delete this account from this browser?'))return;
   const u=USER;try{save();while(busy)await sleep(50);await sleep(100);while(busy)await sleep(50);
    if(wipe){try{await DH.removeEntry(dirFile(u))}catch(e){}try{const bd=await DH.getDirectoryHandle('backups');for await(const [n] of bd.entries())if(n.startsWith(BP()))await bd.removeEntry(n)}catch(e){}FH=null;DH=null}
    else if(!FH)dlBackup();
@@ -1043,10 +1076,10 @@ function openNote(o){
  $('#nfVL').value=vLang;$('#nfVL').onchange=()=>{vLang=$('#nfVL').value;if(REC)REC.stop()};d.onclose=()=>{if(REC)REC.stop();if(MR)MR.stop()};
  const nbSync=()=>{const l=$('#nfT').value==='LDR',b=$('#nfNb'),open=b.dataset.o==='1'||!!$('#nfX').value.trim();$('#nfNbH').style.display=l?'':'none';b.style.display=(!l||open)?'':'none';$('#nfNbT').textContent=(open?'▾ ':'▸ ')+'Note (optional)'};$('#nfNbT').onclick=()=>{const b=$('#nfNb');if(b.style.display==='none')b.dataset.o='1';else if(!$('#nfX').value.trim())b.dataset.o='0';nbSync()};$('#nfEqB').addEventListener('click',()=>{if($('#nfNb').style.display==='none'){$('#nfNb').dataset.o='1';nbSync()}});const tg=()=>{$('#nfL').style.display=$('#nfT').value==='LDR'?'block':'none';nbSync()};$('#nfT').onchange=tg;tg();
  d.showModal();$('#nfNo').onclick=()=>d.close();
- $('#nfOK').onclick=()=>{if(REC)REC.stop();const x=$('#nfX').value.trim(),L1=$('#nfT').value==='LDR',q=L1?[...document.querySelectorAll('#nfQs .qb')].map(b=>({q:b.querySelector('.qn').value.trim(),p:b.querySelector('.qp').value.trim(),s:b.querySelector('.qs').value.trim(),r:b.querySelector('.qr').value,rv:Object.fromEntries([...b.querySelectorAll('.qd input')].map(i=>[i.dataset.k,i.checked?1:0]))})).filter(o=>o.q||o.p||o.s):[];if(MR)return alert('Stop the voice recording first.');if(!x&&!q.length&&!nfA.length)return alert(L1?'Add at least one question (number, page or summary), or write a note.':'Write something on the note.');
+ $('#nfOK').onclick=async()=>{if(REC)REC.stop();const x=$('#nfX').value.trim(),L1=$('#nfT').value==='LDR',q=L1?[...document.querySelectorAll('#nfQs .qb')].map(b=>({q:b.querySelector('.qn').value.trim(),p:b.querySelector('.qp').value.trim(),s:b.querySelector('.qs').value.trim(),r:b.querySelector('.qr').value,rv:Object.fromEntries([...b.querySelectorAll('.qd input')].map(i=>[i.dataset.k,i.checked?1:0]))})).filter(o=>o.q||o.p||o.s):[];if(MR)return alert('Stop the voice recording first.');if(!x&&!q.length&&!nfA.length)return alert(L1?'Add at least one question (number, page or summary), or write a note.':'Write something on the note.');
   const v={s:$('#nfS').value,i:+$('#nfC').value,t:$('#nfT').value,x,q,a:nfA.slice()};
   if(v.t==='LDR'&&q.length){const d=ldrDups(v.s,v.i,q,n||null);if(d.length)return alert(dupMsg(d))}
-  if(n){Object.assign(n,v);delete n.qn;delete n.qp;delete n.qs}else{const ex=(v.t==='LDR'&&q.length)?S.notes.find(z=>!z.rm&&z.t==='LDR'&&z.s===v.s&&z.i===v.i):null;if(ex&&confirm('This chapter already has an LDR sticky note.\n\nOK = add these question(s) to it\nCancel = save as a separate new note')){if(!Array.isArray(ex.q)){ex.q=ldrList(ex);delete ex.qn;delete ex.qp;delete ex.qs}ex.q.push(...q);if(x)ex.x=(ex.x?ex.x+'\n\n':'')+x;ex.a=(ex.a||[]).concat(v.a)}else S.notes.push({id:uid(),...v,c:Date.now(),d:0,sid:''})}
+  if(n){Object.assign(n,v);delete n.qn;delete n.qp;delete n.qs}else{const ex=(v.t==='LDR'&&q.length)?S.notes.find(z=>!z.rm&&z.t==='LDR'&&z.s===v.s&&z.i===v.i):null;if(ex&&await uiConfirm('This chapter already has an LDR sticky note.\n\nOK = add these question(s) to it\nCancel = save as a separate new note')){if(!Array.isArray(ex.q)){ex.q=ldrList(ex);delete ex.qn;delete ex.qp;delete ex.qs}ex.q.push(...q);if(x)ex.x=(ex.x?ex.x+'\n\n':'')+x;ex.a=(ex.a||[]).concat(v.a)}else S.notes.push({id:uid(),...v,c:Date.now(),d:0,sid:''})}
   save();d.close();render()}}
 
 function revDueList(){const now=Date.now(),last={};S.sessions.forEach(x=>{const k=pk(x.s,x.i);if(!last[k]||x.en>last[k])last[k]=x.en});const IV=[3,7,14,21,30],due=[],sa={},tp={},tpc={};
@@ -1087,7 +1120,7 @@ setInterval(tickAll,1000);
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function fillMC(){const s=$('#mS');if(!s)return;$('#mC').innerHTML=L[s.value].map(c=>`<option value="${c.i}">${pad(c.i+1)}. ${esc(c.t)}</option>`).join('')}
 
-document.addEventListener('click',e=>{
+document.addEventListener('click',async e=>{
  const t=e.target.closest('[data-tab],[data-act],[data-sub],[data-dsub],[data-go],[data-del],[data-nadd],[data-nview],[data-npick],[data-nact],[data-nst],[data-ntype],[data-qrev],[data-cexp],[data-clog]');if(!t)return;
  if(t.dataset.cexp!==undefined||t.dataset.clog!==undefined){e.preventDefault();const k=cS+':'+(t.dataset.cexp!==undefined?t.dataset.cexp:t.dataset.clog),St=t.dataset.cexp!==undefined?cOpen:cLog;St.has(k)?St.delete(k):St.add(k);const y=window.scrollY;render();scrollTo(0,y);return}
  if(t.dataset.qrev){e.preventDefault();const[id,x,k]=t.dataset.qrev.split('|'),n=S.notes.find(z=>z.id===id);if(n){if(!Array.isArray(n.q)){n.q=ldrList(n);delete n.qn;delete n.qp;delete n.qs}const o=n.q[+x];if(o){o.rv=o.rv||{};o.rv[k]=o.rv[k]?0:1;save();const y=window.scrollY;render();scrollTo(0,y)}}return}
@@ -1095,12 +1128,12 @@ document.addEventListener('click',e=>{
  if(t.dataset.tab){tab=t.dataset.tab;render();if(tab==='log')fillMC();tickAll();return}
  if(t.dataset.sub){cS=t.dataset.sub;selSave();render();return}
  if(t.dataset.go!==undefined){e.preventDefault();pS=cS;pC=+t.dataset.go;selSave();tab='punch';render();return}
- if(t.dataset.del){if(confirm('Delete this session?')){(S.del=S.del||[]).push(t.dataset.del);S.sessions=S.sessions.filter(x=>x.id!==t.dataset.del);save();render();fillMC()}return}
+ if(t.dataset.del){if(await uiConfirm('Delete this session?')){(S.del=S.del||[]).push(t.dataset.del);S.sessions=S.sessions.filter(x=>x.id!==t.dataset.del);save();render();fillMC()}return}
  if(t.dataset.nadd!==undefined){e.preventDefault();openNote({s:cS,i:+t.dataset.nadd});return}
  if(t.dataset.npick){e.preventDefault();const[s,i]=t.dataset.npick.split(':');nS=s;nC=+i;nCq='';nSt='open';render();return}
  if(t.dataset.nst){nSt=t.dataset.nst;render();return}
  if(t.dataset.nview){e.preventDefault();const[s,i]=t.dataset.nview.split(':');nS=s;nC=+i;nCq='';nSt='open';nT='all';tab='notes';render();return}
- if(t.dataset.nact){const id=t.dataset.nid,n=S.notes.find(x=>x.id===id);if(n){if(t.dataset.nact==='done'){n.d=n.d?0:1;save();render()}else if(t.dataset.nact==='edit')openNote({id});else if(t.dataset.nact==='addq')quickQ(id);else if(t.dataset.nact==='rm'){n.rm=Date.now();save();render()}else if(t.dataset.nact==='restore'){delete n.rm;save();render()}else if(t.dataset.nact==='del'&&confirm('Delete this note permanently? This cannot be undone.')){(S.del=S.del||[]).push(id);S.notes=S.notes.filter(x=>x.id!==id);save();render()}}return}
+ if(t.dataset.nact){const id=t.dataset.nid,n=S.notes.find(x=>x.id===id);if(n){if(t.dataset.nact==='done'){n.d=n.d?0:1;save();render()}else if(t.dataset.nact==='edit')openNote({id});else if(t.dataset.nact==='addq')quickQ(id);else if(t.dataset.nact==='rm'){n.rm=Date.now();save();render()}else if(t.dataset.nact==='restore'){delete n.rm;save();render()}else if(t.dataset.nact==='del'&&await uiConfirm('Delete this note permanently? This cannot be undone.')){(S.del=S.del||[]).push(id);S.notes=S.notes.filter(x=>x.id!==id);save();render()}}return}
  if(t.dataset.ntype!==undefined){nT=t.dataset.ntype;nSt='open';render();return}
  const a=t.dataset.act;e.preventDefault();
  if(a==='subR'||a==='subV'){if(a==='subR')S.set.cr=t.dataset.r;else S.set.sv=t.dataset.r;save();const y=window.scrollY;render();scrollTo(0,y);return}
@@ -1109,11 +1142,11 @@ document.addEventListener('click',e=>{
  if(a==='addNoteAny')openNote({s:nS!=='all'?nS:ORDER[0],i:nC>=0?nC:0,t:nT!=='all'?nT:'Note'});
  if(a==='clearC'){nC=-1;nCq='';render()}
  if(a==='mmAdd'){ensureCust(mmS);S.cust[mmS].push({t:'New chapter',nb:'',pg:null});mmFin()}
- if(a==='mmDel'){const i=+t.dataset.i,s=mmS;if(L[s].length<=1)return alert('At least one chapter is required.');const n=S.sessions.filter(x=>x.s===s&&x.i===i).length+S.notes.filter(x=>x.s===s&&x.i===i).length;if(confirm('Delete chapter '+(i+1)+'? Its progress and '+n+' session(s)/note(s) are removed.')){ensureCust(s);S.cust[s].splice(i,1);remap(s,j=>j===i?-1:j>i?j-1:j);mmFin()}}
+ if(a==='mmDel'){const i=+t.dataset.i,s=mmS;if(L[s].length<=1)return alert('At least one chapter is required.');const n=S.sessions.filter(x=>x.s===s&&x.i===i).length+S.notes.filter(x=>x.s===s&&x.i===i).length;if(await uiConfirm('Delete chapter '+(i+1)+'? Its progress and '+n+' session(s)/note(s) are removed.')){ensureCust(s);S.cust[s].splice(i,1);remap(s,j=>j===i?-1:j>i?j-1:j);mmFin()}}
  if(a==='mmUp'||a==='mmDn'){const i=+t.dataset.i,k=a==='mmUp'?i-1:i+1,s=mmS;if(k<0||k>=L[s].length)return;ensureCust(s);const A=S.cust[s];[A[i],A[k]]=[A[k],A[i]];remap(s,j=>j===i?k:j===k?i:j);mmFin()}
- if(a==='mmReset'){if(confirm('Restore default chapters for '+mmS+'? Progress/notes of extra chapters are removed.')){const s=mmS;delete S.cust[s];remap(s,j=>j<L0[s].length?j:-1);mmFin()}}
+ if(a==='mmReset'){if(await uiConfirm('Restore default chapters for '+mmS+'? Progress/notes of extra chapters are removed.')){const s=mmS;delete S.cust[s];remap(s,j=>j<L0[s].length?j:-1);mmFin()}}
  if(a==='mmApp'){const r=mmParse();if(!r.length)return;ensureCust(mmS);S.cust[mmS].push(...r);mmFin()}
- if(a==='mmRep'){const r=mmParse();if(!r.length)return;if(confirm('Replace all '+mmS+' chapters with '+r.length+' from the list? Progress/notes stay on the same chapter numbers; those beyond the new count are removed.')){const s=mmS;S.cust=S.cust||{};S.cust[s]=r;remap(s,j=>j<r.length?j:-1);mmFin()}}
+ if(a==='mmRep'){const r=mmParse();if(!r.length)return;if(await uiConfirm('Replace all '+mmS+' chapters with '+r.length+' from the list? Progress/notes stay on the same chapter numbers; those beyond the new count are removed.')){const s=mmS;S.cust=S.cust||{};S.cust[s]=r;remap(s,j=>j<r.length?j:-1);mmFin()}}
  if(a==='pause'){const x=S.active;if(x){if(x.pz){x.pd=(x.pd||0)+Date.now()-x.pz;delete x.pz}else x.pz=Date.now();save();render();tickAll()}}
  if(a==='plAdd'){const q=planGet();if(!q.it.some(x=>x.s===pS&&x.i===pC)&&q.it.length<15){q.it.push({s:pS,i:pC,x:0});save();render()}}
  if(a==='plLdr'){const x=planGet().it[+t.dataset.k];if(x){const k=x.s+':'+x.i;plOpen[k]=!plOpen[k];render()}return}
@@ -1123,8 +1156,8 @@ document.addEventListener('click',e=>{
  if(a==='editS')editSess(t.dataset.id);
  if(a==='goPunch'){tab='punch';render();tickAll()}
  if(a==='wdClear'){S.set.wd={d:dk(Date.now()),t:''};save();render();return}
- if(a==='in'){{const nw=new Date(),wd=S.set.wd;if(!wd||wd.d!==dk(nw)){const hmn=pad(nw.getHours())+':'+pad(nw.getMinutes());S.set.wd={d:dk(nw),t:confirm('First punch-in of the day.\n\nSet '+hmn+' as today’s wake-up time?\n\nOK = yes, use '+hmn+'\nCancel = no, use my default wake-up time')?hmn:''}}}S.active={s:pS,i:pC,a:pA,n:$('#pN').value.trim(),st:Date.now()};save();render();tickAll()}
- if(a==='discard'){if(confirm('Discard this running session without saving?')){S.active=null;save();render()}}
+ if(a==='in'){{const nw=new Date(),wd=S.set.wd;if(!wd||wd.d!==dk(nw)){const hmn=pad(nw.getHours())+':'+pad(nw.getMinutes());S.set.wd={d:dk(nw),t:await uiConfirm('Set '+hmn+' as today’s wake-up time?',{title:'☀️ First punch-in today',ok:'Yes, use '+hmn,cancel:'No, use default',icon:'☀️'})?hmn:''}}}S.active={s:pS,i:pC,a:pA,n:$('#pN').value.trim(),st:Date.now()};save();render();tickAll()}
+ if(a==='discard'){if(await uiConfirm('Discard this running session without saving?')){S.active=null;save();render()}}
  if(a==='out')openOut();
  if(a==='addManual'){const st=new Date($('#mD').value+'T'+$('#mT').value).getTime(),mn=+$('#mM').value;if(!st||!mn)return alert('Enter a valid date, time and minutes.');S.sessions.push({id:uid(),s:$('#mS').value,i:+$('#mC').value,a:$('#mA').value,n:'',st,en:st+mn*6e4});save();render();fillMC()}
  if(a==='export')dlBackup();if(a==='exportZip')dlZip();
@@ -1140,7 +1173,7 @@ document.addEventListener('click',e=>{
  if(a==='pdf')sharePdf();
  if(a==='gre')gReconnect();if(a==='addLdr'){const s=t.dataset.s,i=+t.dataset.i;quickQ(S.notes.find(x=>x.s===s&&x.i===i&&x.t==='LDR'&&!x.rm)||{id:uid(),s,i,t:'LDR',x:'',c:Date.now(),d:0,q:[]})}if(a==='gfull'){tab='set';setSec='data';render();scrollTo(0,0);setTimeout(gdLoad,60)}
  if(a==='delacc')delAccDlg();
- if(a==='reset'){if(confirm('Delete ALL sessions and progress?')&&confirm('Really sure? This cannot be undone.')){S=JSON.parse(JSON.stringify(DEF));save();render()}}
+ if(a==='reset'){if(await uiConfirm('Delete ALL sessions and progress?')&&await uiConfirm('Really sure? This cannot be undone.')){S=JSON.parse(JSON.stringify(DEF));save();render()}}
 });
 function openOut(){
  const a=S.active,c=L[a.s][a.i],mn=Math.max(1,Math.round(elapsed(a)/6e4)),j=ACTS.indexOf(a.a),already=prog(a.s,a.i)[PK[j]];
@@ -1153,7 +1186,7 @@ function openOut(){
  $('#oS').onclick=()=>{{const cf=+$('#oCf').value;if(cf)(S.conf=S.conf||{})[pk(a.s,a.i)]={v:cf,at:Date.now()}}const m=+$('#oM').value||0;const sid=uid();if(m>0)S.sessions.push({id:sid,s:a.s,i:a.i,a:a.a,n:$('#oN').value.trim(),st:a.st,en:a.st+m*6e4});const nx=$('#oX').value.trim();if(nx)S.notes.push({id:uid(),s:a.s,i:a.i,t:$('#oT').value,x:nx,c:Date.now(),d:0,sid:m>0?sid:''});
   if($('#oD').checked&&!$('#oD').disabled){const p=S.progress[pk(a.s,a.i)]=S.progress[pk(a.s,a.i)]||{};p[PK[j]]=1}
   planGet().it.forEach(x=>{if(x.s===a.s&&x.i===a.i&&m>0&&!x.rv)x.x=1});S.active=null;save();d.close();render();if(!FH&&!(AUTH&&AUTH.google))dlBackup()}}
-document.addEventListener('change',e=>{const t=e.target;if(t.id==='pS'||t.id==='pC'||t.id==='pA')pTouched=true;
+document.addEventListener('change',async e=>{const t=e.target;if(t.id==='pS'||t.id==='pC'||t.id==='pA')pTouched=true;
  if(t.dataset.qdone!==undefined){const[id,x,k]=t.dataset.qdone.split('|'),n=S.notes.find(z=>z.id===id);if(n){if(!Array.isArray(n.q)){n.q=ldrList(n);delete n.qn;delete n.qp;delete n.qs}const o=n.q[+x];if(o){o.rv=o.rv||{};o.rv[k]=t.checked?1:0;save();const y=window.scrollY;render();tickAll();scrollTo(0,y)}}return}
  if(t.id==='pS'){pS=t.value;pC=lastChap(pS)??0;selSave();render()}
  else if(t.id==='pC'){pC=+t.value;selSave();const b=$('#pNotes');if(b){b.innerHTML=chNotes(pS,pC,1);hydrate(b)}}else if(t.id==='pA'){pA=t.value;selSave()}
@@ -1163,7 +1196,7 @@ document.addEventListener('change',e=>{const t=e.target;if(t.id==='pS'||t.id==='
  else if(t.id==='qSortT'||t.id==='qSortN'){S.set.qSort=t.value==='qno'?'qno':'pri';save();const y=window.scrollY;render();tickAll();scrollTo(0,y)}
  else if(t.id==='qAllT'){S.set.qAll=t.checked?1:0;save();const y=window.scrollY;render();tickAll();scrollTo(0,y)}
  else if(t.id==='mS')fillMC();
- else if(t.dataset.pl!==undefined){const it=planGet().it[+t.dataset.pl];if(it){if(it.rv&&t.checked){const q=plLdr(it);if(q.p>0&&!confirm(q.p+' LDR question(s) are still not ticked for '+plAct(it)+'.\n\nMark this revision done anyway?')){render();return}}
+ else if(t.dataset.pl!==undefined){const it=planGet().it[+t.dataset.pl];if(it){if(it.rv&&t.checked){const q=plLdr(it);if(q.p>0&&!await uiConfirm(q.p+' LDR question(s) are still not ticked for '+plAct(it)+'.\n\nMark this revision done anyway?',{title:'LDR questions pending',ok:'Mark done',cancel:'Not yet',icon:'📖'})){render();return}}
   it.x=t.checked?1:0;const kk=it.rv?plKey(it):'';if(kk&&kk!=='s'){const pr=S.progress[pk(it.s,it.i)]=S.progress[pk(it.s,it.i)]||{};pr[kk]=t.checked?1:0}save();render()}}
  else if(t.dataset.pw!==undefined){S.set.pw=S.set.pw||{};S.set.pw[t.dataset.pw]=t.value===''?'':Math.max(0,+t.value||0);save();render()}
  else if(t.dataset.wt!==undefined){S.set.wt=S.set.wt||{};S.set.wt[t.dataset.wt]=+t.value||0;save()}
@@ -1255,14 +1288,14 @@ function ppCard(){const P=S.papers||[],ck=S.ppChk||0,old=!ck||Date.now()-ck>7*86
  return`<div class="card" style="margin-bottom:12px"><h2>Past papers, RTPs &amp; MTPs</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn acc" href="${PPU}" target="_blank" rel="noopener noreferrer" data-pp="ext" style="text-decoration:none">Open Open Mock papers ↗</a></div><small style="display:block;margin-top:6px;${old?'color:var(--acc)':''}">${ck?'Last checked '+new Date(ck).toLocaleDateString():'Not checked yet'}${old?' — new papers may be out, worth a look.':''} The papers are on their site and update there; use the checklist below for the ones you plan to attempt.</small>
  <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap"><select id="ppS" style="width:auto;max-width:100%">${ORDER.map(s=>`<option value="${s}">${META[s].n}</option>`).join('')}</select><input id="ppN" placeholder="Paper (e.g. MAY 2027 · MTP Series 1)" style="flex:1 1 200px;min-width:min(200px,100%)"><input id="ppU" placeholder="Link (optional)" style="flex:1 1 160px;min-width:min(160px,100%)"><button class="btn sm" data-pp="add">Add</button></div><div style="margin-top:8px"><button class="btn ghost sm" data-pp="def">＋ Add RTP + MTP 1 + MTP 2 for every subject (${esc((S.set.att||'MAY 2027').toUpperCase())})</button></div>
  ${P.length?`<small style="display:block;margin-top:10px" class="mono">CHECKLIST · ${dn}/${P.length} attempted</small>${rows}`:''}</div>`}
-document.addEventListener('click',e=>{const b=e.target.closest('[data-pp]');if(!b)return;const k=b.dataset.pp,id=b.dataset.id,P=S.papers=S.papers||[],x=P.find(z=>z.id===id);
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-pp]');if(!b)return;const k=b.dataset.pp,id=b.dataset.id,P=S.papers=S.papers||[],x=P.find(z=>z.id===id);
  e.preventDefault();if(k==='ext'){ppGo(b.getAttribute('href'));return}
  if(k==='tog'&&x){x.d=x.d?0:1;save();render()}
  else if(k==='log'&&x){mkPre={s:x.s,k:/RTP/i.test(x.n)?'RTP':/MTP/i.test(x.n)?'MTP':'Mock',n:x.n};render();const m=$('#mkM');if(m){m.scrollIntoView({block:'center'});m.focus()}}
- else if(k==='url'&&x){const u=prompt('Paste the link for this paper (https://…). Leave empty to remove it.',x.u||'');if(u===null)return;const t=u.trim();if(t&&!/^https?:\/\//i.test(t))return alert('The link must start with http:// or https://');x.u=t;save();render()}
- else if(k==='del'&&x){if(confirm('Remove "'+x.n+'" from the checklist?')){(S.del=S.del||[]).push(id);S.papers=P.filter(z=>z.id!==id);save();render()}}
+ else if(k==='url'&&x){const u=await uiPrompt('Paste the link for this paper (https://…). Leave empty to remove it.',x.u||'');if(u===null)return;const t=u.trim();if(t&&!/^https?:\/\//i.test(t))return alert('The link must start with http:// or https://');x.u=t;save();render()}
+ else if(k==='del'&&x){if(await uiConfirm('Remove "'+x.n+'" from the checklist?')){(S.del=S.del||[]).push(id);S.papers=P.filter(z=>z.id!==id);save();render()}}
  else if(k==='add'){const n=$('#ppN').value.trim(),u=$('#ppU').value.trim();if(!n)return alert('Enter the paper name.');if(u&&!/^https?:\/\//i.test(u))return alert('The link must start with http:// or https://');P.push({id:uid(),s:$('#ppS').value,n,u,d:0});save();render()}
- else if(k==='def'){const at=(S.set.att||'MAY 2027').toUpperCase();if(!confirm('Add RTP, MTP Series 1 and MTP Series 2 for every subject ('+at+')? Existing rows are kept.'))return;ORDER.forEach(s=>['RTP','MTP Series 1','MTP Series 2'].forEach(t=>{const n=at+' · '+t;if(!P.some(z=>z.s===s&&z.n===n))P.push({id:uid(),s,n,u:'',d:0})}));save();render()}});
+ else if(k==='def'){const at=(S.set.att||'MAY 2027').toUpperCase();if(!await uiConfirm('Add RTP, MTP Series 1 and MTP Series 2 for every subject ('+at+')? Existing rows are kept.'))return;ORDER.forEach(s=>['RTP','MTP Series 1','MTP Series 2'].forEach(t=>{const n=at+' · '+t;if(!P.some(z=>z.s===s&&z.n===n))P.push({id:uid(),s,n,u:'',d:0})}));save();render()}});
 /* ---------- v3 additions: image shrink, Drive backups, mock tests, revision/weekly card ---------- */
 async function imgShrink(b){try{const bm=await createImageBitmap(b),r=Math.min(1,1600/Math.max(bm.width,bm.height)),w=Math.round(bm.width*r),h=Math.round(bm.height*r),c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,w,h);g.drawImage(bm,0,0,w,h);const o=await new Promise(res=>c.toBlob(res,'image/jpeg',.82));return o&&o.size<b.size?o:null}catch(e){return null}}
 async function gBk(tx){const k='caPlanner.bk.'+USER,t=dk(Date.now());if(localStorage.getItem(k)===t)return;const bd='bk'+Date.now();
@@ -1270,7 +1303,7 @@ async function gBk(tx){const k='caPlanner.bk.'+USER,t=dk(Date.now());if(localSto
  const j=await(await gf('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&pageSize=1000&fields=files(id,name)')).json();
  for(const f of(j.files||[]).filter(f=>/^bk-/.test(f.name)).sort((a,b)=>a.name<b.name?1:-1).slice(5))await gf('https://www.googleapis.com/drive/v3/files/'+f.id,{method:'DELETE'})}
 async function gdRestore(id){if(GDBUSY)return;const x=gdItems().find(z=>z.f.id===id);if(!x)return;
- if(x.kind==='backup'&&!confirm('Merge this backup back into your data? Nothing you have now is deleted.'))return;GDBUSY=true;GD.err='';gdRender();
+ if(x.kind==='backup'&&!await uiConfirm('Merge this backup back into your data? Nothing you have now is deleted.'))return;GDBUSY=true;GD.err='';gdRender();
  try{await gdTok();
   if(x.kind==='removed'){const nm=x.f.name.slice(2);await gf('https://www.googleapis.com/drive/v3/files/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:nm})});x.f.name=nm;const r=(S.rmA||[]).find(z=>z.fid===id);if(r){const n=S.notes.find(z=>z.id===r.nid);if(n&&!(n.a||[]).some(z=>z.id===r.id))(n.a=n.a||[]).push(r.a);S.rmA=S.rmA.filter(z=>z!==r)}save();render()}
   else if(x.kind==='backup'){const j=await dRead(id);S=mergeS([S,norm(j.data)]);fixNames();save();render()}}
@@ -1285,9 +1318,9 @@ function vMock(){const T=(S.tests||[]).slice().sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:
  ORDER.forEach(s=>{const pts=T.map((t,i)=>t.s===s?[X(i),Y(pc(t))]:null).filter(Boolean);if(!pts.length)return;sv+=`<polyline fill="none" stroke="${META[s].c}" stroke-width="2" points="${pts.map(p=>p.join(',')).join(' ')}"/>`+pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="${META[s].c}"/>`).join('')});sv+='</svg>';
  const av=ORDER.filter(s=>T.some(t=>t.s===s)).map(s=>{const l=T.filter(t=>t.s===s),a=l.reduce((x,t)=>x+pc(t),0)/l.length,z=pc(l[l.length-1]);return`<div style="border:1px solid var(--line);border-radius:8px;padding:8px 10px"><small class="mono" style="color:${META[s].c}">${META[s].n}</small><div style="font:700 18px var(--fh);color:${col(a)}">${a.toFixed(0)}% <small>avg · ${l.length} tests</small></div><small>latest ${z.toFixed(0)}%</small></div>`}).join('');
  return h+`<div class="card" style="margin-top:12px"><h2>Trend</h2>${sv}<div style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">${av}</div></div><div class="card" style="margin-top:12px"><h2>All results</h2>${T.slice().reverse().map(t=>`<div style="display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)"><b style="color:${META[t.s].c};width:42px">${META[t.s].p||t.s}</b><div style="flex:1;min-width:0;overflow-wrap:anywhere">${esc(t.n||t.k)}<br><small>${esc(t.k)} · ${esc(t.d)}</small></div><span class="mono" style="color:${col(pc(t))};font-weight:700">${t.m}/${t.t} · ${pc(t).toFixed(0)}%</span><button class="btn ghost sm" data-mk="del" data-id="${esc(t.id)}">✕</button></div>`).join('')}</div>`}
-document.addEventListener('click',e=>{const b=e.target.closest('[data-mk]');if(!b)return;e.preventDefault();
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-mk]');if(!b)return;e.preventDefault();
  if(b.dataset.mk==='add'){const m=parseFloat($('#mkM').value),t=parseFloat($('#mkT').value)||100;if(isNaN(m)||m<0||m>t)return alert('Enter valid marks (0 to the total).');(S.tests=S.tests||[]).push({id:uid(),s:$('#mkS').value,k:$('#mkK').value,n:$('#mkN').value.trim(),m,t,d:$('#mkD').value||dk(Date.now())});save();render()}
- else if(confirm('Delete this result?')){(S.del=S.del||[]).push(b.dataset.id);S.tests=(S.tests||[]).filter(x=>x.id!==b.dataset.id);save();render()}});
+ else if(await uiConfirm('Delete this result?')){(S.del=S.del||[]).push(b.dataset.id);S.tests=(S.tests||[]).filter(x=>x.id!==b.dataset.id);save();render()}});
 /* dashboard: revision due + this week */
 const CFL=['Very weak','Weak','Okay','Good','Strong'],cfOf=(s,i)=>((S.conf||{})[pk(s,i)]||{}).v||0;
 function wkCard(){const now=Date.now(),W0=now-7*864e5,last={};S.sessions.forEach(x=>{const k=pk(x.s,x.i);if(!last[k]||x.en>last[k])last[k]=x.en});const IV=[3,7,14,21,30],due=[],sa={},tp={},tpc={};
@@ -1337,7 +1370,7 @@ async function gdLoad(){if(GDBUSY)return;GDBUSY=true;GD=Object.assign(GD||{},{er
  catch(e){GD=Object.assign(GD||{},{err:e.message||String(e)})}
  GDBUSY=false;gdRender()}
 async function gdRun(list){if(!list.length||GDBUSY)return;const tot=list.reduce((t,x)=>t+x.sz,0),lk=list.filter(x=>x.ref).length,real=list.filter(x=>x.recent).length;
- if(!confirm('Delete '+list.length+' file'+(list.length>1?'s':'')+' from Google Drive and free '+gdSz(tot)+'?'+(lk?'\n\n'+lk+' of them '+(lk>1?'are':'is')+' attached to sticky notes. They move to “Recently removed” (restorable, but still using space until you press Empty) and disappear from the notes on every device.':'')+(real?'\n\nNote: '+real+' file'+(real>1?'s were':' was')+' added in the last hour — make sure your other devices have finished syncing.':'')+'\n\nThis cannot be undone.'))return;
+ if(!await uiConfirm('Delete '+list.length+' file'+(list.length>1?'s':'')+' from Google Drive and free '+gdSz(tot)+'?'+(lk?'\n\n'+lk+' of them '+(lk>1?'are':'is')+' attached to sticky notes. They move to “Recently removed” (restorable, but still using space until you press Empty) and disappear from the notes on every device.':'')+(real?'\n\nNote: '+real+' file'+(real>1?'s were':' was')+' added in the last hour — make sure your other devices have finished syncing.':'')+'\n\nThis cannot be undone.'))return;
  GDBUSY=true;GD.err='';gdRender();const done=new Set();let ch=false;
  try{await gdTok();
   for(const x of list){const a=x.ref&&x.ref.a;
@@ -1363,7 +1396,7 @@ async function gLogin(){
   const first=!U[u];AUTH={google:true,email:u,name:ui.name||''};U[u]=AUTH;USER=u;localStorage.setItem(UK,JSON.stringify(U));
   if($('#aRu').checked)localStorage.setItem(LK,u);else localStorage.removeItem(LK);if($('#aKs').checked)localStorage.setItem(KP,u);else localStorage.removeItem(KP);
   const c=[],lo=loadLocal(u);if(lo)c.push(lo);
-  if(first)for(const k of Object.keys(U)){if(k===u||U[k].google)continue;const o=loadLocal(k);if(o&&((o.sessions||[]).length||(o.notes||[]).length)&&confirm('Copy the existing study data from account “'+k+'” into this Google account?'))c.push(o)}
+  if(first)for(const k of Object.keys(U)){if(k===u||U[k].google)continue;const o=loadLocal(k);if(o&&((o.sessions||[]).length||(o.notes||[]).length)&&await uiConfirm('Copy the existing study data from account “'+k+'” into this Google account?'))c.push(o)}
   await attach(u,c,true);S=c.length?mergeS(c):norm();fixNames();
   $('#auth').hidden=true;document.querySelector('.wrap').style.display='';$('#aF').value='';
   syncMsg('☁ connecting to Google Drive…');render();tickAll();prune();
