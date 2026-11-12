@@ -180,6 +180,7 @@ summary{cursor:pointer;font:700 20px var(--fh);margin:20px 0 8px}
  <h1 style="font-size:28px">CA FINAL <span>·</span> MAY 2027</h1><div class="sub">STUDY PUNCH CARD — sign in to continue</div>
  <div class="atabs"><button id="amIn" class="on">Sign in</button><button id="amNew">Create account</button></div>
  <div style="margin:12px 0 4px"><button type="button" class="btn acc big" id="aG" style="width:100%">🔐 Sign in / Sign up with Google (Gmail)</button>
+ <div class="hint" style="margin-top:8px">By signing in with Google, your name and email are added to the developer’s user list. Your study data is not shared. <a href="privacy.html" target="_blank" rel="noopener">Privacy policy</a></div>
  <details style="margin-top:8px"><summary class="hint" style="cursor:pointer">Google setup (Client ID)</summary><input id="aCid" placeholder="xxxx.apps.googleusercontent.com" style="margin-top:6px" autocomplete="off"><div class="hint">One-time: paste your Google OAuth Client ID. Works only when this planner is opened from a web address (e.g. GitHub Pages), not from a file on your computer.</div></details>
  <div class="hint" style="text-align:center;margin-top:10px">— or use a username &amp; password —</div></div>
  <form id="aForm"><label class="f">USERNAME</label><input id="aU" name="username" autocomplete="username" autocapitalize="none">
@@ -1609,6 +1610,21 @@ document.addEventListener('click',e=>{if(e.target.closest('[data-rm]')){const y=
 document.addEventListener('keydown',e=>{if(e.key!==' '||tab!=='punch'||!USER||$('#dlg').open||e.ctrlKey||e.metaKey||e.altKey)return;if(['INPUT','TEXTAREA','SELECT','BUTTON','A'].includes(e.target.tagName))return;const b=document.querySelector('[data-act="in"],[data-act="out"]');if(b){e.preventDefault();b.click()}});
 document.addEventListener('toggle',e=>{const k=e.target.dataset&&e.target.dataset.col;if(k){S.set.col=S.set.col||{};S.set.col[k]=e.target.open?0:1;save()}},true);
 {const kp=localStorage.getItem(KP);if(kp&&users()[kp])autoLogin(kp);else showAuth()}
+</script>
+<script>
+/* ===== USER LIST (mandatory for Google sign-in). Paste your Apps Script /exec URL below. ===== */
+(()=>{
+const REG_URL='';
+const T=()=>'caPlanner.reg.t.'+USER;
+const g=k=>{try{return localStorage.getItem(k)}catch(e){return null}},st=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+function ping(){
+ if(!REG_URL||!USER||!AUTH||!AUTH.google||!GTOK||GNEED)return;
+ if(Date.now()-(+g(T())||0)<3*864e5)return;
+ st(T(),String(Date.now()));
+ fetch(REG_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({t:GTOK})}).catch(()=>{st(T(),'0')});
+}
+const _g=gSync;gSync=async function(){const r=await _g.apply(this,arguments);try{ping()}catch(e){}return r};
+})();
 </script>
 </body>
 </html>

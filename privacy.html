@@ -34,10 +34,15 @@
     <li>If you sign in with Google, in a private app folder in your own Google Drive. The planner requests only the Google Drive “app data” permission, so it can see only the files it created itself. It cannot see or change your other Drive files, Gmail or Photos.</li>
     <li>In a backup or save file on your own computer, if you choose to link one.</li>
   </ul>
-  <p>The developer does not run a server or database for this planner, and cannot see your data.</p>
+  <p>The developer does not run a server or database for your study data and cannot see it. The only data the developer holds is the user list described below.</p>
 
   <h2>How your data is used</h2>
   <p>Your data is used only to run the planner for you: to show your dashboard and notes, and to sync them between your own devices. It is not sold, shared with third parties, used for advertising, or used to train any AI model.</p>
+
+  <h2>Developer user list</h2>
+  <p>When you sign in with Google, your <b>name and Google email address</b> are added to a private list kept by the developer, together with the dates you first and last opened the planner and a visit count. The developer uses this only to know how many people use the planner, to contact users about updates or problems, and to keep the planner running. It is stored in a private Google Sheet that only the developer can open, and it is not sold or shared.</p>
+  <p>To do this, the planner sends a temporary Google sign-in token to the developer’s Google Apps Script, which uses it only to confirm your email address and does not store it. No study data, notes, or files are sent. People who use a username and password instead of Google sign-in are not added to this list, because the planner does not collect an email address for them.</p>
+  <p>To have your entry deleted, email the address below and the developer will remove it. You can also stop future updates by signing out and revoking access at <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.</p>
 
   <h2>Sharing</h2>
   <p>Nothing leaves your device or your Google Drive unless you choose to export or share it yourself, for example by creating a PDF report.</p>
